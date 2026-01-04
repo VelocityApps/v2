@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>🤖 AI Assistant</h2>
+      <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+    </div>
+
+    <div id="settings-panel" class="settings-panel hidden">
+      <div class="settings-content">
+        <label>
+          <span>OpenAI API Key:</span>
+          <input type="password" id="api-key-input" placeholder="sk-...">
+        </label>
+        <label>
+          <span>Model:</span>
+          <select id="model-select">
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+          </select>
+        </label>
+        <button id="save-settings" class="btn-primary">Save Settings</button>
+      </div>
+    </div>
+
+    <div id="chat-container" class="chat-container">
+      <div id="messages" class="messages"></div>
+      
+      <div class="input-area">
+        <textarea 
+          id="message-input" 
+          placeholder="Ask me anything..."
+          rows="3"
+        ></textarea>
+        <button id="send-btn" class="btn-primary">
+          <span>Send</span>
+          <span class="icon">➤</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="status" class="status hidden"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+

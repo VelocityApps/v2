@@ -1,0 +1,26 @@
+{
+  "name": "discord-bot-starter",
+  "version": "1.0.0",
+  "description": "Production-ready Discord bot with slash commands, command handler, and event listeners",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js",
+    "slash-commands"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

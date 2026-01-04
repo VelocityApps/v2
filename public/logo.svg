@@ -1,0 +1,27 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stylized V with three parallel lines on left -->
+  <g>
+    <!-- Left arm of V - three parallel vertical lines (striped) -->
+    <line x1="8" y1="5" x2="8" y2="40" stroke="#0a2463" stroke-width="3" stroke-linecap="round"/>
+    <line x1="12" y1="5" x2="12" y2="40" stroke="#0a2463" stroke-width="3" stroke-linecap="round"/>
+    <line x1="16" y1="5" x2="16" y2="40" stroke="#0a2463" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Right arm of V integrated with upward arrow -->
+    <!-- Arrow shaft (diagonal, bottom-center to top-right) -->
+    <path d="M20 40 L32 8" stroke="#0066cc" stroke-width="3" stroke-linecap="round" fill="none"/>
+    
+    <!-- Arrowhead (triangular tip) -->
+    <path d="M32 8 L28 12 L30 10 L32 8" fill="#3498db"/>
+    <polygon points="32,8 28,12 36,10" fill="#3498db"/>
+    
+    <!-- Speed lines (three horizontal tapering lines) -->
+    <line x1="28" y1="20" x2="38" y2="20" stroke="#0066cc" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+    <line x1="30" y1="25" x2="36" y2="25" stroke="#0066cc" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+    <line x1="32" y1="30" x2="35" y2="30" stroke="#0066cc" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  </g>
+  
+  <!-- Text: VelocityApps -->
+  <text x="50" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600">
+    <tspan fill="#0a2463">Velocity</tspan><tspan fill="#3498db">Apps</tspan>
+  </text>
+</svg>

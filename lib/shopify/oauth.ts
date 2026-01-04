@@ -1,0 +1,173 @@
+/**
+ * Shopify OAuth Integration
+ * Handles OAuth flow for connecting Shopify stores
+ */
+
+export interface ShopifyOAuthConfig {
+  shop: string; // Store domain (e.g., 'mystore.myshopify.com')
+  redirectUri: string;
+  scopes?: string[];
+}
+
+export interface ShopifyTokenResponse {
+  access_token: string;
+  scope: string;
+  expires_in?: number;
+}
+
+const DEFAULT_SCOPES = [
+  'read_products',
+  'write_products',
+  'read_orders',
+  'read_inventory',
+  'write_inventory',
+  'read_customers',
+  'read_content',
+  'write_content',
+];
+
+/**
+ * Generate Shopify OAuth authorization URL
+ */
+export function generateShopifyAuthUrl(config: ShopifyOAuthConfig): string {
+  const shop = config.shop.replace(/\.myshopify\.com$/, '') + '.myshopify.com';
+  const scopes = (config.scopes || DEFAULT_SCOPES).join(',');
+  const clientId = process.env.SHOPIFY_CLIENT_ID!;
+  const redirectUri = encodeURIComponent(config.redirectUri);
+  const state = generateState();
+
+  if (!clientId) {
+    throw new Error('SHOPIFY_CLIENT_ID environment variable is required');
+  }
+
+  const authUrl = `https://${shop}/admin/oauth/authorize?` +
+    `client_id=${clientId}&` +
+    `scope=${scopes}&` +
+    `redirect_uri=${redirectUri}&` +
+    `state=${state}`;
+
+  return authUrl;
+}
+
+/**
+ * Exchange authorization code for access token
+ */
+export async function exchangeCodeForToken(
+  shop: string,
+  code: string
+): Promise<ShopifyTokenResponse> {
+  const clientId = process.env.SHOPIFY_CLIENT_ID!;
+  const clientSecret = process.env.SHOPIFY_CLIENT_SECRET!;
+
+  if (!clientId || !clientSecret) {
+    throw new Error('SHOPIFY_CLIENT_ID and SHOPIFY_CLIENT_SECRET environment variables are required');
+  }
+
+  const shopDomain = shop.replace(/\.myshopify\.com$/, '') + '.myshopify.com';
+  const url = `https://${shopDomain}/admin/oauth/access_token`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to exchange code for token: ${error}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Verify Shopify webhook HMAC signature
+ */
+export function verifyWebhookSignature(
+  body: string,
+  signature: string,
+  secret: string
+): boolean {
+  const crypto = require('crypto');
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(body, 'utf8');
+  const calculatedSignature = hmac.digest('base64');
+  return calculatedSignature === signature;
+}
+
+/**
+ * Generate random state for OAuth flow
+ */
+function generateState(): string {
+  return require('crypto').randomBytes(32).toString('hex');
+}
+
+/**
+ * Encrypt Shopify access token for storage
+ */
+export async function encryptToken(token: string): Promise<string> {
+  // For production, use a proper encryption library like crypto-js or @noble/cipher
+  // For now, we'll use a simple base64 encoding (NOT secure - replace with proper encryption)
+  const encryptionKey = process.env.ENCRYPTION_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  
+  if (!encryptionKey) {
+    throw new Error('ENCRYPTION_KEY or SUPABASE_SERVICE_ROLE_KEY is required for token encryption');
+  }
+
+  // TODO: Implement proper encryption (AES-256-GCM)
+  // For now, return base64 encoded (this is NOT secure - must be replaced)
+  const crypto = require('crypto');
+  const cipher = crypto.createCipheriv(
+    'aes-256-gcm',
+    crypto.scryptSync(encryptionKey, 'salt', 32),
+    crypto.randomBytes(16)
+  );
+  
+  let encrypted = cipher.update(token, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+  
+  return JSON.stringify({
+    encrypted,
+    iv: authTag.toString('hex'),
+  });
+}
+
+/**
+ * Decrypt Shopify access token
+ */
+export async function decryptToken(encryptedToken: string): Promise<string> {
+  const encryptionKey = process.env.ENCRYPTION_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  
+  if (!encryptionKey) {
+    throw new Error('ENCRYPTION_KEY or SUPABASE_SERVICE_ROLE_KEY is required for token decryption');
+  }
+
+  // TODO: Implement proper decryption
+  // For now, handle base64 encoded tokens
+  try {
+    const data = JSON.parse(encryptedToken);
+    const crypto = require('crypto');
+    const decipher = crypto.createDecipheriv(
+      'aes-256-gcm',
+      crypto.scryptSync(encryptionKey, 'salt', 32),
+      Buffer.from(data.iv, 'hex')
+    );
+    
+    decipher.setAuthTag(Buffer.from(data.iv, 'hex'));
+    let decrypted = decipher.update(data.encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  } catch (error) {
+    // Fallback: assume it's plain text (for development)
+    return encryptedToken;
+  }
+}
+

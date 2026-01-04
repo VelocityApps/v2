@@ -1,0 +1,26 @@
+{
+  "name": "telegram-bot-starter",
+  "version": "1.0.0",
+  "description": "Production-ready Telegram bot with inline keyboards, command handlers, and message handlers",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node bot.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "node-telegram-bot-api",
+    "telegram-bot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+
