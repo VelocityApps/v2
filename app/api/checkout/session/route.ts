@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/?canceled=true`,
       metadata: {
         user_id: user.id,
+        plan_type: planType,  // carried through to webhook so we don't need line_items expansion
       },
     });
 

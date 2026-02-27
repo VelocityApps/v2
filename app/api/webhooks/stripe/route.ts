@@ -41,10 +41,10 @@ export async function POST(request: NextRequest) {
             .single();
 
           const fromTier = currentProfile?.subscription_status || 'free';
-          
-          // Determine to tier based on price
-          const priceId = (session as any).line_items?.data?.[0]?.price?.id;
-          const toTier = priceId === process.env.STRIPE_PRICE_ID_TEAMS ? 'teams' : 'pro';
+
+          // Use plan_type metadata stored at checkout creation time.
+          // line_items is not populated in webhook payloads without explicit expansion.
+          const toTier = (session.metadata?.plan_type === 'teams') ? 'teams' : 'pro';
 
           // Update user profile to pro/teams
           await supabaseAdmin
@@ -142,15 +142,47 @@ export async function POST(request: NextRequest) {
             .eq('stripe_subscription_id', subscriptionId)
             .single();
 
-          if (profile && profile.subscription_status === 'pro') {
-            // Reset credits for pro users on successful payment
+          if (profile && (profile.subscription_status === 'pro' || profile.subscription_status === 'teams')) {
+            // Reset credits on monthly renewal for both pro and teams
+            const credits = profile.subscription_status === 'teams' ? 2000.0 : 500.0;
             await supabaseAdmin
               .from('user_profiles')
               .update({
-                credits_remaining: 500.0,
+                credits_remaining: credits,
                 credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
               })
               .eq('user_id', profile.user_id);
+          }
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const invoiceData = invoice as any;
+        const subscriptionId = typeof invoiceData.subscription === 'string'
+          ? invoiceData.subscription
+          : invoiceData.subscription?.id || null;
+
+        if (subscriptionId) {
+          const { data: profile } = await supabaseAdmin
+            .from('user_profiles')
+            .select('user_id, subscription_status')
+            .eq('stripe_subscription_id', subscriptionId)
+            .single();
+
+          if (profile) {
+            // Log the failure – Stripe will retry automatically (Smart Retries).
+            // We don't downgrade yet; Stripe will fire customer.subscription.deleted
+            // if all retries fail and the subscription is cancelled.
+            console.error(`[Stripe] Payment failed for user ${profile.user_id}, subscription ${subscriptionId}`);
+
+            // Optionally notify the user via email
+            const { sendAlertEmail } = await import('@/lib/email');
+            await sendAlertEmail(
+              `Payment failed – user ${profile.user_id}`,
+              `<p>Stripe payment failed for subscription <strong>${subscriptionId}</strong> (user: ${profile.user_id}, tier: ${profile.subscription_status}).</p><p>Stripe will retry automatically. No action needed unless retries are exhausted.</p>`
+            ).catch(() => {}); // non-blocking
           }
         }
         break;
