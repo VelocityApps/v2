@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const shop = searchParams.get('shop');
-    const state = searchParams.get('state');
     const error = searchParams.get('error');
 
     // Check for OAuth errors
@@ -31,18 +30,37 @@ export async function GET(request: NextRequest) {
     // Exchange code for access token
     const tokenResponse = await exchangeCodeForToken(shop, code);
 
-    // Get authenticated user from session (passed via state or stored in session)
-    // For now, we'll redirect with token and let frontend handle storage
-    // In production, you'd get user from session/state
-    
+    // SECURITY: Store token in session/cookie instead of URL
+    // For now, we'll use a secure cookie to pass token to frontend
+    // In production, consider storing in database immediately
+
     const redirectUrl = new URL(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/marketplace`
     );
     redirectUrl.searchParams.set('shopify_auth_success', '1');
     redirectUrl.searchParams.set('shop', shop);
-    redirectUrl.searchParams.set('access_token', tokenResponse.access_token);
+    const oauthState = searchParams.get('state') ?? '';
+    const installSlug = oauthState.includes(':') ? oauthState.split(':').slice(1).join(':') : '';
+    if (installSlug) redirectUrl.searchParams.set('install', installSlug);
+    
+    // Store token in httpOnly cookie (more secure than URL param)
+    const response = NextResponse.redirect(redirectUrl.toString());
+    response.cookies.set('shopify_token_temp', tokenResponse.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60, // 1 minute - frontend should read and clear immediately
+      path: '/',
+    });
+    response.cookies.set('shopify_shop_temp', shop, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60,
+      path: '/',
+    });
 
-    return NextResponse.redirect(redirectUrl.toString());
+    return response;
   } catch (error: any) {
     console.error('[ShopifyAuth] Error in callback:', error);
     return NextResponse.redirect(
@@ -50,4 +68,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
 

@@ -1,13 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AutomationCard from '@/components/automations/AutomationCard';
+import InstallModal from '@/components/automations/InstallModal';
+
+interface AutomationMetrics {
+  automationId: string;
+  successRate: number;
+  totalRuns: number;
+  conversionRate?: number;
+}
 
 export default function MarketplacePage() {
+  const searchParams = useSearchParams();
   const [automations, setAutomations] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<Record<string, AutomationMetrics>>({});
+  const [trialedAutomationIds, setTrialedAutomationIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [installModalSlug, setInstallModalSlug] = useState<string | null>(null);
 
   const categories = ['all', 'marketing', 'inventory', 'seo', 'analytics', 'automation'];
 
@@ -22,6 +35,21 @@ export default function MarketplacePage() {
 
         if (error) throw error;
         setAutomations(data || []);
+
+        // Fetch metrics for each automation
+        const metricsMap: Record<string, AutomationMetrics> = {};
+        for (const automation of data || []) {
+          try {
+            const response = await fetch(`/api/automations/${automation.id}/metrics`);
+            if (response.ok) {
+              const metricsData = await response.json();
+              metricsMap[automation.id] = metricsData;
+            }
+          } catch (err) {
+            // Silently fail - metrics are optional
+          }
+        }
+        setMetrics(metricsMap);
       } catch (error) {
         console.error('Error fetching automations:', error);
       } finally {
@@ -31,6 +59,28 @@ export default function MarketplacePage() {
 
     fetchAutomations();
   }, []);
+
+  // Fetch which automations the current user has already used a trial for
+  useEffect(() => {
+    async function fetchTrialed() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: rows } = await supabase
+        .from('user_automations')
+        .select('automation_id')
+        .eq('user_id', user.id)
+        .not('trial_started_at', 'is', null);
+      if (rows?.length) setTrialedAutomationIds(new Set(rows.map((r: any) => r.automation_id)));
+    }
+    fetchTrialed();
+  }, []);
+
+  // Re-open install modal when returning from Shopify OAuth (install=slug&shopify_auth_success=1)
+  useEffect(() => {
+    const install = searchParams.get('install');
+    const success = searchParams.get('shopify_auth_success');
+    if (install && success === '1') setInstallModalSlug(install);
+  }, [searchParams]);
 
   const filteredAutomations = automations.filter((auto: any) => 
     selectedCategory === 'all' || auto.category === selectedCategory
@@ -42,7 +92,7 @@ export default function MarketplacePage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">Automation Marketplace</h1>
           <p className="text-gray-400 text-lg">
-            Browse 20+ pre-built automations for your Shopify store
+            Browse {automations.length > 0 ? `${automations.length}` : '20+'} pre-built automations for your Shopify store
           </p>
         </div>
 
@@ -63,28 +113,7 @@ export default function MarketplacePage() {
           ))}
         </div>
 
-        {/* Automation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAutomations.map((automation: any) => (
-            <AutomationCard
-              key={automation.id}
-              automation={{
-                id: automation.id,
-                name: automation.name,
-                slug: automation.slug,
-                description: automation.description,
-                category: automation.category,
-                price_monthly: automation.price_monthly,
-                icon: automation.icon,
-                features: automation.features || [],
-                user_count: automation.user_count || 0,
-                config_schema: automation.config_schema || {},
-              }}
-              variant="marketplace"
-            />
-          ))}
-        </div>
-
+        {/* Loading State */}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0066cc] mx-auto mb-4"></div>
@@ -92,9 +121,75 @@ export default function MarketplacePage() {
           </div>
         ) : filteredAutomations.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-400">No automations found in this category.</p>
+            <div className="text-6xl mb-4">🔍</div>
+            <p className="text-gray-400 text-lg mb-2">No automations found</p>
+            <p className="text-gray-500 text-sm">
+              {selectedCategory === 'all' 
+                ? 'Try running the database migration to seed automations.'
+                : `No automations in the "${selectedCategory}" category.`}
+            </p>
           </div>
-        ) : null}
+        ) : (
+          <>
+            {/* Automation Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {filteredAutomations.map((automation: any) => (
+                <AutomationCard
+                  key={automation.id}
+                  automation={{
+                    id: automation.id,
+                    name: automation.name,
+                    slug: automation.slug,
+                    description: automation.description,
+                    category: automation.category,
+                    price_monthly: automation.price_monthly,
+                    icon: automation.icon,
+                    features: automation.features || [],
+                    user_count: automation.user_count || 0,
+                    config_schema: automation.config_schema || {},
+                  }}
+                  variant="marketplace"
+                  trialAlreadyUsed={trialedAutomationIds.has(automation.id)}
+                  metrics={metrics[automation.id]}
+                />
+              ))}
+            </div>
+
+            {/* Install modal when returning from Shopify OAuth */}
+            {installModalSlug && (() => {
+              const automation = filteredAutomations.find((a: any) => a.slug === installModalSlug);
+              if (!automation) return null;
+              return (
+                <InstallModal
+                  automation={{
+                    id: automation.id,
+                    name: automation.name,
+                    slug: automation.slug,
+                    description: automation.description,
+                    category: automation.category,
+                    price_monthly: automation.price_monthly,
+                    icon: automation.icon,
+                    features: automation.features || [],
+                    user_count: automation.user_count || 0,
+                    config_schema: automation.config_schema || {},
+                  }}
+                  isOpen={true}
+                  onClose={() => {
+                    setInstallModalSlug(null);
+                    window.history.replaceState({}, '', '/marketplace');
+                  }}
+                />
+              );
+            })()}
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-center text-gray-500 text-sm mt-8">
+                Showing {filteredAutomations.length} of {automations.length} automations
+                {selectedCategory !== 'all' && ` (filtered by ${selectedCategory})`}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

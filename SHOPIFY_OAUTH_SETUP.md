@@ -33,15 +33,29 @@ To set up Shopify OAuth, you need to:
      - For production: `https://yourdomain.com`
 5. Click **"Create app"**
 
-### Step 3: Configure OAuth Settings
+### Step 3: Configure OAuth Settings (App URL and redirect URLs)
 
-1. In your app settings, go to **"Configuration"** tab
-2. Under **"App URL"**:
-   - **App URL**: `http://localhost:3000` (or your production URL)
-3. Under **"Allowed redirection URL(s)"**, add:
-   - `http://localhost:3000/api/auth/shopify/callback` (for development)
-   - `https://yourdomain.com/api/auth/shopify/callback` (for production)
-   - Click **"Add URL"** after each one
+**Where to find these settings** — Shopify has two dashboards; the layout depends on which you use:
+
+- **If you use Partners (partners.shopify.com):**
+  1. Left sidebar: **Apps** → click your app (e.g. Velocity Apps).
+  2. Open **Configuration** (or **App setup** / **Settings** — the exact tab name can vary).
+  3. Look for **App URL** and **Allowed redirection URL(s)** (sometimes under “URLs” or “OAuth”).
+  - If you don’t see a Configuration tab, try **Settings** (gear icon) on the app page, or check the top tabs (Overview, Configuration, API credentials, etc.).
+
+- **If you were moved to the Dev Dashboard (dev.shopify.com):**
+  1. Go to [dev.shopify.com/dashboard](https://dev.shopify.com/dashboard) (or from Partners: **Visit Dev Dashboard** → **App distribution** in the left sidebar).
+  2. Left sidebar: **Apps** → click your app.
+  3. Open the **Versions** tab. Create or edit a version — the **App URL** is set there (e.g. `http://localhost:3000`).
+  4. Redirect URLs may be in the same version form, or under **Settings** for that app. Add: `http://localhost:3000/api/auth/shopify/callback`.
+
+**What to set (same in both dashboards):**
+
+- **App URL**: `http://localhost:3000` (for local testing) or your production URL.
+- **Allowed redirection URL(s)** (or “Redirect URLs”): add exactly:
+  - `http://localhost:3000/api/auth/shopify/callback` (development)
+  - `https://yourdomain.com/api/auth/shopify/callback` (production when you deploy)
+  - Click **Add URL** / **Save** after adding.
 
 ### Step 4: Set Required Scopes
 
@@ -135,11 +149,12 @@ npm run dev
 - Restart your dev server after adding env variables
 - Check for typos in the variable name
 
-### "Invalid redirect_uri"
-- Make sure the redirect URL in Shopify app settings matches exactly:
-  - `http://localhost:3000/api/auth/shopify/callback`
-- No trailing slashes!
-- Check that you've saved the settings in Shopify Partners
+### "Invalid redirect_uri" or "redirect_uri and application url must have matching hosts"
+- **Hosts must match:** The **App URL** in Shopify and the **redirect_uri** your app sends must use the same host.
+  - **Local:** In Shopify Partners → Configuration → set **App URL** to `http://localhost:3000` and **Allowed redirection URL(s)** to `http://localhost:3000/api/auth/shopify/callback`.
+  - **Production:** Use your production domain for both (e.g. App URL `https://yourdomain.com`, redirect `https://yourdomain.com/api/auth/shopify/callback`).
+- If you test locally, App URL must be `http://localhost:3000` (not your production URL), and `.env.local` must have `NEXT_PUBLIC_APP_URL=http://localhost:3000`.
+- No trailing slashes on any URL. Save the app settings in Shopify Partners after changing.
 
 ### "Invalid client_id"
 - Double-check your Client ID is correct
@@ -199,4 +214,6 @@ If you run into issues:
 4. Make sure the redirect URL in Shopify matches exactly
 
 Once you have the credentials, I can help you test the flow!
+
+
 

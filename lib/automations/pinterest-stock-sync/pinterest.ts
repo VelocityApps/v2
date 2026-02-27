@@ -26,15 +26,18 @@ export interface PinterestPin {
 /**
  * Create a pin on Pinterest
  * Note: This uses Pinterest API v5
- * Requires PINTEREST_ACCESS_TOKEN environment variable
+ * Token: pass accessToken, or set PINTEREST_ACCESS_TOKEN in env
  */
 export async function createPinterestPin(
-  params: PinterestPinParams
+  params: PinterestPinParams,
+  accessTokenOverride?: string
 ): Promise<PinterestPin> {
-  const accessToken = process.env.PINTEREST_ACCESS_TOKEN;
+  const accessToken = accessTokenOverride?.trim() || process.env.PINTEREST_ACCESS_TOKEN;
 
   if (!accessToken) {
-    throw new Error('PINTEREST_ACCESS_TOKEN environment variable is required');
+    throw new Error(
+      'Pinterest Access Token is required. Add it in the automation Configuration (Pinterest Access Token), or set PINTEREST_ACCESS_TOKEN in .env.local. Get a token from developers.pinterest.com.'
+    );
   }
 
   // First, get or create the board
@@ -186,4 +189,6 @@ export async function deletePinterestPin(pinId: string): Promise<void> {
     throw new Error(`Failed to delete Pinterest pin: ${error}`);
   }
 }
+
+
 

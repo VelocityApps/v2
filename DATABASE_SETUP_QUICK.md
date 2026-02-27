@@ -1,44 +1,45 @@
 # Quick Database Setup
 
 ## The Error
-"Database error saving new user" or similar database errors.
+"Database error saving new user" or similar database errors when signing up.
 
 ## The Solution
 
-You need to run the SQL migration to create the database tables.
+Supabase creates the user in `auth.users`, then a trigger inserts a row into `user_profiles`. That step is failing because either the table/trigger don’t exist or RLS is blocking the insert. Fix it by running the right SQL in Supabase.
 
-### Step 1: Open Supabase SQL Editor
+### Option A: First-time setup (no tables yet)
+
+If you haven’t run any migrations yet:
+
+1. Go to **Supabase Dashboard** → your project → **SQL Editor** → **New query**.
+2. Open `supabase/migrations/complete_setup.sql` in your project, copy **all** of it, paste into the editor, and **Run**.
+3. In **Table Editor**, confirm `user_profiles` (and other tables) exist.
+4. Try signing up again.
+
+### Option B: Tables exist but signup still fails
+
+If you already have tables (or you get the error after running migrations):
+
+1. Go to **Supabase Dashboard** → your project → **SQL Editor** → **New query**.
+2. Open `supabase/migrations/fix_signup_trigger.sql` in your project, copy **all** of it, paste into the editor, and **Run**.
+3. This fixes the trigger and RLS so the “create profile on signup” insert is allowed.
+4. Try signing up again.
+
+### Step-by-step (SQL Editor)
 
 1. Go to https://supabase.com/dashboard
-2. Select your project: **ofkohtektddpflcdbsma**
+2. Select your project (e.g. **ofkohtektddpflcdbsma**)
 3. Click **SQL Editor** in the left sidebar
 4. Click **New query**
+5. Paste the full contents of either `complete_setup.sql` (first time) or `fix_signup_trigger.sql` (fix only)
+6. Click **Run** (or Ctrl+Enter)
+7. Wait for it to complete
 
-### Step 2: Copy the Migration SQL
+### Verify
 
-1. Open the file `supabase/migrations/complete_setup.sql` in your project
-2. **Select ALL** the contents (Ctrl+A)
-3. **Copy** it (Ctrl+C)
-
-### Step 3: Paste and Run
-
-1. Paste the SQL into the Supabase SQL Editor
-2. Click **Run** (or press Ctrl+Enter)
-3. Wait for it to complete (should take a few seconds)
-
-### Step 4: Verify
-
-1. Go to **Table Editor** in Supabase Dashboard
-2. You should see these tables:
-   - ✅ `projects`
-   - ✅ `user_profiles`
-   - ✅ `monitoring_events`
-   - ✅ `costs`
-   - ✅ `feedback`
-
-### Step 5: Try Signing Up Again
-
-After running the migration, try signing up again. The error should be gone!
+1. Go to **Table Editor** in Supabase Dashboard.
+2. You should see **user_profiles** (and with Option A, also `projects`, `monitoring_events`, etc.).
+3. Try signing up again; the error should be gone.
 
 ## What This Migration Creates
 

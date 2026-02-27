@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface AuthModalProps {
@@ -162,6 +163,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           )}
 
+          {isSignUp && (
+            <div className="text-xs text-gray-500 text-center">
+              By signing up, you agree to our{' '}
+              <Link href="/terms" onClick={onClose} className="text-[#00bcd4] hover:text-[#32cd32] transition-colors">
+                Terms of Service
+              </Link>
+              {' '}and{' '}
+              <Link href="/privacy" onClick={onClose} className="text-[#00bcd4] hover:text-[#32cd32] transition-colors">
+                Privacy Policy
+              </Link>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
@@ -171,7 +185,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 space-y-2 text-center">
+          {!isSignUp && (
+            <Link
+              href="/auth/forgot-password"
+              onClick={onClose}
+              className="block text-sm text-gray-400 hover:text-[#00bcd4] transition-colors"
+            >
+              Forgot password?
+            </Link>
+          )}
           <button
             onClick={() => {
               setIsSignUp(!isSignUp);

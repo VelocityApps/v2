@@ -25,11 +25,22 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-html, body, #__next {
+html {
   height: 100%;
+  width: 100%;
+}
+
+body {
+  min-height: 100%;
+  width: 100%;
+}
+
+#__next {
+  min-height: 100%;
   width: 100%;
 }
 

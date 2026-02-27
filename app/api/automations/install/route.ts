@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { getAutomation } from '@/lib/automations/base';
 import { encryptToken } from '@/lib/shopify/oauth';
+import { validateShopifyStoreUrl, validateUUID, validateAutomationConfig } from '@/lib/validation';
 
 /**
  * POST /api/automations/install
@@ -24,9 +25,42 @@ export async function POST(request: NextRequest) {
 
     const { automationId, config, shopifyStoreUrl, shopifyAccessToken } = await request.json();
 
+    // Input validation
     if (!automationId || !shopifyStoreUrl || !shopifyAccessToken) {
       return NextResponse.json(
         { error: 'automationId, shopifyStoreUrl, and shopifyAccessToken are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate UUID
+    if (!validateUUID(automationId)) {
+      return NextResponse.json(
+        { error: 'Invalid automation ID format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate Shopify store URL
+    if (!validateShopifyStoreUrl(shopifyStoreUrl)) {
+      return NextResponse.json(
+        { error: 'Invalid Shopify store URL format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate config
+    if (config && !validateAutomationConfig(config)) {
+      return NextResponse.json(
+        { error: 'Invalid configuration format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate token format (basic check)
+    if (typeof shopifyAccessToken !== 'string' || shopifyAccessToken.length < 20) {
+      return NextResponse.json(
+        { error: 'Invalid access token format' },
         { status: 400 }
       );
     }
@@ -61,20 +95,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Encrypt Shopify access token
-    const encryptedToken = await encryptToken(shopifyAccessToken);
+    // One free trial per user per automation type
+    const { data: priorTrial } = await supabaseAdmin
+      .from('user_automations')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('automation_id', automationId)
+      .not('trial_started_at', 'is', null)
+      .limit(1);
 
-    // Create user_automation record
+    const trialEligible = !priorTrial?.length;
+    const now = new Date();
+    const trialEndsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const insertRow: Record<string, unknown> = {
+      user_id: user.id,
+      automation_id: automationId,
+      shopify_store_url: shopifyStoreUrl,
+      shopify_access_token_encrypted: await encryptToken(shopifyAccessToken),
+      config: config || {},
+      status: trialEligible ? 'trial' : 'active',
+    };
+    if (trialEligible) {
+      insertRow.trial_started_at = now.toISOString();
+      insertRow.trial_ends_at = trialEndsAt.toISOString();
+    }
+
     const { data: userAutomation, error: createError } = await supabaseAdmin
       .from('user_automations')
-      .insert({
-        user_id: user.id,
-        automation_id: automationId,
-        shopify_store_url: shopifyStoreUrl,
-        shopify_access_token_encrypted: encryptedToken,
-        config: config || {},
-        status: 'active',
-      })
+      .insert(insertRow)
       .select()
       .single();
 
@@ -96,13 +145,26 @@ export async function POST(request: NextRequest) {
         // Update status to error
         await supabaseAdmin
           .from('user_automations')
-          .update({ status: 'error', error_message: error.message })
+          .update({ status: 'error' as const, error_message: error.message })
           .eq('id', userAutomation.id);
         
         return NextResponse.json(
           { error: `Failed to install automation: ${error.message}` },
           { status: 500 }
         );
+      }
+    }
+
+    if (trialEligible && user.email) {
+      try {
+        const { sendTrialStartedEmail } = await import('@/lib/email/trial');
+        await sendTrialStartedEmail(
+          user.email,
+          automation.name,
+          new Date(userAutomation.trial_ends_at)
+        );
+      } catch (e) {
+        console.error('[Install] Trial welcome email failed:', e);
       }
     }
 
@@ -119,4 +181,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 

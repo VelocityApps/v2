@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import ConfigForm from './ConfigForm';
 import { Automation } from './AutomationCard';
 
@@ -35,43 +36,60 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
     const urlParams = new URLSearchParams(window.location.search);
     const shopifySuccess = urlParams.get('shopify_auth_success');
     const shop = urlParams.get('shop');
-    const accessToken = urlParams.get('access_token');
 
-    if (shopifySuccess === '1' && shop && accessToken && isOpen) {
-      // Store in sessionStorage for install step
-      sessionStorage.setItem('shopify_token', accessToken);
-      sessionStorage.setItem('shopify_shop', shop);
-      setStep('configure');
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
+    if (shopifySuccess === '1' && shop && isOpen) {
+      // Get token from cookie (set by server)
+      // Note: In production, you'd fetch this from an API endpoint that reads the cookie
+      // For now, we'll use a workaround - read from cookie via API
+      fetch('/api/auth/shopify/get-token')
+        .then(res => res.json())
+        .then(data => {
+          if (data.token && data.shop) {
+            sessionStorage.setItem('shopify_token', data.token);
+            sessionStorage.setItem('shopify_shop', data.shop);
+            setStep('configure');
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        })
+        .catch(err => {
+          console.error('Error getting token from cookie:', err);
+          toast.error('Failed to retrieve authentication token');
+        });
     }
   }, [isOpen]);
 
   const handleConnectShopify = async () => {
     if (!shopifyStoreUrl) {
+      toast.error('Please enter your Shopify store URL');
       setError('Please enter your Shopify store URL');
       return;
     }
 
     setLoading(true);
     setError(null);
+    toast.loading('Connecting to Shopify...', { id: 'connect-shopify' });
 
     try {
       // Get authorization URL
       const response = await fetch(
-        `/api/auth/shopify/authorize?shop=${encodeURIComponent(shopifyStoreUrl)}`
+        `/api/auth/shopify/authorize?shop=${encodeURIComponent(shopifyStoreUrl)}&install=${encodeURIComponent(automation.slug)}`
       );
       const data = await response.json();
 
       if (data.error) {
+        toast.error(data.error, { id: 'connect-shopify' });
         setError(data.error);
         return;
       }
 
+      toast.success('Redirecting to Shopify...', { id: 'connect-shopify' });
       // Redirect to Shopify OAuth
       window.location.href = data.authUrl;
     } catch (err: any) {
-      setError(err.message || 'Failed to connect Shopify store');
+      const errorMessage = err.message || 'Failed to connect Shopify store';
+      toast.error(errorMessage, { id: 'connect-shopify' });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -79,6 +97,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
 
   const handleInstall = async () => {
     if (!session) {
+      toast.error('Please sign in to install automations');
       setError('Please sign in to install automations');
       return;
     }
@@ -88,7 +107,9 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
     const shop = sessionStorage.getItem('shopify_shop');
 
     if (!shopifyToken || !shop) {
-      setError('Shopify connection not found. Please connect your store first.');
+      const errorMessage = 'Shopify connection not found. Please connect your store first.';
+      toast.error(errorMessage);
+      setError(errorMessage);
       setStep('connect');
       return;
     }
@@ -96,6 +117,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
     setStep('installing');
     setLoading(true);
     setError(null);
+    toast.loading('Installing automation...', { id: 'install-automation' });
 
     try {
       const response = await fetch('/api/automations/install', {
@@ -115,6 +137,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       const data = await response.json();
 
       if (data.error) {
+        toast.error(data.error, { id: 'install-automation' });
         setError(data.error);
         setStep('configure');
         return;
@@ -123,9 +146,12 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       // Success - clear sessionStorage and redirect to dashboard
       sessionStorage.removeItem('shopify_token');
       sessionStorage.removeItem('shopify_shop');
+      toast.success(`${automation.name} installed successfully!`, { id: 'install-automation' });
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Failed to install automation');
+      const errorMessage = err.message || 'Failed to install automation';
+      toast.error(errorMessage, { id: 'install-automation' });
+      setError(errorMessage);
       setStep('configure');
     } finally {
       setLoading(false);

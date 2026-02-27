@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
           slug
         )
       `)
-      .eq('status', 'active')
+      .in('status', ['active', 'trial'])
       .lte('next_run_at', now)
       .not('next_run_at', 'is', null);
 
@@ -124,4 +124,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return GET(request);
 }
+
+
 

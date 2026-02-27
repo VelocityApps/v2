@@ -29,11 +29,12 @@ export class PinterestStockSync extends BaseAutomation {
     const shopify = await this.getShopifyClient(userAutomation as UserAutomation);
     const webhookAddress = `${process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev'}/api/webhooks/shopify`;
 
-    // Register webhook for products/update
-    const webhook = await shopify.createWebhook('products/update', webhookAddress);
-    
-    await this.registerWebhook(userAutomationId, 'products/update', webhook.id);
-    await this.log(userAutomationId, 'success', 'Automation installed - webhook registered');
+    // Register webhooks: products/update and inventory_levels/update (quantity changes in admin trigger the latter)
+    const webhookProduct = await shopify.createWebhook('products/update', webhookAddress);
+    const webhookInventory = await shopify.createWebhook('inventory_levels/update', webhookAddress);
+    await this.registerWebhook(userAutomationId, 'products/update', webhookProduct.id);
+    await this.registerWebhook(userAutomationId, 'inventory_levels/update', webhookInventory.id);
+    await this.log(userAutomationId, 'success', 'Automation installed - webhooks registered');
   }
 
   /**
@@ -67,95 +68,108 @@ export class PinterestStockSync extends BaseAutomation {
   }
 
   /**
-   * Handle Shopify webhook events
+   * Handle Shopify webhook events (products/update and inventory_levels/update)
    */
   async handleWebhook(
     topic: string,
     payload: ShopifyWebhookPayload,
     userAutomation: UserAutomation
   ): Promise<void> {
-    if (topic !== 'products/update') {
+    if (topic === 'products/update') {
+      await this.handleProductUpdate(payload, userAutomation);
       return;
     }
+    if (topic === 'inventory_levels/update') {
+      await this.handleInventoryUpdate(payload, userAutomation);
+      return;
+    }
+  }
 
+  private async handleProductUpdate(
+    payload: ShopifyWebhookPayload,
+    userAutomation: UserAutomation
+  ): Promise<void> {
     try {
-      const shopify = await this.getShopifyClient(userAutomation);
       const productId = payload.id?.toString() || payload.id;
-
       if (!productId) {
-        await this.log(
-          userAutomation.id,
-          'warning',
-          'Product ID not found in webhook payload',
-          { payload }
-        );
+        await this.log(userAutomation.id, 'warning', 'Product ID not found in webhook payload', { payload });
         return;
       }
-
-      // Get full product details
+      const shopify = await this.getShopifyClient(userAutomation);
       const product = await shopify.getProduct(productId);
-      
-      // Check if product is out of stock
-      const isOutOfStock = product.variants.every(
-        (v) => v.inventory_quantity === 0
-      );
+      await this.maybePinIfOutOfStock(product, userAutomation);
+    } catch (error: any) {
+      await this.log(userAutomation.id, 'error', `Product update webhook failed: ${error.message}`, { error: error.toString(), payload });
+      await this.updateStatus(userAutomation.id, 'error', error.message);
+    }
+  }
 
+  private async handleInventoryUpdate(
+    payload: ShopifyWebhookPayload & { inventory_item_id?: string; available?: number | null },
+    userAutomation: UserAutomation
+  ): Promise<void> {
+    try {
+      const available = payload.available ?? (payload as any).available;
+      if (available != null && available !== 0) return;
+      const inventoryItemId = payload.inventory_item_id ?? (payload as any).inventory_item_id;
+      if (!inventoryItemId) {
+        await this.log(userAutomation.id, 'warning', 'inventory_item_id not found in webhook payload', { payload });
+        return;
+      }
+      const shopify = await this.getShopifyClient(userAutomation);
+      const productId = await shopify.getProductIdByInventoryItemId(inventoryItemId);
+      if (!productId) {
+        await this.log(userAutomation.id, 'warning', 'Could not resolve product from inventory_item_id', { inventoryItemId });
+        return;
+      }
+      const product = await shopify.getProduct(productId);
+      await this.maybePinIfOutOfStock(product, userAutomation);
+    } catch (error: any) {
+      await this.log(userAutomation.id, 'error', `Inventory update webhook failed: ${error.message}`, { error: error.toString(), payload });
+      await this.updateStatus(userAutomation.id, 'error', error.message);
+    }
+  }
+
+  private async maybePinIfOutOfStock(
+    product: ShopifyProduct,
+    userAutomation: UserAutomation
+  ): Promise<void> {
+    try {
+      const isOutOfStock = product.variants.every((v) => v.inventory_quantity === 0);
       const config = userAutomation.config || {};
       const boardName = config.board_name || 'Out of Stock';
       const pinTemplate = config.pin_template || '{{product_title}} - Currently out of stock! Join our waitlist.';
 
       if (isOutOfStock) {
-        // Product is out of stock - create pin
         const productUrl = `${userAutomation.shopify_store_url}/products/${product.handle}?waitlist=true`;
         const imageUrl = product.images?.[0]?.src || '';
-
         if (!imageUrl) {
-          await this.log(
-            userAutomation.id,
-            'warning',
-            `Product ${product.title} has no image, skipping pin creation`
-          );
+          await this.log(userAutomation.id, 'warning', `Product ${product.title} has no image, skipping pin creation`);
           return;
         }
-
         const description = this.renderTemplate(pinTemplate, {
           product_title: product.title,
           product_handle: product.handle,
           product_price: product.variants[0]?.price || 'N/A',
         });
-
-        await createPinterestPin({
-          board: boardName,
-          title: product.title,
-          description,
-          image_url: imageUrl,
-          link: productUrl,
-        });
-
-        await this.log(
-          userAutomation.id,
-          'success',
-          `Pinned ${product.title} to Pinterest board "${boardName}"`
+        const pinterestToken = (config.pinterest_access_token || '').trim() || undefined;
+        await createPinterestPin(
+          {
+            board: boardName,
+            title: product.title,
+            description,
+            image_url: imageUrl,
+            link: productUrl,
+          },
+          pinterestToken
         );
+        await this.log(userAutomation.id, 'success', `Pinned ${product.title} to Pinterest board "${boardName}"`);
       } else {
-        // Product is back in stock - update or remove pin
-        // Note: We'd need to track pin IDs to update them
-        // For now, we'll just log that it's back in stock
-        await this.log(
-          userAutomation.id,
-          'info',
-          `${product.title} is back in stock`
-        );
+        await this.log(userAutomation.id, 'info', `${product.title} is back in stock`);
       }
-
       await this.updateLastRun(userAutomation.id);
     } catch (error: any) {
-      await this.log(
-        userAutomation.id,
-        'error',
-        `Failed to process product update: ${error.message}`,
-        { error: error.toString(), payload }
-      );
+      await this.log(userAutomation.id, 'error', `Failed to process: ${error.message}`, { error: error.toString() });
       await this.updateStatus(userAutomation.id, 'error', error.message);
     }
   }
@@ -164,4 +178,6 @@ export class PinterestStockSync extends BaseAutomation {
 // Register the automation
 import { registerAutomation } from '../base';
 registerAutomation(PinterestStockSync);
+
+
 

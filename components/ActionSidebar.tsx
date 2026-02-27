@@ -114,9 +114,23 @@ export default function ActionSidebar({
       >
         {/* Logo Area */}
         <div className="p-3 border-b border-[#2a2a2a]">
-          <div className="w-10 h-10 mx-auto rounded-xl bg-gradient-to-br from-[#0a2463] to-[#3498db] flex items-center justify-center shadow-lg shadow-[#0066cc]/20">
-            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 4 L12 20 L12 14 L8 14 L12 4 L16 14 L12 14 L12 20 L20 4 L16 4 L12 12 L8 4 Z"/>
+          <div className="w-10 h-10 mx-auto flex items-center justify-center">
+            <svg className="w-full h-full" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="sidebarRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+                  <stop offset="0%" stopColor="#00bcd4" stopOpacity={1} />
+                  <stop offset="50%" stopColor="#00ff88" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#32cd32" stopOpacity={1} />
+                </linearGradient>
+              </defs>
+              {/* Outer gradient ring */}
+              <circle cx="80" cy="80" r="56" fill="url(#sidebarRingGradient)"/>
+              {/* Inner dark teal circle */}
+              <circle cx="80" cy="80" r="46" fill="#0a0a0a"/>
+              {/* Upper V shape (orange, pointing down) */}
+              <path d="M 56 48 L 80 28 L 104 48 Z" fill="#ff6600"/>
+              {/* Lower V shape (teal, pointing up) */}
+              <path d="M 56 112 L 80 132 L 104 112 Z" fill="#40e0d0"/>
             </svg>
           </div>
         </div>

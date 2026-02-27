@@ -1,27 +1,28 @@
-<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Stylized V with three parallel lines on left -->
-  <g>
-    <!-- Left arm of V - three parallel vertical lines (striped) -->
-    <line x1="8" y1="5" x2="8" y2="40" stroke="#0a2463" stroke-width="3" stroke-linecap="round"/>
-    <line x1="12" y1="5" x2="12" y2="40" stroke="#0a2463" stroke-width="3" stroke-linecap="round"/>
-    <line x1="16" y1="5" x2="16" y2="40" stroke="#0a2463" stroke-width="3" stroke-linecap="round"/>
-    
-    <!-- Right arm of V integrated with upward arrow -->
-    <!-- Arrow shaft (diagonal, bottom-center to top-right) -->
-    <path d="M20 40 L32 8" stroke="#0066cc" stroke-width="3" stroke-linecap="round" fill="none"/>
-    
-    <!-- Arrowhead (triangular tip) -->
-    <path d="M32 8 L28 12 L30 10 L32 8" fill="#3498db"/>
-    <polygon points="32,8 28,12 36,10" fill="#3498db"/>
-    
-    <!-- Speed lines (three horizontal tapering lines) -->
-    <line x1="28" y1="20" x2="38" y2="20" stroke="#0066cc" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
-    <line x1="30" y1="25" x2="36" y2="25" stroke="#0066cc" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-    <line x1="32" y1="30" x2="35" y2="30" stroke="#0066cc" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-  </g>
+<svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer gradient ring -->
+  <defs>
+    <linearGradient id="outerRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#00bcd4" stop-opacity="1" />
+      <stop offset="50%" stop-color="#00ff88" stop-opacity="1" />
+      <stop offset="100%" stop-color="#32cd32" stop-opacity="1" />
+    </linearGradient>
+  </defs>
   
-  <!-- Text: VelocityApps -->
-  <text x="50" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600">
-    <tspan fill="#0a2463">Velocity</tspan><tspan fill="#3498db">Apps</tspan>
-  </text>
+  <!-- Outer gradient ring circle -->
+  <circle cx="100" cy="90" r="70" fill="url(#outerRingGradient)"/>
+  
+  <!-- Inner dark teal circle -->
+  <circle cx="100" cy="90" r="58" fill="#0a0a0a"/>
+  
+  <!-- Upper V shape (orange, pointing down) -->
+  <path d="M 70 60 L 100 35 L 130 60 Z" fill="#ff6600"/>
+  
+  <!-- Lower V shape (teal, pointing up) -->
+  <path d="M 70 120 L 100 145 L 130 120 Z" fill="#40e0d0"/>
+  
+  <!-- Text: VELOCITY -->
+  <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">VELOCITY</text>
+  
+  <!-- Text: APPS -->
+  <text x="100" y="205" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">APPS</text>
 </svg>

@@ -154,26 +154,26 @@ export default function ShareCardGenerator({
                 
                 {/* Logo watermark (background) */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-5">
-                  <svg className="w-full h-full" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Stylized V with three parallel lines on left */}
-                    <g>
-                      {/* Left arm of V - three parallel vertical lines (striped) */}
-                      <line x1="8" y1="5" x2="8" y2="40" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-                      <line x1="12" y1="5" x2="12" y2="40" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-                      <line x1="16" y1="5" x2="16" y2="40" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-                      
-                      {/* Right arm of V integrated with upward arrow */}
-                      <path d="M20 40 L32 8" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none"/>
-                      <polygon points="32,8 28,12 36,10" fill="white"/>
-                      
-                      {/* Speed lines */}
-                      <line x1="28" y1="20" x2="38" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
-                      <line x1="30" y1="25" x2="36" y2="25" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
-                      <line x1="32" y1="30" x2="35" y2="30" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
-                    </g>
-                    <text x="50" y="38" fontFamily="system-ui" fontSize="24" fontWeight="600" fill="white">
-                      <tspan>Velocity</tspan><tspan>Apps</tspan>
-                    </text>
+                  <svg className="w-full h-full" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="watermarkRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" stopColor="#00bcd4" stopOpacity={1} />
+                        <stop offset="50%" stopColor="#00ff88" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#32cd32" stopOpacity={1} />
+                      </linearGradient>
+                    </defs>
+                    {/* Outer gradient ring */}
+                    <circle cx="100" cy="90" r="70" fill="url(#watermarkRingGradient)"/>
+                    {/* Inner dark teal circle */}
+                    <circle cx="100" cy="90" r="58" fill="#0a0a0a"/>
+                    {/* Upper V shape (orange, pointing down) */}
+                    <path d="M 70 60 L 100 35 L 130 60 Z" fill="#ff6600"/>
+                    {/* Lower V shape (teal, pointing up) */}
+                    <path d="M 70 120 L 100 145 L 130 120 Z" fill="#40e0d0"/>
+                    {/* Text: VELOCITY */}
+                    <text x="100" y="180" fontFamily="Arial, sans-serif" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white">VELOCITY</text>
+                    {/* Text: APPS */}
+                    <text x="100" y="205" fontFamily="Arial, sans-serif" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white">APPS</text>
                   </svg>
                 </div>
 
@@ -181,26 +181,22 @@ export default function ShareCardGenerator({
                 <div className="relative h-full flex flex-col p-8">
                   {/* Logo in corner */}
                   <div className="absolute top-6 left-6">
-                    <svg className="w-20 h-6" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      {/* Stylized V with three parallel lines on left */}
-                      <g>
-                        {/* Left arm of V - three parallel vertical lines (striped) */}
-                        <line x1="8" y1="5" x2="8" y2="40" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-                        <line x1="12" y1="5" x2="12" y2="40" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-                        <line x1="16" y1="5" x2="16" y2="40" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-                        
-                        {/* Right arm of V integrated with upward arrow */}
-                        <path d="M20 40 L32 8" stroke="white" strokeWidth="3" strokeLinecap="round" fill="none"/>
-                        <polygon points="32,8 28,12 36,10" fill="white"/>
-                        
-                        {/* Speed lines */}
-                        <line x1="28" y1="20" x2="38" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
-                        <line x1="30" y1="25" x2="36" y2="25" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
-                        <line x1="32" y1="30" x2="35" y2="30" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
-                      </g>
-                      <text x="50" y="38" fontFamily="system-ui" fontSize="24" fontWeight="600" fill="white">
-                        <tspan>Velocity</tspan><tspan fill="#3498db">Apps</tspan>
-                      </text>
+                    <svg className="w-16 h-16" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="cornerRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+                          <stop offset="0%" stopColor="#00bcd4" stopOpacity={1} />
+                          <stop offset="50%" stopColor="#00ff88" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#32cd32" stopOpacity={1} />
+                        </linearGradient>
+                      </defs>
+                      {/* Outer gradient ring */}
+                      <circle cx="80" cy="80" r="56" fill="url(#cornerRingGradient)"/>
+                      {/* Inner dark teal circle */}
+                      <circle cx="80" cy="80" r="46" fill="#0a0a0a"/>
+                      {/* Upper V shape (orange, pointing down) */}
+                      <path d="M 56 48 L 80 28 L 104 48 Z" fill="#ff6600"/>
+                      {/* Lower V shape (teal, pointing up) */}
+                      <path d="M 56 112 L 80 132 L 104 112 Z" fill="#40e0d0"/>
                     </svg>
                   </div>
 

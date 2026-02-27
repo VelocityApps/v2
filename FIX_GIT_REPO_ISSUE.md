@@ -64,3 +64,5 @@ After fixing, verify:
 - VS Code Source Control shows all your files
 - You can stage, commit, and push
 
+
+

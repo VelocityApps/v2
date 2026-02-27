@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import AutomationCard from '@/components/automations/AutomationCard';
 import Link from 'next/link';
 
@@ -49,6 +50,8 @@ export default function DashboardPage() {
   async function handlePause(id: string) {
     if (!session) return;
 
+    toast.loading('Pausing automation...', { id: `pause-${id}` });
+
     try {
       const response = await fetch(`/api/automations/${id}/pause`, {
         method: 'PATCH',
@@ -58,15 +61,22 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
+        toast.success('Automation paused', { id: `pause-${id}` });
         fetchUserAutomations();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to pause automation', { id: `pause-${id}` });
       }
     } catch (error) {
       console.error('Error pausing automation:', error);
+      toast.error('Failed to pause automation', { id: `pause-${id}` });
     }
   }
 
   async function handleResume(id: string) {
     if (!session) return;
+
+    toast.loading('Resuming automation...', { id: `resume-${id}` });
 
     try {
       const response = await fetch(`/api/automations/${id}/resume`, {
@@ -77,16 +87,23 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
+        toast.success('Automation resumed', { id: `resume-${id}` });
         fetchUserAutomations();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to resume automation', { id: `resume-${id}` });
       }
     } catch (error) {
       console.error('Error resuming automation:', error);
+      toast.error('Failed to resume automation', { id: `resume-${id}` });
     }
   }
 
   async function handleRemove(id: string) {
     if (!session) return;
     if (!confirm('Are you sure you want to remove this automation?')) return;
+
+    toast.loading('Removing automation...', { id: `remove-${id}` });
 
     try {
       const response = await fetch(`/api/automations/${id}/remove`, {
@@ -97,10 +114,15 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
+        toast.success('Automation removed', { id: `remove-${id}` });
         fetchUserAutomations();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to remove automation', { id: `remove-${id}` });
       }
     } catch (error) {
       console.error('Error removing automation:', error);
+      toast.error('Failed to remove automation', { id: `remove-${id}` });
     }
   }
 
@@ -165,6 +187,7 @@ export default function DashboardPage() {
                   }}
                   variant="installed"
                   status={userAutomation.status}
+                  trialEndsAt={userAutomation.trial_ends_at}
                   onConfigure={() => router.push(`/dashboard/automations/${userAutomation.id}`)}
                   onPause={() => handlePause(userAutomation.id)}
                   onResume={() => handleResume(userAutomation.id)}
@@ -178,4 +201,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
 

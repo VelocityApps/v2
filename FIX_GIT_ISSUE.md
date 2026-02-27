@@ -67,3 +67,5 @@ Tell me:
 2. What folder is VS Code open in? (check title bar)
 3. Do you see "Initialize Repository" button?
 
+
+

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateShopifyAuthUrl } from '@/lib/shopify/oauth';
+import { validateShopifyStoreUrl } from '@/lib/validation';
 
 /**
  * GET /api/auth/shopify/authorize
@@ -8,7 +9,12 @@ import { generateShopifyAuthUrl } from '@/lib/shopify/oauth';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const shop = searchParams.get('shop');
+    let shop = searchParams.get('shop')?.trim() ?? '';
+
+    // Normalize: strip protocol and path so we only have host (e.g. store.myshopify.com)
+    if (shop) {
+      shop = shop.replace(/^https?:\/\//i, '').toLowerCase().split('/')[0];
+    }
 
     if (!shop) {
       return NextResponse.json(
@@ -17,11 +23,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate shop URL format
+    if (!validateShopifyStoreUrl(shop)) {
+      return NextResponse.json(
+        { error: 'Invalid Shopify store URL format' },
+        { status: 400 }
+      );
+    }
+
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/shopify/callback`;
-    
+    const installSlug = searchParams.get('install')?.trim() || '';
+    const crypto = await import('crypto');
+    const state = installSlug
+      ? `${crypto.randomBytes(16).toString('hex')}:${installSlug}`
+      : undefined;
+
     const authUrl = generateShopifyAuthUrl({
       shop,
       redirectUri,
+      state,
     });
 
     return NextResponse.json({ authUrl });
@@ -33,4 +53,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
 

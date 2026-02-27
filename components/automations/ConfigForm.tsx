@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ConfigSchema {
   [key: string]: {
-    type: 'text' | 'number' | 'select' | 'textarea' | 'json';
+    type: 'text' | 'number' | 'select' | 'textarea' | 'json' | 'password';
     label: string;
     default?: any;
     required?: boolean;
@@ -19,22 +19,39 @@ interface ConfigFormProps {
 }
 
 export default function ConfigForm({ configSchema, initialConfig, onChange }: ConfigFormProps) {
-  const [config, setConfig] = useState<Record<string, any>>(initialConfig || {});
-
-  useEffect(() => {
-    // Initialize with defaults
+  const [config, setConfig] = useState<Record<string, any>>(() => {
     const defaultConfig: Record<string, any> = {};
-    Object.entries(configSchema).forEach(([key, schema]) => {
-      if (schema.default !== undefined && !(key in config)) {
-        defaultConfig[key] = schema.default;
-      }
+    const schema = configSchema || {};
+    Object.entries(schema).forEach(([key, s]) => {
+      if (s.default !== undefined) defaultConfig[key] = s.default;
     });
-    setConfig({ ...defaultConfig, ...initialConfig });
-  }, [configSchema, initialConfig]);
+    return { ...defaultConfig, ...(initialConfig || {}) };
+  });
 
+  const lastInitialRef = useRef<string>('');
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  // Sync from props only when schema or initialConfig *value* changes (not reference)
+  const initialConfigKey = typeof initialConfig === 'object' && initialConfig !== null
+    ? JSON.stringify(initialConfig)
+    : '';
   useEffect(() => {
-    onChange(config);
-  }, [config, onChange]);
+    const defaultConfig: Record<string, any> = {};
+    Object.entries(configSchema || {}).forEach(([key, schema]) => {
+      if (schema.default !== undefined) defaultConfig[key] = schema.default;
+    });
+    const merged = { ...defaultConfig, ...(initialConfig || {}) };
+    const key = JSON.stringify(merged);
+    if (key === lastInitialRef.current) return;
+    lastInitialRef.current = key;
+    setConfig(merged);
+  }, [configSchema, initialConfigKey]);
+
+  // Notify parent when config changes; use ref for onChange so we don't retrigger on parent re-render
+  useEffect(() => {
+    onChangeRef.current(config);
+  }, [config]);
 
   const handleChange = (key: string, value: any) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -49,14 +66,15 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
             {schema.required && <span className="text-red-400 ml-1">*</span>}
           </label>
           
-          {schema.type === 'text' && (
+          {(schema.type === 'text' || schema.type === 'password') && (
             <input
-              type="text"
+              type={schema.type === 'password' ? 'password' : 'text'}
               value={config[key] || ''}
               onChange={(e) => handleChange(key, e.target.value)}
               required={schema.required}
               className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors"
-              placeholder={schema.default}
+              placeholder={schema.type === 'password' ? 'Paste token from developers.pinterest.com' : schema.default}
+              autoComplete={schema.type === 'password' ? 'off' : undefined}
             />
           )}
 
@@ -117,4 +135,6 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
     </div>
   );
 }
+
+
 

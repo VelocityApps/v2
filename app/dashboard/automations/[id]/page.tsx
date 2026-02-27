@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import ConfigForm from '@/components/automations/ConfigForm';
 import Link from 'next/link';
 
@@ -91,9 +92,10 @@ export default function AutomationManagementPage() {
 
       if (data.error) {
         setError(data.error);
+        toast.error(data.error);
       } else {
         setUserAutomation(data.userAutomation);
-        alert('Configuration saved successfully!');
+        toast.success('Configuration saved successfully!');
       }
     } catch (error: any) {
       setError(error.message);
@@ -142,12 +144,34 @@ export default function AutomationManagementPage() {
             </div>
             <div className={`ml-auto px-3 py-1 rounded-full text-sm font-medium ${
               userAutomation.status === 'active' ? 'bg-green-500/20 text-green-300' :
+              userAutomation.status === 'trial' ? 'bg-blue-500/20 text-blue-300' :
               userAutomation.status === 'paused' ? 'bg-yellow-500/20 text-yellow-300' :
               'bg-red-500/20 text-red-300'
             }`}>
-              {userAutomation.status}
+              {userAutomation.status === 'trial' ? 'Trial' : userAutomation.status}
             </div>
           </div>
+
+          {userAutomation.status === 'trial' && userAutomation.trial_ends_at && (
+            <div className="mb-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <p className="text-blue-300 font-medium">
+                Free trial ends {new Date(userAutomation.trial_ends_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                {(() => {
+                  const end = new Date(userAutomation.trial_ends_at).getTime();
+                  const days = Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000));
+                  if (days <= 2) return ` — ${days} day${days !== 1 ? 's' : ''} left`;
+                  return ` — ${days} days left`;
+                })()}
+              </p>
+              <p className="text-gray-400 text-sm mt-1">Then £{automation?.price_monthly}/month. Add a payment method to continue without interruption.</p>
+              <Link
+                href="/dashboard/settings"
+                className="inline-block mt-3 px-4 py-2 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg text-sm font-medium"
+              >
+                Add Payment Method
+              </Link>
+            </div>
+          )}
 
           {userAutomation.error_message && (
             <div className="mb-4 p-3 rounded-lg bg-red-900/30 text-red-300 border border-red-500/50 text-sm">
@@ -224,4 +248,6 @@ export default function AutomationManagementPage() {
     </div>
   );
 }
+
+
 

@@ -96,3 +96,5 @@ Add to `vercel.json`:
 - Logo issue needs investigation (SVG might need different approach)
 - GitHub push can be done via GUI tools if command line isn't working
 
+
+

@@ -246,3 +246,5 @@ Once setup is complete:
 
 Once you've completed these steps, your Shopify automation marketplace is ready to use! 🎉
 
+
+

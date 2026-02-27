@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import InstallModal from './InstallModal';
+import AutomationInfoModal from './AutomationInfoModal';
 
 export interface Automation {
   id: string;
@@ -16,6 +17,12 @@ export interface Automation {
   config_schema?: Record<string, any>;
 }
 
+interface AutomationMetrics {
+  successRate?: number;
+  totalRuns?: number;
+  conversionRate?: number;
+}
+
 interface AutomationCardProps {
   automation: Automation;
   variant?: 'marketplace' | 'installed';
@@ -23,7 +30,19 @@ interface AutomationCardProps {
   onPause?: () => void;
   onResume?: () => void;
   onRemove?: () => void;
-  status?: 'active' | 'paused' | 'error';
+  status?: 'active' | 'paused' | 'error' | 'trial';
+  trialEndsAt?: string | null;
+  /** When true (marketplace), show "£X/month, no trial available" instead of trial badge */
+  trialAlreadyUsed?: boolean;
+  metrics?: AutomationMetrics;
+}
+
+function daysLeft(endsAt: string | null | undefined): number | null {
+  if (!endsAt) return null;
+  const end = new Date(endsAt).getTime();
+  const now = Date.now();
+  const days = Math.ceil((end - now) / (24 * 60 * 60 * 1000));
+  return days > 0 ? days : 0;
 }
 
 export default function AutomationCard({
@@ -34,8 +53,12 @@ export default function AutomationCard({
   onResume,
   onRemove,
   status,
+  trialEndsAt,
+  trialAlreadyUsed,
+  metrics,
 }: AutomationCardProps) {
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   return (
     <>
@@ -51,10 +74,11 @@ export default function AutomationCard({
           {variant === 'installed' && status && (
             <div className={`px-3 py-1 rounded-full text-xs font-medium ${
               status === 'active' ? 'bg-green-500/20 text-green-300' :
+              status === 'trial' ? 'bg-blue-500/20 text-blue-300' :
               status === 'paused' ? 'bg-yellow-500/20 text-yellow-300' :
               'bg-red-500/20 text-red-300'
             }`}>
-              {status === 'active' ? 'Active' : status === 'paused' ? 'Paused' : 'Error'}
+              {status === 'active' ? 'Active' : status === 'trial' ? 'Trial' : status === 'paused' ? 'Paused' : 'Error'}
             </div>
           )}
         </div>
@@ -62,25 +86,67 @@ export default function AutomationCard({
         <p className="text-gray-300 mb-4 line-clamp-2">{automation.description}</p>
 
         {variant === 'marketplace' && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-              <span>💰</span>
-              <span className="font-semibold text-white">£{automation.price_monthly}/month</span>
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {trialAlreadyUsed ? (
+                <span className="text-sm text-gray-400">£{automation.price_monthly}/month — no trial available</span>
+              ) : (
+                <>
+                  <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-medium">7-Day Free Trial</span>
+                  <span className="text-sm text-gray-400">then £{automation.price_monthly}/month</span>
+                </>
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <span>👥</span>
               <span>{automation.user_count} stores using this</span>
             </div>
+            {metrics && metrics.successRate !== undefined && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-green-400">✓</span>
+                <span className="text-gray-300">
+                  {metrics.successRate.toFixed(1)}% success rate
+                </span>
+              </div>
+            )}
+            {metrics && metrics.conversionRate !== undefined && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-blue-400">📈</span>
+                <span className="text-gray-300">
+                  {metrics.conversionRate.toFixed(1)}% conversion rate
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {variant === 'installed' && status === 'trial' && trialEndsAt && (
+          <div className="mb-4 flex items-center gap-2 text-sm text-blue-300">
+            <span>⏱</span>
+            <span>
+              {(() => {
+                const d = daysLeft(trialEndsAt);
+                return d !== null ? `${d} day${d !== 1 ? 's' : ''} left in trial` : 'Trial ended';
+              })()}
+            </span>
           </div>
         )}
 
         {variant === 'marketplace' ? (
-          <button
-            onClick={() => setShowInstallModal(true)}
-            className="w-full px-4 py-2 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors"
-          >
-            Add to Store
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowInfoModal(true)}
+              className="flex-1 px-4 py-2 bg-[#333] hover:bg-[#444] text-white rounded-lg font-medium transition-colors text-sm"
+            >
+              More Info
+            </button>
+            <button
+              onClick={() => setShowInstallModal(true)}
+              className="flex-1 px-4 py-2 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors"
+            >
+              Add to Store
+            </button>
+          </div>
         ) : (
           <div className="flex gap-2">
             <button
@@ -119,6 +185,18 @@ export default function AutomationCard({
           automation={automation}
           isOpen={showInstallModal}
           onClose={() => setShowInstallModal(false)}
+        />
+      )}
+
+      {showInfoModal && (
+        <AutomationInfoModal
+          automation={automation}
+          isOpen={showInfoModal}
+          onClose={() => setShowInfoModal(false)}
+          onInstall={() => {
+            setShowInfoModal(false);
+            setShowInstallModal(true);
+          }}
         />
       )}
     </>

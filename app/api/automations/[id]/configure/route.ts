@@ -35,7 +35,7 @@ export async function PATCH(
     // Verify ownership
     const { data: userAutomation, error: fetchError } = await supabaseAdmin
       .from('user_automations')
-      .select('*')
+      .select('*, automation:automations(slug)')
       .eq('id', id)
       .eq('user_id', user.id)
       .single();
@@ -53,10 +53,21 @@ export async function PATCH(
       ...config,
     };
 
+    const updatePayload: Record<string, unknown> = { config: updatedConfig };
+
+    // Low Stock Alerts: when switching to daily-digest, set next_run_at so cron runs it
+    const slug = (userAutomation as any).automation?.slug;
+    if (slug === 'low-stock-alerts' && updatedConfig.frequency === 'daily-digest') {
+      const now = new Date();
+      let next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 8, 0, 0, 0));
+      if (next.getTime() <= now.getTime()) next.setUTCDate(next.getUTCDate() + 1);
+      updatePayload.next_run_at = next.toISOString();
+    }
+
     // Update configuration
     const { data, error } = await supabaseAdmin
       .from('user_automations')
-      .update({ config: updatedConfig })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();
@@ -74,4 +85,6 @@ export async function PATCH(
     );
   }
 }
+
+
 

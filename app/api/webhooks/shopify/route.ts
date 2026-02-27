@@ -35,15 +35,17 @@ export async function POST(request: NextRequest) {
 
     const payload = JSON.parse(body);
 
-    // Find all active automations for this shop that listen to this topic
-    const { data: userAutomations, error } = await supabaseAdmin
+    const shopNormalized = shop.replace(/^https?:\/\//i, '').toLowerCase().split('/')[0];
+
+    // Find all active automations for this shop that listen to this topic.
+    // Match shopify_store_url with or without protocol (Shopify sends host only).
+    const { data: allForTopic, error } = await supabaseAdmin
       .from('user_automations')
       .select(`
         *,
         automation:automations(*)
       `)
-      .eq('shopify_store_url', shop)
-      .eq('status', 'active');
+      .in('status', ['active', 'trial']);
 
     if (error) {
       console.error('Error fetching user automations:', error);
@@ -53,8 +55,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!userAutomations || userAutomations.length === 0) {
-      // No automations for this shop, return success anyway
+    const userAutomations = (allForTopic || []).filter((ua: any) => {
+      const stored = (ua.shopify_store_url || '').replace(/^https?:\/\//i, '').toLowerCase().split('/')[0];
+      return stored === shopNormalized || ua.shopify_store_url === shop;
+    });
+
+    if (userAutomations.length === 0) {
       return NextResponse.json({ success: true });
     }
 
@@ -107,4 +113,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   }
 }
+
+
 

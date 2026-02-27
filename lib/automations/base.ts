@@ -13,7 +13,7 @@ export interface UserAutomation {
   shopify_store_url: string;
   shopify_access_token_encrypted: string | null;
   config: Record<string, any>;
-  status: 'active' | 'paused' | 'error';
+  status: 'active' | 'paused' | 'error' | 'trial';
   last_run_at: string | null;
   next_run_at: string | null;
   error_message: string | null;
@@ -68,6 +68,21 @@ export abstract class BaseAutomation {
         message,
         metadata: metadata || {},
       });
+
+      // Track execution for monitoring (async, don't block)
+      if (type === 'success' || type === 'error') {
+        import('@/lib/automation-monitoring').then(({ trackAutomationExecution }) => {
+          const executionTime = metadata?.execution_time_ms || 0;
+          // Get automation ID from metadata or user_automation
+          trackAutomationExecution(
+            userAutomationId,
+            metadata?.automationId || '',
+            type === 'success',
+            executionTime,
+            type === 'error' ? message : undefined
+          ).catch(err => console.error('[BaseAutomation] Failed to track execution:', err));
+        });
+      }
     } catch (error) {
       console.error(`[${this.name}] Failed to log:`, error);
     }
@@ -94,7 +109,7 @@ export abstract class BaseAutomation {
    */
   protected async updateStatus(
     userAutomationId: string,
-    status: 'active' | 'paused' | 'error',
+    status: 'active' | 'paused' | 'error' | 'trial',
     errorMessage?: string
   ): Promise<void> {
     await supabaseAdmin
@@ -203,4 +218,6 @@ export function getAutomation(slug: string): BaseAutomation | null {
   }
   return new AutomationClass();
 }
+
+
 

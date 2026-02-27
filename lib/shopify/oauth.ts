@@ -7,6 +7,7 @@ export interface ShopifyOAuthConfig {
   shop: string; // Store domain (e.g., 'mystore.myshopify.com')
   redirectUri: string;
   scopes?: string[];
+  state?: string; // Optional; if not set, a random state is generated
 }
 
 export interface ShopifyTokenResponse {
@@ -30,11 +31,13 @@ const DEFAULT_SCOPES = [
  * Generate Shopify OAuth authorization URL
  */
 export function generateShopifyAuthUrl(config: ShopifyOAuthConfig): string {
-  const shop = config.shop.replace(/\.myshopify\.com$/, '') + '.myshopify.com';
+  // Normalize: strip protocol and path so we only have host
+  const raw = config.shop.replace(/^https?:\/\//i, '').split('/')[0];
+  const shop = raw.replace(/\.myshopify\.com$/, '') + '.myshopify.com';
   const scopes = (config.scopes || DEFAULT_SCOPES).join(',');
   const clientId = process.env.SHOPIFY_CLIENT_ID!;
   const redirectUri = encodeURIComponent(config.redirectUri);
-  const state = generateState();
+  const state = config.state ?? generateState();
 
   if (!clientId) {
     throw new Error('SHOPIFY_CLIENT_ID environment variable is required');
@@ -120,22 +123,23 @@ export async function encryptToken(token: string): Promise<string> {
     throw new Error('ENCRYPTION_KEY or SUPABASE_SERVICE_ROLE_KEY is required for token encryption');
   }
 
-  // TODO: Implement proper encryption (AES-256-GCM)
-  // For now, return base64 encoded (this is NOT secure - must be replaced)
+  // Proper AES-256-GCM encryption
   const crypto = require('crypto');
-  const cipher = crypto.createCipheriv(
-    'aes-256-gcm',
-    crypto.scryptSync(encryptionKey, 'salt', 32),
-    crypto.randomBytes(16)
-  );
+  const algorithm = 'aes-256-gcm';
+  const key = crypto.scryptSync(encryptionKey, 'salt', 32);
+  const iv = crypto.randomBytes(16); // Initialization vector
+  
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
   
   let encrypted = cipher.update(token, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  const authTag = cipher.getAuthTag();
+  const authTag = cipher.getAuthTag(); // Authentication tag (not IV!)
   
+  // Store IV and authTag separately
   return JSON.stringify({
     encrypted,
-    iv: authTag.toString('hex'),
+    iv: iv.toString('hex'),
+    authTag: authTag.toString('hex'),
   });
 }
 
@@ -149,25 +153,31 @@ export async function decryptToken(encryptedToken: string): Promise<string> {
     throw new Error('ENCRYPTION_KEY or SUPABASE_SERVICE_ROLE_KEY is required for token decryption');
   }
 
-  // TODO: Implement proper decryption
-  // For now, handle base64 encoded tokens
+  // Proper AES-256-GCM decryption
   try {
     const data = JSON.parse(encryptedToken);
     const crypto = require('crypto');
-    const decipher = crypto.createDecipheriv(
-      'aes-256-gcm',
-      crypto.scryptSync(encryptionKey, 'salt', 32),
-      Buffer.from(data.iv, 'hex')
-    );
+    const algorithm = 'aes-256-gcm';
+    const key = crypto.scryptSync(encryptionKey, 'salt', 32);
+    const iv = Buffer.from(data.iv, 'hex');
+    const authTag = Buffer.from(data.authTag || data.iv, 'hex'); // Support old format
     
-    decipher.setAuthTag(Buffer.from(data.iv, 'hex'));
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    decipher.setAuthTag(authTag);
+    
     let decrypted = decipher.update(data.encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     
     return decrypted;
   } catch (error) {
-    // Fallback: assume it's plain text (for development)
-    return encryptedToken;
+    // Fallback: assume it's plain text (for development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[TokenDecrypt] Failed to decrypt, using plain text fallback');
+      return encryptedToken;
+    }
+    throw new Error('Failed to decrypt token');
   }
 }
+
+
 
