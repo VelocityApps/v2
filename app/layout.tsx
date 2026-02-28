@@ -41,21 +41,14 @@ export const metadata: Metadata = {
     title: 'VelocityApps – Shopify Automation Marketplace',
     description:
       'Browse 20+ pre-built automations for your Shopify store. Zero code required.',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'VelocityApps – Shopify Automation Marketplace',
-      },
-    ],
+    // og:image is auto-generated from app/opengraph-image.tsx
   },
   twitter: {
     card: 'summary_large_image',
     title: 'VelocityApps – Shopify Automation Marketplace',
     description:
       'Browse 20+ pre-built automations for your Shopify store. Zero code required.',
-    images: ['/og-image.png'],
+    // twitter:image falls back to og:image from opengraph-image.tsx
   },
   robots: {
     index: true,
