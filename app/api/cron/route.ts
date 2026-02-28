@@ -6,6 +6,7 @@
  * Or use external service like cron-job.org
  */
 
+import '@/lib/automations/load-all';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { getAutomation } from '@/lib/automations/base';

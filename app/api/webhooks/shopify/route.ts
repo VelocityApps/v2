@@ -1,3 +1,4 @@
+import '@/lib/automations/load-all';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/shopify/oauth';
 import { supabaseAdmin } from '@/lib/supabase-server';
