@@ -1,11 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
+import { verifyAdminPassword } from '@/lib/admin-auth';
 
 /**
  * GET /api/test/database
  * Test Supabase database connection
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!verifyAdminPassword(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // Check if Supabase is configured
     const supabaseConfigured = 
@@ -94,20 +99,13 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       message: 'Database connection successful',
-      testedTable: 'user_profiles',
       timestamp: new Date().toISOString(),
-      supabase: {
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
-        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      },
     });
   } catch (error: any) {
     console.error('[TestDatabase] Error:', error);
     return NextResponse.json({
       success: false,
-      error: error.message || 'Failed to test database connection',
-      details: error.stack,
+      error: 'Failed to test database connection',
     }, { status: 500 });
   }
 }

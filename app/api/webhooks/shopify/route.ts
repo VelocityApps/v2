@@ -22,16 +22,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify webhook signature
+    // Verify webhook signature — mandatory
     const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const isValid = verifyWebhookSignature(body, signature, webhookSecret);
-      if (!isValid) {
-        return NextResponse.json(
-          { error: 'Invalid signature' },
-          { status: 401 }
-        );
-      }
+    if (!webhookSecret) {
+      console.error('[ShopifyWebhook] SHOPIFY_WEBHOOK_SECRET is not configured');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+    const isValid = verifyWebhookSignature(body, signature, webhookSecret);
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     const payload = JSON.parse(body);

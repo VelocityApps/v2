@@ -19,7 +19,10 @@
       "Bash(npx vercel:*)",
       "Bash(rm:*)",
       "Bash(printf %s:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(nslookup:*)",
+      "Bash(printf:*)",
+      "Bash(npm audit:*)"
     ]
   }
 }

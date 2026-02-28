@@ -101,7 +101,14 @@ export function verifyWebhookSignature(
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(body, 'utf8');
   const calculatedSignature = hmac.digest('base64');
-  return calculatedSignature === signature;
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(calculatedSignature),
+      Buffer.from(signature),
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -115,27 +122,24 @@ function generateState(): string {
  * Encrypt Shopify access token for storage
  */
 export async function encryptToken(token: string): Promise<string> {
-  // For production, use a proper encryption library like crypto-js or @noble/cipher
-  // For now, we'll use a simple base64 encoding (NOT secure - replace with proper encryption)
-  const encryptionKey = process.env.ENCRYPTION_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  
+  const encryptionKey = process.env.ENCRYPTION_KEY;
+
   if (!encryptionKey) {
-    throw new Error('ENCRYPTION_KEY or SUPABASE_SERVICE_ROLE_KEY is required for token encryption');
+    throw new Error('ENCRYPTION_KEY is required for token encryption');
   }
 
-  // Proper AES-256-GCM encryption
   const crypto = require('crypto');
   const algorithm = 'aes-256-gcm';
-  const key = crypto.scryptSync(encryptionKey, 'salt', 32);
-  const iv = crypto.randomBytes(16); // Initialization vector
-  
+  // Key is stored as 64-char hex (32 bytes) — use directly, no KDF needed
+  const key = Buffer.from(encryptionKey, 'hex');
+  const iv = crypto.randomBytes(16);
+
   const cipher = crypto.createCipheriv(algorithm, key, iv);
-  
+
   let encrypted = cipher.update(token, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  const authTag = cipher.getAuthTag(); // Authentication tag (not IV!)
-  
-  // Store IV and authTag separately
+  const authTag = cipher.getAuthTag();
+
   return JSON.stringify({
     encrypted,
     iv: iv.toString('hex'),
@@ -147,27 +151,31 @@ export async function encryptToken(token: string): Promise<string> {
  * Decrypt Shopify access token
  */
 export async function decryptToken(encryptedToken: string): Promise<string> {
-  const encryptionKey = process.env.ENCRYPTION_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  
+  const encryptionKey = process.env.ENCRYPTION_KEY;
+
   if (!encryptionKey) {
-    throw new Error('ENCRYPTION_KEY or SUPABASE_SERVICE_ROLE_KEY is required for token decryption');
+    throw new Error('ENCRYPTION_KEY is required for token decryption');
   }
 
-  // Proper AES-256-GCM decryption
   try {
     const data = JSON.parse(encryptedToken);
+
+    if (!data.authTag) {
+      throw new Error('Token missing authentication tag — data is corrupted or tampered');
+    }
+
     const crypto = require('crypto');
     const algorithm = 'aes-256-gcm';
-    const key = crypto.scryptSync(encryptionKey, 'salt', 32);
+    const key = Buffer.from(encryptionKey, 'hex');
     const iv = Buffer.from(data.iv, 'hex');
-    const authTag = Buffer.from(data.authTag || data.iv, 'hex'); // Support old format
-    
+    const authTag = Buffer.from(data.authTag, 'hex');
+
     const decipher = crypto.createDecipheriv(algorithm, key, iv);
     decipher.setAuthTag(authTag);
-    
+
     let decrypted = decipher.update(data.encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   } catch (error) {
     throw new Error('Failed to decrypt token: data may be corrupted or the encryption key has changed');

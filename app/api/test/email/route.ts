@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendTestEmail } from '@/lib/email';
+import { verifyAdminPassword } from '@/lib/admin-auth';
 
 /**
  * POST /api/test/email
- * Test email sending functionality
+ * Test email sending functionality — admin only
  */
 export async function POST(request: NextRequest) {
+  if (!verifyAdminPassword(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { to } = body;
@@ -55,18 +60,12 @@ export async function POST(request: NextRequest) {
       message: 'Test email sent successfully',
       to,
       timestamp: new Date().toISOString(),
-      smtp: {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT || '587',
-        from: process.env.SMTP_FROM || 'not configured',
-      },
     });
   } catch (error: any) {
     console.error('[TestEmail] Error:', error);
     return NextResponse.json({
       success: false,
-      error: error.message || 'Failed to send test email',
-      details: error.stack,
+      error: 'Failed to send test email',
     }, { status: 500 });
   }
 }
@@ -75,21 +74,15 @@ export async function POST(request: NextRequest) {
  * GET /api/test/email
  * Check email configuration status
  */
-export async function GET() {
-  const smtpConfigured = 
-    process.env.SMTP_HOST &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS;
+export async function GET(request: NextRequest) {
+  if (!verifyAdminPassword(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-  return NextResponse.json({
-    configured: smtpConfigured,
-    environment: {
-      SMTP_HOST: !!process.env.SMTP_HOST,
-      SMTP_PORT: process.env.SMTP_PORT || 'not set',
-      SMTP_USER: !!process.env.SMTP_USER,
-      SMTP_PASS: !!process.env.SMTP_PASS,
-      SMTP_FROM: process.env.SMTP_FROM || 'not set',
-      SUPPORT_ALERT_EMAILS: !!process.env.SUPPORT_ALERT_EMAILS,
-    },
-  });
+  const smtpConfigured =
+    !!process.env.SMTP_HOST &&
+    !!process.env.SMTP_USER &&
+    !!process.env.SMTP_PASS;
+
+  return NextResponse.json({ configured: smtpConfigured });
 }

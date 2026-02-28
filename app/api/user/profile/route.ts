@@ -97,11 +97,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { credits_remaining } = await request.json();
+    // Only allow updating non-privileged profile fields
+    const body = await request.json();
+    const allowedFields: Record<string, unknown> = {};
+    if (body.display_name !== undefined) allowedFields.display_name = body.display_name;
+    if (body.avatar_url !== undefined) allowedFields.avatar_url = body.avatar_url;
+
+    if (Object.keys(allowedFields).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    }
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .update({ credits_remaining })
+      .update(allowedFields)
       .eq('user_id', user.id)
       .select()
       .single();

@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { sendTrialReminderEmail, sendTrialEndedEmail } from '@/lib/email/trial';
 
-const CRON_SECRET = process.env.CRON_SECRET || '';
+const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function GET(request: NextRequest) {
   return runTrialCron(request);
@@ -19,9 +19,13 @@ export async function POST(request: NextRequest) {
 
 async function runTrialCron(request: NextRequest) {
   try {
+    if (!CRON_SECRET) {
+      console.error('[TrialCron] CRON_SECRET environment variable is not set');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+
     const authHeader = request.headers.get('authorization');
-    const secret = request.nextUrl.searchParams.get('secret');
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && secret !== CRON_SECRET) {
+    if (authHeader !== `Bearer ${CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

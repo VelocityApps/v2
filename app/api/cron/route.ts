@@ -22,9 +22,8 @@ export async function GET(request: NextRequest) {
     }
 
     const authHeader = request.headers.get('authorization');
-    const cronSecret = request.nextUrl.searchParams.get('secret');
 
-    if (authHeader !== `Bearer ${CRON_SECRET}` && cronSecret !== CRON_SECRET) {
+    if (authHeader !== `Bearer ${CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

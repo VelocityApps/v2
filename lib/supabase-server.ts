@@ -146,17 +146,6 @@ function loadEnvVars() {
 
 const { supabaseUrl, supabaseServiceKey } = loadEnvVars();
 
-// Debug logging
-if (typeof window === 'undefined') {
-  console.log('[supabase-server] NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? `SET (${supabaseUrl.length} chars)` : 'MISSING');
-  console.log('[supabase-server] SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? `SET (${supabaseServiceKey.length} chars)` : 'MISSING');
-  if (!supabaseServiceKey) {
-    console.error('[supabase-server] ❌ SUPABASE_SERVICE_ROLE_KEY is MISSING!');
-    console.error('[supabase-server] Check .env.local file exists and contains: SUPABASE_SERVICE_ROLE_KEY=your_key_here');
-    console.error('[supabase-server] Current working directory:', process.cwd());
-    console.error('[supabase-server] Process env keys with SUPABASE:', Object.keys(process.env).filter(k => k.includes('SUPABASE')).join(', ') || 'NONE');
-  }
-}
 
 // Create client - loadEnvVars() should have already loaded the keys
 if (!supabaseUrl) {
