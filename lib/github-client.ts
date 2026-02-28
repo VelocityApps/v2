@@ -103,7 +103,7 @@ export async function createRepoAndPush(
  * Parse code into multiple files based on structure
  */
 function parseCodeIntoFiles(code: string): Array<{ path: string; content: string }> {
-  const files: Array<{ path: string; content: string } = [];
+  const files: Array<{ path: string; content: string }> = [];
 
   // Check if code contains file markers (e.g., "// File: filename.js")
   const fileMarkerRegex = /(?:^|\n)(?:\/\/|#)\s*File:\s*([^\n]+)\n/g;
