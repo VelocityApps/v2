@@ -6,6 +6,16 @@ import { supabase } from '@/lib/supabase';
 import AutomationCard from '@/components/automations/AutomationCard';
 import InstallModal from '@/components/automations/InstallModal';
 
+// Slugs with a full backend implementation — everything else is Coming Soon
+const LIVE_SLUGS = new Set([
+  'abandoned-cart-recovery',
+  'best-sellers-collection',
+  'low-stock-alerts',
+  'pinterest-stock-sync',
+  'review-request-automator',
+  'welcome-email-series',
+]);
+
 interface AutomationMetrics {
   automationId: string;
   successRate: number;
@@ -151,6 +161,7 @@ export default function MarketplacePage() {
                   variant="marketplace"
                   trialAlreadyUsed={trialedAutomationIds.has(automation.id)}
                   metrics={metrics[automation.id]}
+                  comingSoon={!LIVE_SLUGS.has(automation.slug)}
                 />
               ))}
             </div>

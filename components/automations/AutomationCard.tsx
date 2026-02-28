@@ -35,6 +35,8 @@ interface AutomationCardProps {
   /** When true (marketplace), show "£X/month, no trial available" instead of trial badge */
   trialAlreadyUsed?: boolean;
   metrics?: AutomationMetrics;
+  /** When true, show a Coming Soon banner and disable install */
+  comingSoon?: boolean;
 }
 
 function daysLeft(endsAt: string | null | undefined): number | null {
@@ -56,13 +58,19 @@ export default function AutomationCard({
   trialEndsAt,
   trialAlreadyUsed,
   metrics,
+  comingSoon = false,
 }: AutomationCardProps) {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
   return (
     <>
-      <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-6 hover:border-[#444] transition-all">
+      <div className={`relative bg-[#1a1a1a] border border-[#333] rounded-xl p-6 transition-all ${comingSoon ? 'opacity-70' : 'hover:border-[#444]'}`}>
+        {comingSoon && (
+          <div className="absolute top-4 right-4 px-2.5 py-1 bg-[#2a2a2a] border border-[#444] rounded-full text-xs font-semibold text-gray-400 tracking-wide z-10">
+            Coming Soon
+          </div>
+        )}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="text-3xl">{automation.icon}</div>
@@ -140,12 +148,21 @@ export default function AutomationCard({
             >
               More Info
             </button>
-            <button
-              onClick={() => setShowInstallModal(true)}
-              className="flex-1 px-4 py-2 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors"
-            >
-              Add to Store
-            </button>
+            {comingSoon ? (
+              <button
+                disabled
+                className="flex-1 px-4 py-2 bg-[#222] text-gray-500 rounded-lg font-medium cursor-not-allowed text-sm border border-[#333]"
+              >
+                Coming Soon
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowInstallModal(true)}
+                className="flex-1 px-4 py-2 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors"
+              >
+                Add to Store
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex gap-2">
@@ -180,7 +197,7 @@ export default function AutomationCard({
         )}
       </div>
 
-      {showInstallModal && (
+      {showInstallModal && !comingSoon && (
         <InstallModal
           automation={automation}
           isOpen={showInstallModal}
