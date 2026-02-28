@@ -42,10 +42,17 @@ export async function POST(request: NextRequest) {
 
     // If it's a share_link_clicked event, increment view count
     if (type === 'link_clicked' && previewId) {
-      await supabaseAdmin
+      const { data: preview } = await supabaseAdmin
         .from('share_previews')
-        .update({ view_count: supabaseAdmin.raw('view_count + 1') })
-        .eq('id', previewId);
+        .select('view_count')
+        .eq('id', previewId)
+        .single();
+      if (preview) {
+        await supabaseAdmin
+          .from('share_previews')
+          .update({ view_count: (preview.view_count || 0) + 1 })
+          .eq('id', previewId);
+      }
     }
 
     return NextResponse.json({ success: true });

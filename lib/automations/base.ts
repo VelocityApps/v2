@@ -216,7 +216,7 @@ export function getAutomation(slug: string): BaseAutomation | null {
   if (!AutomationClass) {
     return null;
   }
-  return new AutomationClass();
+  return new (AutomationClass as any)();
 }
 
 

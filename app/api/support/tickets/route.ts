@@ -72,8 +72,6 @@ export async function POST(request: NextRequest) {
         component: 'support',
         route: '/api/support/tickets',
         userId: user.id,
-        automationId,
-        userAutomationId,
       });
     }
 

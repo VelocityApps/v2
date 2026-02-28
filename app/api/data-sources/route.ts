@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Remove sensitive data from config before sending
     const sanitized = data.map((source: any) => ({
       ...source,
-      config: this.sanitizeConfig(source.config, source.type),
+      config: sanitizeConfig(source.config, source.type),
     }));
 
     return NextResponse.json({ data: sanitized });

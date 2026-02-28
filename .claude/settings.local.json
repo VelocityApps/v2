@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(/c/Users/petes/forge44/.env.local:*)",
+      "Bash(stripe:*)",
+      "Bash(winget install:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(git stash:*)",
+      "Bash(psql:*)",
+      "Bash(ls:*)",
+      "Bash(xargs sed:*)",
+      "Bash(find .:*)",
+      "Bash(npx vercel:*)",
+      "Bash(rm:*)",
+      "Bash(printf %s:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

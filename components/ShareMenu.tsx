@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import ShareCardGenerator from './ShareCardGenerator';
 
 interface ShareMenuProps {
   isOpen: boolean;
@@ -325,19 +324,7 @@ export default function ShareMenu({
         </div>
       </div>
 
-      {/* Share Card Generator Modal */}
-      {showCardGenerator && (
-        <ShareCardGenerator
-          isOpen={showCardGenerator}
-          onClose={() => setShowCardGenerator(false)}
-          code={code}
-          projectName={projectName}
-          generationTime={generationTime}
-          generationMode={generationMode}
-          modelUsed={modelUsed}
-          subscriptionStatus={subscriptionStatus}
-        />
-      )}
+      {/* Share Card Generator Modal (feature not yet implemented) */}
     </>
   );
 }

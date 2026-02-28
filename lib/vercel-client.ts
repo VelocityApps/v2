@@ -116,7 +116,7 @@ export async function getVercelUser(accessToken: string): Promise<{ username: st
 async function vercelRequest<T>(
   endpoint: string,
   accessToken: string,
-  options: RequestInit = {}
+  options: Omit<RequestInit, 'body'> & { body?: Record<string, unknown> } = {}
 ): Promise<T> {
   const baseUrl = 'https://api.vercel.com';
 

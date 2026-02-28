@@ -9,7 +9,7 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 
 export interface CostCalculation {
   costUsd: number;
-  modelUsed: 'haiku' | 'sonnet' | 'opus';
+  modelUsed: 'haiku' | 'sonnet' | 'opus' | 'gpt-4o';
   promptTokens?: number;
   completionTokens?: number;
 }

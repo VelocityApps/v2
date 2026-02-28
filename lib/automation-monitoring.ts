@@ -55,8 +55,6 @@ export async function trackAutomationExecution(
       await logError(error, {
         component: 'automation',
         route: `/dashboard/automations/${userAutomationId}`,
-        automationId,
-        userAutomationId,
       });
       // Determine severity and send alert for high/critical
       const severity = determineSeverity(error);

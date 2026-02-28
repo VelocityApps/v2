@@ -1,12 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-white mb-2">Verifying Email...</h2>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
+  );
+}
+
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -57,8 +74,8 @@ export default function VerifyEmailPage() {
 
         // Extract tokens from hash (hashParams already set above)
         const accessToken = hashParams!.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        const refreshToken = hashParams!.get('refresh_token');
+        const type = hashParams!.get('type');
 
         if (!accessToken || type !== 'email') {
           setStatus('expired');

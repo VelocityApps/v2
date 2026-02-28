@@ -5,22 +5,23 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-export default async function PreviewPage({ params }: { params: { id: string } }) {
+export default async function PreviewPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   // Query by id (the preview ID in the URL path)
   const { data: preview, error } = await supabaseAdmin
     .from('share_previews')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
-  
+
   // If not found by id, try querying by the full preview_url as fallback
   // (in case the ID is actually stored in preview_url somehow)
   let previewData = preview;
-  if ((error || !preview) && params.id) {
+  if ((error || !preview) && id) {
     const { data: fallbackPreview } = await supabaseAdmin
       .from('share_previews')
       .select('*')
-      .eq('preview_url', `${process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev'}/preview/${params.id}`)
+      .eq('preview_url', `${process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev'}/preview/${id}`)
       .single();
     previewData = fallbackPreview;
   } else {
@@ -64,7 +65,7 @@ export default async function PreviewPage({ params }: { params: { id: string } }
         <meta property="og:title" content="Check out my app built with VelocityApps" />
         <meta property="og:description" content="Built in seconds with AI" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_APP_URL}/preview/${params.id}`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_APP_URL}/preview/${id}`} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
         <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>

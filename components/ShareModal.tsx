@@ -4,6 +4,7 @@ import { useState } from 'react';
 import html2canvas from 'html2canvas';
 
 interface ShareModalProps {
+  isOpen: boolean;
   code: string;
   onClose: () => void;
   generationTime?: number;

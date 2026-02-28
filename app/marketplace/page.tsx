@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AutomationCard from '@/components/automations/AutomationCard';
@@ -33,6 +33,14 @@ interface AutomationMetrics {
 }
 
 export default function MarketplacePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a]" />}>
+      <MarketplaceContent />
+    </Suspense>
+  );
+}
+
+function MarketplaceContent() {
   const searchParams = useSearchParams();
   const [automations, setAutomations] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<Record<string, AutomationMetrics>>({});

@@ -7,10 +7,11 @@ import { getAutomationMetrics } from '@/lib/automation-monitoring';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const metrics = await getAutomationMetrics(params.id);
+    const { id } = await params;
+    const metrics = await getAutomationMetrics(id);
 
     if (!metrics) {
       return NextResponse.json(

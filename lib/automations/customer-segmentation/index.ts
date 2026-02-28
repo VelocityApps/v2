@@ -194,7 +194,7 @@ export class CustomerSegmentation extends BaseAutomation {
     const allCustomers: any[] = [];
 
     while (url) {
-      const res = await fetch(url, {
+      const res: Response = await fetch(url, {
         headers: {
           'X-Shopify-Access-Token': token,
           'Content-Type': 'application/json',
@@ -210,8 +210,8 @@ export class CustomerSegmentation extends BaseAutomation {
       allCustomers.push(...batch);
 
       // Follow Link header for cursor-based pagination
-      const linkHeader = res.headers.get('Link') || '';
-      const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+      const linkHeader: string = res.headers.get('Link') || '';
+      const nextMatch: RegExpMatchArray | null = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
       url = nextMatch ? nextMatch[1] : null;
     }
 
