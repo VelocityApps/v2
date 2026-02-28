@@ -106,7 +106,7 @@ export default function ResetPasswordPage() {
             </p>
             <Link
               href="/onboarding"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium transition-all"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-all"
             >
               Go to Sign In
             </Link>
@@ -130,12 +130,12 @@ export default function ResetPasswordPage() {
             <p className="text-gray-400 mb-6">{error}</p>
             <Link
               href="/auth/forgot-password"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium transition-all"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-all"
             >
               Request New Reset Link
             </Link>
             <div className="mt-6">
-              <Link href="/onboarding" className="text-sm text-gray-400 hover:text-[#00bcd4] transition-colors">
+              <Link href="/onboarding" className="text-sm text-gray-400 hover:text-[#3b82f6] transition-colors">
                 ← Back to Sign In
               </Link>
             </div>
@@ -149,7 +149,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00bcd4] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
           <p className="text-gray-400">Checking reset link...</p>
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00bcd4] transition-colors"
+                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
                 placeholder="••••••••"
               />
               <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters</p>
@@ -202,7 +202,7 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00bcd4] transition-colors"
+                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
                 placeholder="••••••••"
               />
             </div>
@@ -210,7 +210,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-3 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Resetting Password...' : 'Reset Password'}
             </button>
@@ -219,7 +219,7 @@ export default function ResetPasswordPage() {
           <div className="mt-6 text-center">
             <Link
               href="/auth/forgot-password"
-              className="text-sm text-gray-400 hover:text-[#00bcd4] transition-colors"
+              className="text-sm text-gray-400 hover:text-[#3b82f6] transition-colors"
             >
               Request a new reset link
             </Link>

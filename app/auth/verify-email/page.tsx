@@ -122,7 +122,7 @@ export default function VerifyEmailPage() {
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00bcd4] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
             <h2 className="text-xl font-semibold text-white mb-2">Verifying Email...</h2>
             <p className="text-gray-400">Please wait while we verify your email address.</p>
           </div>
@@ -147,7 +147,7 @@ export default function VerifyEmailPage() {
             </p>
             <Link
               href="/dashboard"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium transition-all"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-all"
             >
               Go to Dashboard
             </Link>
@@ -174,7 +174,7 @@ export default function VerifyEmailPage() {
           <div className="space-y-3">
             <button
               onClick={handleResendVerification}
-              className="w-full px-6 py-3 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium transition-all"
+              className="w-full px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-all"
             >
               Resend Verification Email
             </button>

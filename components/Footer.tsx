@@ -14,9 +14,9 @@ export default function Footer() {
                 <svg width="40" height="40" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <linearGradient id="footerRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-                      <stop offset="0%" stopColor="#00bcd4" stopOpacity={1} />
-                      <stop offset="50%" stopColor="#00ff88" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#32cd32" stopOpacity={1} />
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+                      <stop offset="50%" stopColor="#93c5fd" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#60a5fa" stopOpacity={1} />
                     </linearGradient>
                   </defs>
                   <circle cx="80" cy="80" r="56" fill="url(#footerRingGradient)"/>
@@ -39,17 +39,17 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/marketplace" className="text-gray-400 hover:text-[#00bcd4] transition-colors text-sm">
+                <Link href="/marketplace" className="text-gray-400 hover:text-[#3b82f6] transition-colors text-sm">
                   Marketplace
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="text-gray-400 hover:text-[#00bcd4] transition-colors text-sm">
+                <Link href="/pricing" className="text-gray-400 hover:text-[#3b82f6] transition-colors text-sm">
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/features" className="text-gray-400 hover:text-[#00bcd4] transition-colors text-sm">
+                <Link href="/features" className="text-gray-400 hover:text-[#3b82f6] transition-colors text-sm">
                   Features
                 </Link>
               </li>
@@ -61,17 +61,17 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/terms" className="text-gray-400 hover:text-[#00bcd4] transition-colors text-sm">
+                <Link href="/terms" className="text-gray-400 hover:text-[#3b82f6] transition-colors text-sm">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-[#00bcd4] transition-colors text-sm">
+                <Link href="/privacy" className="text-gray-400 hover:text-[#3b82f6] transition-colors text-sm">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/support" className="text-gray-400 hover:text-[#00bcd4] transition-colors text-sm">
+                <Link href="/support" className="text-gray-400 hover:text-[#3b82f6] transition-colors text-sm">
                   Support
                 </Link>
               </li>
@@ -84,10 +84,10 @@ export default function Footer() {
             © {currentYear} VelocityApps. All rights reserved.
           </p>
           <div className="flex gap-6 mt-4 sm:mt-0">
-            <Link href="/terms" className="text-gray-500 hover:text-[#00bcd4] transition-colors text-sm">
+            <Link href="/terms" className="text-gray-500 hover:text-[#3b82f6] transition-colors text-sm">
               Terms
             </Link>
-            <Link href="/privacy" className="text-gray-500 hover:text-[#00bcd4] transition-colors text-sm">
+            <Link href="/privacy" className="text-gray-500 hover:text-[#3b82f6] transition-colors text-sm">
               Privacy
             </Link>
           </div>

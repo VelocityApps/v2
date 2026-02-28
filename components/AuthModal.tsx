@@ -166,11 +166,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           {isSignUp && (
             <div className="text-xs text-gray-500 text-center">
               By signing up, you agree to our{' '}
-              <Link href="/terms" onClick={onClose} className="text-[#00bcd4] hover:text-[#32cd32] transition-colors">
+              <Link href="/terms" onClick={onClose} className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors">
                 Terms of Service
               </Link>
               {' '}and{' '}
-              <Link href="/privacy" onClick={onClose} className="text-[#00bcd4] hover:text-[#32cd32] transition-colors">
+              <Link href="/privacy" onClick={onClose} className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors">
                 Privacy Policy
               </Link>
             </div>
@@ -190,7 +190,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <Link
               href="/auth/forgot-password"
               onClick={onClose}
-              className="block text-sm text-gray-400 hover:text-[#00bcd4] transition-colors"
+              className="block text-sm text-gray-400 hover:text-[#3b82f6] transition-colors"
             >
               Forgot password?
             </Link>

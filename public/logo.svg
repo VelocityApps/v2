@@ -1,16 +1,23 @@
-<svg width="400" height="80" viewBox="0 0 400 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="va-g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#00bcd4"/>
-      <stop offset="50%" stop-color="#00ff88"/>
-      <stop offset="100%" stop-color="#32cd32"/>
-    </linearGradient>
-  </defs>
-  <!-- V lightning icon (72x72, centered in 80px height = 4px padding top/bottom) -->
-  <g transform="translate(4, 4)">
-    <path d="M 8 8 L 36 64 L 64 8 L 52 8 L 36 47 L 20 8 Z" fill="url(#va-g)"/>
-  </g>
-  <!-- Wordmark -->
-  <text x="92" y="36" font-family="Arial Black, Arial, sans-serif" font-size="24" font-weight="900" letter-spacing="4" fill="white">VELOCITY</text>
-  <text x="92" y="64" font-family="Arial Black, Arial, sans-serif" font-size="20" font-weight="900" letter-spacing="8" fill="#00bcd4">APPS</text>
+<svg width="220" height="56" viewBox="0 0 220 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon mark (56×56 area) -->
+  <!-- Left arm: deep blue -->
+  <line x1="6" y1="8" x2="28" y2="50" stroke="#1d4ed8" stroke-width="10" stroke-linecap="round"/>
+  <!-- Right arm shaft: bright blue -->
+  <line x1="28" y1="50" x2="43" y2="13" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+  <!-- Arrowhead -->
+  <polygon points="37,11 50,16 47,5" fill="#60a5fa"/>
+
+  <!-- Wordmark: "Velocity" white + "Apps" blue, baseline at y=38 -->
+  <text x="62" y="38"
+        font-family="Inter, system-ui, -apple-system, Arial, sans-serif"
+        font-weight="600"
+        font-size="22"
+        letter-spacing="-0.5"
+        fill="#ffffff">Velocity</text>
+  <text x="158" y="38"
+        font-family="Inter, system-ui, -apple-system, Arial, sans-serif"
+        font-weight="600"
+        font-size="22"
+        letter-spacing="-0.5"
+        fill="#60a5fa">Apps</text>
 </svg>

@@ -58,7 +58,7 @@ export default function LandingPage() {
             </div>
 
             {/* Hero Text */}
-            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] bg-clip-text text-transparent">
               Shopify Automations That Just Work
             </h1>
             <p className="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto">
@@ -70,7 +70,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               <Link
                 href="/marketplace"
-                className="px-8 py-4 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-xl font-semibold text-lg transition-all shadow-lg shadow-[#00bcd4]/30 hover:shadow-[#00bcd4]/50 hover:scale-105"
+                className="px-8 py-4 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-xl font-semibold text-lg transition-all shadow-lg shadow-[#3b82f6]/30 hover:shadow-[#3b82f6]/50 hover:scale-105"
               >
                 Browse All Automations →
               </Link>
@@ -94,7 +94,7 @@ export default function LandingPage() {
 
             {/* Social Proof */}
             <div className="text-gray-500 text-sm">
-              Join <span className="text-[#00bcd4] font-semibold">1,234+</span> Shopify stores using VelocityApps
+              Join <span className="text-[#3b82f6] font-semibold">1,234+</span> Shopify stores using VelocityApps
             </div>
           </div>
         </div>
@@ -258,14 +258,14 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-gradient-to-r from-[#00bcd4] to-[#32cd32] rounded-2xl p-12 text-center">
+        <div className="bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] rounded-2xl p-12 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to Automate Your Store?</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             Join hundreds of Shopify stores saving hours every week with VelocityApps automations.
           </p>
           <Link
             href={session ? "/dashboard" : "/onboarding"}
-            className="inline-block px-8 py-4 bg-white text-[#00bcd4] rounded-xl font-semibold text-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+            className="inline-block px-8 py-4 bg-white text-[#3b82f6] rounded-xl font-semibold text-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl"
           >
             Get Started Free
           </Link>

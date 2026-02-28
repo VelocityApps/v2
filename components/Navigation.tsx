@@ -72,7 +72,7 @@ export default function Navigation() {
                 href={link.href}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   isActive(link.href)
-                    ? 'bg-[#00bcd4] text-white'
+                    ? 'bg-[#3b82f6] text-white'
                     : 'text-gray-300 hover:bg-[#1a1a1a] hover:text-white'
                 }`}
               >
@@ -91,7 +91,7 @@ export default function Navigation() {
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] hover:bg-[#222] border border-[#2a2a2a] transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00bcd4] to-[#32cd32] flex items-center justify-center text-white text-sm font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#60a5fa] flex items-center justify-center text-white text-sm font-semibold">
                       {user?.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <span className="text-gray-300 text-sm hidden lg:block max-w-[150px] truncate">
@@ -142,7 +142,7 @@ export default function Navigation() {
                 {/* User Avatar - Mobile */}
                 <Link
                   href="/dashboard"
-                  className="md:hidden w-8 h-8 rounded-full bg-gradient-to-br from-[#00bcd4] to-[#32cd32] flex items-center justify-center text-white text-sm font-semibold"
+                  className="md:hidden w-8 h-8 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#60a5fa] flex items-center justify-center text-white text-sm font-semibold"
                 >
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </Link>
@@ -157,7 +157,7 @@ export default function Navigation() {
                 </Link>
                 <Link
                   href="/onboarding"
-                  className="px-4 py-2 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium text-sm transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium text-sm transition-all"
                 >
                   Get Started
                 </Link>

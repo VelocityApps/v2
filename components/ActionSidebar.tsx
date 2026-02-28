@@ -118,9 +118,9 @@ export default function ActionSidebar({
             <svg className="w-full h-full" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="sidebarRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-                  <stop offset="0%" stopColor="#00bcd4" stopOpacity={1} />
-                  <stop offset="50%" stopColor="#00ff88" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#32cd32" stopOpacity={1} />
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+                  <stop offset="50%" stopColor="#93c5fd" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#60a5fa" stopOpacity={1} />
                 </linearGradient>
               </defs>
               {/* Outer gradient ring */}

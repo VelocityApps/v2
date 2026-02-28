@@ -12,16 +12,16 @@ export default function PrivacyPage() {
 
         <div className="prose prose-invert max-w-none space-y-8">
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">1. Introduction</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">1. Introduction</h2>
             <p className="text-gray-300 leading-relaxed">
               VelocityApps ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">2. Information We Collect</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">2. Information We Collect</h2>
             
-            <h3 className="text-xl font-semibold mb-3 text-[#32cd32] mt-6">2.1 Information You Provide</h3>
+            <h3 className="text-xl font-semibold mb-3 text-[#60a5fa] mt-6">2.1 Information You Provide</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4">
               <li><strong>Account Information:</strong> Email address, password (encrypted), name</li>
               <li><strong>Payment Information:</strong> Processed securely through Stripe (we do not store credit card details)</li>
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
               <li><strong>Support Communications:</strong> Messages sent through our support system</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-3 text-[#32cd32] mt-6">2.2 Information Automatically Collected</h3>
+            <h3 className="text-xl font-semibold mb-3 text-[#60a5fa] mt-6">2.2 Information Automatically Collected</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4">
               <li><strong>Usage Data:</strong> Pages visited, features used, time spent</li>
               <li><strong>Device Information:</strong> Browser type, operating system, IP address</li>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
               <li><strong>Log Data:</strong> Error logs, performance metrics</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-3 text-[#32cd32] mt-6">2.3 Information from Shopify</h3>
+            <h3 className="text-xl font-semibold mb-3 text-[#60a5fa] mt-6">2.3 Information from Shopify</h3>
             <p className="text-gray-300 leading-relaxed">
               When you connect your Shopify store, we access:
             </p>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">3. How We Use Your Information</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">3. How We Use Your Information</h2>
             <p className="text-gray-300 leading-relaxed mb-4">
               We use the collected information for:
             </p>
@@ -72,33 +72,33 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">4. Data Sharing and Disclosure</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">4. Data Sharing and Disclosure</h2>
             <p className="text-gray-300 leading-relaxed mb-4">
               We do not sell your personal information. We may share your information only in the following circumstances:
             </p>
             
-            <h3 className="text-xl font-semibold mb-3 text-[#32cd32] mt-6">4.1 Service Providers</h3>
+            <h3 className="text-xl font-semibold mb-3 text-[#60a5fa] mt-6">4.1 Service Providers</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-300 ml-4">
               <li><strong>Supabase:</strong> Database and authentication services</li>
               <li><strong>Stripe:</strong> Payment processing</li>
               <li><strong>Email Services:</strong> SMTP providers for sending emails</li>
               <li><strong>Shopify:</strong> Accessing your store data (as authorized by you)</li>
-              <li><strong>Pinterest:</strong> When you use the Pinterest Stock Sync automation, we use Pinterest’s API with your access token to create Pins (board, image, title, description, link) for out-of-stock products. See <a href="https://policy.pinterest.com/en/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#00bcd4] hover:underline">Pinterest’s Privacy Policy</a> for how Pinterest handles data.</li>
+              <li><strong>Pinterest:</strong> When you use the Pinterest Stock Sync automation, we use Pinterest’s API with your access token to create Pins (board, image, title, description, link) for out-of-stock products. See <a href="https://policy.pinterest.com/en/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#3b82f6] hover:underline">Pinterest’s Privacy Policy</a> for how Pinterest handles data.</li>
             </ul>
 
-            <h3 className="text-xl font-semibold mb-3 text-[#32cd32] mt-6">4.2 Legal Requirements</h3>
+            <h3 className="text-xl font-semibold mb-3 text-[#60a5fa] mt-6">4.2 Legal Requirements</h3>
             <p className="text-gray-300 leading-relaxed">
               We may disclose your information if required by law or in response to valid requests by public authorities.
             </p>
 
-            <h3 className="text-xl font-semibold mb-3 text-[#32cd32] mt-6">4.3 Business Transfers</h3>
+            <h3 className="text-xl font-semibold mb-3 text-[#60a5fa] mt-6">4.3 Business Transfers</h3>
             <p className="text-gray-300 leading-relaxed">
               In the event of a merger, acquisition, or sale of assets, your information may be transferred to the acquiring entity.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">5. Data Security</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">5. Data Security</h2>
             <p className="text-gray-300 leading-relaxed mb-4">
               We implement appropriate technical and organizational measures to protect your information:
             </p>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">6. Your Rights (GDPR Compliance)</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">6. Your Rights (GDPR Compliance)</h2>
             <p className="text-gray-300 leading-relaxed mb-4">
               If you are located in the European Economic Area (EEA), you have certain data protection rights:
             </p>
@@ -134,7 +134,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">7. Cookies and Tracking</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">7. Cookies and Tracking</h2>
             <p className="text-gray-300 leading-relaxed mb-4">
               We use cookies and similar tracking technologies:
             </p>
@@ -149,35 +149,35 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">8. Data Retention</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">8. Data Retention</h2>
             <p className="text-gray-300 leading-relaxed">
               We retain your personal information for as long as necessary to provide the Service and fulfill the purposes outlined in this Privacy Policy. When you delete your account, we will delete or anonymize your personal data within 30 days, except where we are required to retain it for legal purposes.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">9. Children's Privacy</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">9. Children's Privacy</h2>
             <p className="text-gray-300 leading-relaxed">
               Our Service is not intended for individuals under the age of 18. We do not knowingly collect personal information from children. If you become aware that a child has provided us with personal information, please contact us immediately.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">10. International Data Transfers</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">10. International Data Transfers</h2>
             <p className="text-gray-300 leading-relaxed">
               Your information may be transferred to and processed in countries other than your country of residence. These countries may have data protection laws that differ from those in your country. We ensure appropriate safeguards are in place to protect your data in accordance with this Privacy Policy.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">11. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">11. Changes to This Privacy Policy</h2>
             <p className="text-gray-300 leading-relaxed">
               We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last updated" date. You are advised to review this Privacy Policy periodically for any changes.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#00bcd4]">12. Contact Us</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-[#3b82f6]">12. Contact Us</h2>
             <p className="text-gray-300 leading-relaxed">
               If you have any questions about this Privacy Policy or wish to exercise your rights, please contact us:
             </p>
@@ -191,7 +191,7 @@ export default function PrivacyPage() {
         <div className="mt-12 pt-8 border-t border-[#2a2a2a]">
           <a
             href="/terms"
-            className="text-[#00bcd4] hover:text-[#32cd32] transition-colors"
+            className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors"
           >
             ← View Terms of Service
           </a>

@@ -93,7 +93,7 @@ export async function sendTestEmail(to: string): Promise<void> {
   const subject = 'VelocityApps - Test Email';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #00bcd4;">✅ Test Email Successful</h2>
+      <h2 style="color: #3b82f6;">✅ Test Email Successful</h2>
       <p>This is a test email from VelocityApps to verify your SMTP configuration.</p>
       <p><strong>Timestamp:</strong> ${timestamp}</p>
       <p>If you received this email, your email service is configured correctly!</p>
@@ -116,10 +116,10 @@ export async function sendWelcomeEmail(to: string, userName?: string): Promise<v
   const subject = 'Welcome to VelocityApps! 🚀';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #00bcd4;">Welcome to VelocityApps, ${name}!</h2>
+      <h2 style="color: #3b82f6;">Welcome to VelocityApps, ${name}!</h2>
       <p>We're excited to have you on board. VelocityApps helps you automate your Shopify store with powerful, easy-to-use automations.</p>
       
-      <h3 style="color: #32cd32;">Getting Started</h3>
+      <h3 style="color: #60a5fa;">Getting Started</h3>
       <ol>
         <li>Connect your Shopify store</li>
         <li>Browse our marketplace of automations</li>
@@ -127,7 +127,7 @@ export async function sendWelcomeEmail(to: string, userName?: string): Promise<v
         <li>Watch your store run more efficiently!</li>
       </ol>
       
-      <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/marketplace" style="background: linear-gradient(135deg, #00bcd4 0%, #32cd32 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">Explore Marketplace</a></p>
+      <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/marketplace" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">Explore Marketplace</a></p>
       
       <p>If you have any questions, feel free to reach out to our support team.</p>
       

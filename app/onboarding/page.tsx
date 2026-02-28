@@ -148,7 +148,7 @@ export default function OnboardingPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00bcd4]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
       </div>
     );
   }
@@ -176,7 +176,7 @@ export default function OnboardingPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00bcd4] transition-colors"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
                   placeholder="you@example.com"
                 />
               </div>
@@ -188,7 +188,7 @@ export default function OnboardingPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00bcd4] transition-colors"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
                   placeholder="••••••••"
                 />
               </div>
@@ -205,22 +205,22 @@ export default function OnboardingPage() {
               {isSignUp && (
                 <p className="text-xs text-gray-500">
                   By signing up, you agree to our{' '}
-                  <Link href="/terms" className="text-[#00bcd4] hover:text-[#32cd32] transition-colors">Terms of Service</Link>
+                  <Link href="/terms" className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors">Terms of Service</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-[#00bcd4] hover:text-[#32cd32] transition-colors">Privacy Policy</Link>.
+                  <Link href="/privacy" className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors">Privacy Policy</Link>.
                 </p>
               )}
               <button
                 type="submit"
                 disabled={authFormLoading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="w-full px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
               >
                 {authFormLoading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
               </button>
             </form>
             <div className="mt-4 space-y-2 text-center">
               {!isSignUp && (
-                <Link href="/auth/forgot-password" className="block text-sm text-gray-400 hover:text-[#00bcd4] transition-colors">
+                <Link href="/auth/forgot-password" className="block text-sm text-gray-400 hover:text-[#3b82f6] transition-colors">
                   Forgot password?
                 </Link>
               )}
@@ -231,7 +231,7 @@ export default function OnboardingPage() {
                   setAuthError(null);
                   setAuthSuccess(null);
                 }}
-                className="text-sm text-gray-400 hover:text-[#00bcd4] transition-colors"
+                className="text-sm text-gray-400 hover:text-[#3b82f6] transition-colors"
               >
                 {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
               </button>

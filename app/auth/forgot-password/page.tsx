@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00bcd4] transition-colors"
+                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
                   placeholder="you@example.com"
                 />
               </div>
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-[#00bcd4] to-[#32cd32] hover:from-[#00acc1] hover:to-[#2eb82e] text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </button>
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                   setSent(false);
                   setEmail('');
                 }}
-                className="text-[#00bcd4] hover:text-[#32cd32] transition-colors text-sm"
+                className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors text-sm"
               >
                 Send another email
               </button>
@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
           <div className="mt-6 text-center">
             <Link
               href="/onboarding"
-              className="text-sm text-gray-400 hover:text-[#00bcd4] transition-colors"
+              className="text-sm text-gray-400 hover:text-[#3b82f6] transition-colors"
             >
               ← Back to Sign In
             </Link>
