@@ -391,6 +391,53 @@ export class ShopifyClient {
   async deletePriceRule(priceRuleId: string): Promise<void> {
     await this.request(`/price_rules/${priceRuleId}.json`, { method: 'DELETE' });
   }
+
+  /**
+   * Get customers with optional filters
+   * Useful params: limit, last_order_date_max, state ('enabled'|'disabled'), fields
+   */
+  async getCustomers(params: Record<string, string | number> = {}): Promise<any[]> {
+    const qs = new URLSearchParams();
+    qs.set('limit', String(params.limit ?? 250));
+    for (const [k, v] of Object.entries(params)) {
+      if (k !== 'limit') qs.set(k, String(v));
+    }
+    const response = await this.request<{ customers: any[] }>(`/customers.json?${qs}`);
+    return response.customers || [];
+  }
+
+  /**
+   * Update a customer (e.g. to set tags)
+   */
+  async updateCustomer(customerId: string, data: Record<string, any>): Promise<any> {
+    const response = await this.request<{ customer: any }>(
+      `/customers/${customerId}.json`,
+      { method: 'PUT', body: JSON.stringify({ customer: { id: customerId, ...data } }) }
+    );
+    return response.customer;
+  }
+
+  /**
+   * Fulfill an order (creates a fulfillment for all line items)
+   */
+  async fulfillOrder(orderId: string, trackingInfo?: { number?: string; url?: string; company?: string }): Promise<void> {
+    await this.request(`/orders/${orderId}/fulfillments.json`, {
+      method: 'POST',
+      body: JSON.stringify({
+        fulfillment: {
+          notify_customer: true,
+          ...(trackingInfo ? { tracking_info: trackingInfo } : {}),
+        },
+      }),
+    });
+  }
+
+  /**
+   * Update product tags (convenience wrapper)
+   */
+  async updateProductTags(productId: string, tags: string): Promise<void> {
+    await this.updateProduct(productId, { tags } as any);
+  }
 }
 
 
