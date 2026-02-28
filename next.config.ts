@@ -1,6 +1,32 @@
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
+// Content-Security-Policy — keeps Next.js hydration + Stripe + Supabase + Sentry working
+const CSP = [
+  "default-src 'self'",
+  // Next.js requires unsafe-inline for its runtime scripts; Babel standalone (preview page) needs unsafe-eval
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://unpkg.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  // Broad img-src: Shopify product images, CDNs, data URIs
+  "img-src 'self' data: blob: https:",
+  // API connections: Supabase (HTTP + WS), Stripe, Sentry
+  [
+    "connect-src 'self'",
+    "https://*.supabase.co",
+    "wss://*.supabase.co",
+    "https://api.stripe.com",
+    "https://*.sentry.io",
+    "https://o4510963733889024.ingest.de.sentry.io",
+  ].join(' '),
+  // Stripe's payment iframes
+  "frame-src https://js.stripe.com https://hooks.stripe.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "upgrade-insecure-requests",
+].join('; ');
+
 const nextConfig: NextConfig = {
   async headers() {
     return [
@@ -17,6 +43,7 @@ const nextConfig: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains; preload',
           },
+          { key: 'Content-Security-Policy', value: CSP },
         ],
       },
     ];

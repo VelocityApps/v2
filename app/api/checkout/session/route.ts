@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { logUpgrade } from '@/lib/monitoring';
+import { checkCheckoutRateLimit } from '@/lib/rate-limit';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-11-17.clover',
@@ -24,6 +25,14 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rl = checkCheckoutRateLimit(user.id);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil(rl.resetIn / 1000)) },
+      });
     }
 
     // Get or create user profile

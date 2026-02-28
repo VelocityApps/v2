@@ -15,12 +15,14 @@ interface RateLimitEntry {
 
 class RateLimiter {
   private requests: Map<string, RateLimitEntry> = new Map();
-  private readonly MAX_REQUESTS = 5; // 5 generations per minute
-  private readonly WINDOW_MS = 60 * 1000; // 1 minute window
-  private readonly CLEANUP_INTERVAL = 60 * 1000; // Clean up old entries every 60 seconds
+  private readonly MAX_REQUESTS: number;
+  private readonly WINDOW_MS: number;
+  private readonly CLEANUP_INTERVAL: number;
 
-  constructor() {
-    // Start cleanup interval
+  constructor(maxRequests = 5, windowMs = 60_000) {
+    this.MAX_REQUESTS = maxRequests;
+    this.WINDOW_MS = windowMs;
+    this.CLEANUP_INTERVAL = windowMs;
     setInterval(() => this.cleanup(), this.CLEANUP_INTERVAL);
   }
 
@@ -233,5 +235,53 @@ function getHourlyRateLimiter(): HourlyRateLimiter {
  */
 export function getRateLimitRemaining(userId: string): { remaining: number; resetIn: number } {
   return getRateLimiter().getRemaining(userId);
+}
+
+// ── Auth rate limiter: 20 requests / minute / IP ──────────────────────────
+
+let authLimiter: RateLimiter | null = null;
+function getAuthRateLimiter(): RateLimiter {
+  if (!authLimiter) authLimiter = new RateLimiter(20, 60_000);
+  return authLimiter;
+}
+
+// ── Checkout rate limiter: 10 requests / minute / user ───────────────────
+
+let checkoutLimiter: RateLimiter | null = null;
+function getCheckoutRateLimiter(): RateLimiter {
+  if (!checkoutLimiter) checkoutLimiter = new RateLimiter(10, 60_000);
+  return checkoutLimiter;
+}
+
+/**
+ * Rate-limit by IP address (for unauthenticated endpoints like OAuth flows).
+ * Allows 20 requests per minute per IP.
+ */
+export function checkIpRateLimit(
+  ip: string,
+): { allowed: boolean; remaining: number; resetIn: number } {
+  return getAuthRateLimiter().checkLimit(ip);
+}
+
+/**
+ * Rate-limit checkout session creation by user ID.
+ * Allows 10 requests per minute per user.
+ */
+export function checkCheckoutRateLimit(
+  userId: string,
+): { allowed: boolean; remaining: number; resetIn: number } {
+  return getCheckoutRateLimiter().checkLimit(userId);
+}
+
+/**
+ * Extract the real client IP from a Next.js request.
+ * Respects x-forwarded-for (set by Vercel/proxies).
+ */
+export function getClientIp(request: import('next/server').NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
 }
 

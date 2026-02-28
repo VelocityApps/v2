@@ -22,7 +22,8 @@
       "Bash(npm run:*)",
       "Bash(nslookup:*)",
       "Bash(printf:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(npm update:*)"
     ]
   }
 }

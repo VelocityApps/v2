@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateShopifyAuthUrl } from '@/lib/shopify/oauth';
 import { validateShopifyStoreUrl } from '@/lib/validation';
+import { checkIpRateLimit, getClientIp } from '@/lib/rate-limit';
 
 /**
  * GET /api/auth/shopify/authorize
  * Generate Shopify OAuth authorization URL
  */
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkIpRateLimit(ip);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, {
+      status: 429,
+      headers: { 'Retry-After': String(Math.ceil(rl.resetIn / 1000)) },
+    });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     let shop = searchParams.get('shop')?.trim() ?? '';

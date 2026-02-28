@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkIpRateLimit, getClientIp } from '@/lib/rate-limit';
 
 /**
  * GET /api/auth/shopify/get-token
@@ -6,6 +7,15 @@ import { NextRequest, NextResponse } from 'next/server';
  * This endpoint reads the token from httpOnly cookie and returns it once
  */
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkIpRateLimit(ip);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, {
+      status: 429,
+      headers: { 'Retry-After': String(Math.ceil(rl.resetIn / 1000)) },
+    });
+  }
+
   try {
     const token = request.cookies.get('shopify_token_temp')?.value;
     const shop = request.cookies.get('shopify_shop_temp')?.value;

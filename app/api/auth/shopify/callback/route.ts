@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeCodeForToken } from '@/lib/shopify/oauth';
 import { supabaseAdmin } from '@/lib/supabase-server';
+import { checkIpRateLimit, getClientIp } from '@/lib/rate-limit';
 
 /**
  * Handle Shopify OAuth callback
  * Exchange code for token and store in user profile
  */
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkIpRateLimit(ip);
+  if (!rl.allowed) {
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding?error=too_many_requests`
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
