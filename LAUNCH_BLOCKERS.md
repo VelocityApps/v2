@@ -1,6 +1,6 @@
 # Launch Blockers
 
-**Last updated:** 2026-02-27
+**Last updated:** 2026-02-28
 
 ---
 
@@ -18,59 +18,51 @@
 | 8 | **Review Request Automator** – fulfillment-triggered scheduling, multi-platform review URLs, cancellation handling |
 | 9 | **Low Stock Alerts** – immediate + daily-digest modes, email + Slack + both, per-product cooldown |
 | 10 | **Best Sellers Collection** – real sales ranking, diff-based collection sync, fixed revenue/pagination |
-| 11 | Pinterest Stock Sync (was already complete) |
-| 12 | Stripe webhook handler (checkout, subscription updated/deleted, invoice paid) |
+| 11 | **Pinterest Stock Sync** (was already complete) |
+| 12 | **Welcome Email Series** – first-time buyer detection, 3-email sequence, optional discount code, cron-driven |
+| 13 | Stripe webhook handler (checkout, subscription updated/deleted, invoice paid) |
+| 14 | Vercel cron job config (`vercel.json` – runs `/api/cron` hourly) |
+| 15 | Sentry error monitoring (installed, configured, global error boundary) |
+| 16 | Automation registry fix (`load-all.ts` – all automations now load in webhook/cron/install routes) |
+| 17 | `welcome_email_series` DB table + config_schema migrations applied |
 
 ---
 
-## ❌ Remaining (4 blockers)
+## ❌ Remaining (2 blockers)
 
-### 1. `vercel.json` — Cron Job Config
-**CRITICAL** – without this, no scheduled automation (abandoned cart emails, review requests, low stock digests, best sellers updates) will ever run in production.
+### 1. Production Environment Variables on Vercel
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 * * * *"
-    }
-  ]
-}
-```
-
-Also add `CRON_SECRET` to Vercel env vars and to `.env.local`, then update the cron path to `/api/cron?secret=YOUR_SECRET`.
-
-**Time:** 10 minutes
-
----
-
-### 2. Production Environment Variables on Vercel
-These must be set in the Vercel dashboard before deploying:
+Set these in the Vercel dashboard before deploying:
 
 | Variable | Status |
 |----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Set locally |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Set locally |
-| `SUPABASE_SERVICE_ROLE_KEY` | Set locally |
-| `SHOPIFY_CLIENT_ID` | Set locally |
-| `SHOPIFY_CLIENT_SECRET` | Set locally |
-| `SHOPIFY_WEBHOOK_SECRET` | Set locally |
-| `STRIPE_SECRET_KEY` | Set locally |
-| `STRIPE_WEBHOOK_SECRET` | Set locally |
-| `RESEND_API_KEY` | Set locally |
-| `NEXT_PUBLIC_APP_URL` | Set to production URL |
-| `CRON_SECRET` | **Not set** – add before deploying |
-| `SUPPORT_ALERT_EMAILS` | **Not set** – needed for low stock alerts fallback |
-| `ENCRYPTION_KEY` | Check if set |
+| `NEXT_PUBLIC_SUPABASE_URL` | Set locally ✓ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Set locally ✓ |
+| `SUPABASE_SERVICE_ROLE_KEY` | Set locally ✓ |
+| `SHOPIFY_CLIENT_ID` | Set locally ✓ |
+| `SHOPIFY_CLIENT_SECRET` | Set locally ✓ |
+| `SHOPIFY_WEBHOOK_SECRET` | Set locally ✓ |
+| `STRIPE_SECRET_KEY` | Set locally ✓ |
+| `STRIPE_WEBHOOK_SECRET` | Set locally ✓ |
+| `RESEND_API_KEY` | Set locally ✓ |
+| `FROM_EMAIL` | Set locally ✓ |
+| `SUPPORT_ALERT_EMAILS` | Set locally ✓ |
+| `CRON_SECRET` | Set locally ✓ |
+| `ENCRYPTION_KEY` | **Verify this is set** |
+| `NEXT_PUBLIC_APP_URL` | Set to production URL (https://velocityapps.dev) |
+| `NEXT_PUBLIC_SENTRY_DSN` | **Not set** – create account at sentry.io first |
+| `SENTRY_ORG` | **Not set** |
+| `SENTRY_PROJECT` | **Not set** |
+| `SENTRY_AUTH_TOKEN` | **Not set** (only needed for source map uploads in CI) |
 
 **Time:** 15 minutes
 
 ---
 
-### 3. Stripe Webhooks – End-to-End Test
+### 2. Stripe Webhooks – End-to-End Test
+
 The handler code is complete. What's needed:
-- [ ] Register the webhook endpoint in Stripe Dashboard → `https://yourdomain.com/api/webhooks/stripe`
+- [ ] Register the webhook endpoint in Stripe Dashboard → `https://velocityapps.dev/api/webhooks/stripe`
 - [ ] Test with Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
 - [ ] Trigger test events: `stripe trigger checkout.session.completed`
 - [ ] Verify subscription status updates in Supabase
@@ -80,25 +72,11 @@ The handler code is complete. What's needed:
 
 ---
 
-### 4. Sentry Error Monitoring
-Currently there is zero error monitoring in production. If an automation fails silently, you won't know.
-
-- [ ] Create account at sentry.io
-- [ ] Create a Next.js project
-- [ ] `npm install @sentry/nextjs`
-- [ ] Run `npx @sentry/wizard@latest -i nextjs`
-- [ ] Add `SENTRY_DSN` to Vercel env vars
-- [ ] Test: throw an intentional error, verify it appears in Sentry
-
-**Time:** 30 minutes
-
----
-
 ## Summary
 
 | Status | Count |
 |--------|-------|
-| ✅ Done | 12 |
-| ❌ Remaining | 4 |
+| ✅ Done | 17 |
+| ❌ Remaining | 2 |
 
-**All 5 automations are complete.** The 4 remaining items are infrastructure/ops tasks (cron config, env vars, Stripe test, Sentry) — none require code changes except `vercel.json`.
+**All 6 automations complete. 2 remaining items are ops/infra tasks — no more code changes needed to launch.**
