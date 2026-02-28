@@ -79,4 +79,28 @@ The handler code is complete. What's needed:
 | ✅ Done | 17 |
 | ❌ Remaining | 2 |
 
-**All 6 automations complete. 2 remaining items are ops/infra tasks — no more code changes needed to launch.**
+**All 15 automations complete. 2 remaining items are ops/infra tasks — no more code changes needed to launch.**
+
+---
+
+## 🗺️ Post-Launch Roadmap
+
+### Automations – Pending Third-Party Integrations
+
+These 5 automations are built as "Coming Soon" placeholders in the marketplace. Each requires external API credentials that merchants must supply.
+
+| Automation | Slug | Blocker | Notes |
+|---|---|---|---|
+| **Social Media Auto-Post** | `social-media-auto-post` | Facebook/Instagram Graph API OAuth per merchant; Twitter (X) API v2 | Each merchant needs their own app credentials — significant per-user OAuth setup |
+| **Google Shopping Feed Sync** | `google-shopping-feed-sync` | Google Merchant Center API + OAuth per merchant | Need to register as a Google partner; per-store OAuth flow |
+| **Competitor Price Monitoring** | `competitor-price-monitoring` | Web scraping legally grey; blocked by bot protection on most retail sites | Consider using a paid scraping API (ScraperAPI, Bright Data) |
+| **Product Image Optimizer** | `product-image-optimizer` | Image processing pipeline needed (Sharp, Cloudinary, or imgix) | Images must be downloaded, processed, re-uploaded to Shopify CDN |
+| **Inventory Sync Across Channels** | `inventory-sync-channels` | Amazon SP-API, eBay API, Etsy API — each requires separate OAuth + app approval | High complexity; consider launching Amazon-only first |
+
+### Implementation order (when ready)
+
+1. **Product Image Optimizer** — self-contained, no per-user OAuth. Use `sharp` + re-upload to Shopify via Admin API. Estimated: 1 day.
+2. **Social Media Auto-Post** — start with Facebook/Instagram only (Graph API). Estimated: 2–3 days.
+3. **Google Shopping Feed Sync** — generate a static feed URL; simpler than full sync. Estimated: 2 days.
+4. **Inventory Sync Across Channels** — start with Amazon SP-API only. Estimated: 3–5 days.
+5. **Competitor Price Monitoring** — integrate a paid scraping service. Estimated: 1–2 days.
