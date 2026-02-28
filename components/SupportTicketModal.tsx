@@ -102,7 +102,7 @@ export default function SupportTicketModal({
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as any)}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white focus:outline-none focus:border-[#0066cc] transition-colors"
+              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white focus:outline-none focus:border-[#3b82f6] transition-colors"
             >
               <option value="low">Low - General question</option>
               <option value="medium">Medium - Need help</option>
@@ -120,7 +120,7 @@ export default function SupportTicketModal({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Brief description of your issue"
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors"
+              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
               required
             />
           </div>
@@ -134,7 +134,7 @@ export default function SupportTicketModal({
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe your issue in detail..."
               rows={6}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors resize-none"
+              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors resize-none"
               required
             />
           </div>
@@ -160,7 +160,7 @@ export default function SupportTicketModal({
             <button
               type="submit"
               disabled={loading || !subject || !message}
-              className="flex-1 px-4 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Submitting...' : 'Submit Ticket'}
             </button>

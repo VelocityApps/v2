@@ -107,7 +107,7 @@ export default function AutomationManagementPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0066cc]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
       </div>
     );
   }
@@ -117,7 +117,7 @@ export default function AutomationManagementPage() {
       <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Automation not found</h2>
-          <Link href="/dashboard" className="text-[#0066cc] hover:text-[#0052a3]">
+          <Link href="/dashboard" className="text-[#3b82f6] hover:text-[#2563eb]">
             Back to Dashboard
           </Link>
         </div>
@@ -130,7 +130,7 @@ export default function AutomationManagementPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
           href="/dashboard"
-          className="text-[#0066cc] hover:text-[#0052a3] mb-6 inline-block"
+          className="text-[#3b82f6] hover:text-[#2563eb] mb-6 inline-block"
         >
           ← Back to Dashboard
         </Link>
@@ -165,10 +165,10 @@ export default function AutomationManagementPage() {
               </p>
               <p className="text-gray-400 text-sm mt-1">Then £{automation?.price_monthly}/month. Add a payment method to continue without interruption.</p>
               <Link
-                href="/dashboard/settings"
-                className="inline-block mt-3 px-4 py-2 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg text-sm font-medium"
+                href="/marketplace"
+                className="inline-block mt-3 px-4 py-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg text-sm font-medium"
               >
-                Add Payment Method
+                Upgrade to Pro
               </Link>
             </div>
           )}
@@ -202,7 +202,7 @@ export default function AutomationManagementPage() {
           <button
             onClick={handleSaveConfig}
             disabled={saving}
-            className="mt-4 px-6 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="mt-4 px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Configuration'}
           </button>

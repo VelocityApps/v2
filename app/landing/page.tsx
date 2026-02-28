@@ -94,7 +94,7 @@ export default function LandingPage() {
 
             {/* Social Proof */}
             <div className="text-gray-500 text-sm">
-              Join <span className="text-[#3b82f6] font-semibold">1,234+</span> Shopify stores using VelocityApps
+              Free 7-day trial · No credit card required · Cancel anytime
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function LandingPage() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0066cc] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
             <p className="text-gray-400">Loading automations...</p>
           </div>
         ) : (

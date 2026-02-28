@@ -43,10 +43,12 @@ export async function GET(request: NextRequest) {
 
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/shopify/callback`;
     const installSlug = searchParams.get('install')?.trim() || '';
+    const source = searchParams.get('source')?.trim() || '';
     const crypto = await import('crypto');
-    const state = installSlug
-      ? `${crypto.randomBytes(16).toString('hex')}:${installSlug}`
-      : undefined;
+    const nonce = crypto.randomBytes(16).toString('hex');
+    // State format: nonce:installSlug:source  (trailing parts omitted if empty)
+    const stateParts = [nonce, installSlug, source].join(':').replace(/:+$/, '');
+    const state = stateParts !== nonce ? stateParts : undefined;
 
     const authUrl = generateShopifyAuthUrl({
       shop,

@@ -43,14 +43,18 @@ export async function GET(request: NextRequest) {
     // For now, we'll use a secure cookie to pass token to frontend
     // In production, consider storing in database immediately
 
-    const redirectUrl = new URL(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/marketplace`
-    );
+    // Parse state: nonce:installSlug:source
+    const oauthState = searchParams.get('state') ?? '';
+    const [, installSlug = '', source = ''] = oauthState.split(':');
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const destination = source === 'onboarding' ? 'onboarding' : 'marketplace';
+    const redirectUrl = new URL(`${baseUrl}/${destination}`);
     redirectUrl.searchParams.set('shopify_auth_success', '1');
     redirectUrl.searchParams.set('shop', shop);
-    const oauthState = searchParams.get('state') ?? '';
-    const installSlug = oauthState.includes(':') ? oauthState.split(':').slice(1).join(':') : '';
-    if (installSlug) redirectUrl.searchParams.set('install', installSlug);
+    if (installSlug && destination === 'marketplace') {
+      redirectUrl.searchParams.set('install', installSlug);
+    }
     
     // Store token in httpOnly cookie (more secure than URL param)
     const response = NextResponse.redirect(redirectUrl.toString());

@@ -33,23 +33,34 @@ function OnboardingContent() {
   const [authFormLoading, setAuthFormLoading] = useState(false);
 
   useEffect(() => {
-    // Check if Shopify OAuth callback
     const shopifySuccess = searchParams.get('shopify_auth_success');
     const shop = searchParams.get('shop');
-    const accessToken = searchParams.get('access_token');
+    const shopifyError = searchParams.get('shopify_auth_error');
 
-    if (shopifySuccess === '1' && shop && accessToken) {
-      // Store token temporarily (in production, store in database)
-      sessionStorage.setItem('shopify_token', accessToken);
-      sessionStorage.setItem('shopify_shop', shop);
-      setStep('select');
-      fetchTopAutomations();
+    if (shopifyError) {
+      alert(`Shopify connection error: ${shopifyError}`);
+      return;
     }
 
-    // Check for errors
-    const error = searchParams.get('shopify_auth_error');
-    if (error) {
-      alert(`Shopify connection error: ${error}`);
+    if (shopifySuccess === '1' && shop) {
+      // Read token from httpOnly cookie via server endpoint (cleared after one read)
+      fetch('/api/auth/shopify/get-token')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.token && data.shop) {
+            sessionStorage.setItem('shopify_token', data.token);
+            sessionStorage.setItem('shopify_shop', data.shop);
+            setStep('select');
+            fetchTopAutomations();
+            // Clean URL without reloading
+            window.history.replaceState({}, '', '/onboarding');
+          } else {
+            alert('Failed to retrieve Shopify token. Please try connecting again.');
+          }
+        })
+        .catch(() => {
+          alert('Failed to retrieve Shopify token. Please try connecting again.');
+        });
     }
   }, [searchParams]);
 
@@ -135,7 +146,7 @@ function OnboardingContent() {
 
     try {
       const response = await fetch(
-        `/api/auth/shopify/authorize?shop=${encodeURIComponent(shopifyStoreUrl)}`
+        `/api/auth/shopify/authorize?shop=${encodeURIComponent(shopifyStoreUrl)}&source=onboarding`
       );
       const data = await response.json();
 

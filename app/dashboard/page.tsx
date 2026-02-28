@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authLoading && !session) {
-      router.push('/');
+      router.push('/onboarding');
       return;
     }
 
@@ -129,7 +129,7 @@ export default function DashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0066cc]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
       </div>
     );
   }
@@ -144,7 +144,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/marketplace"
-            className="px-6 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors"
+            className="px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors"
           >
             Browse More Automations
           </Link>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
             </p>
             <Link
               href="/marketplace"
-              className="inline-block px-6 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors"
+              className="inline-block px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors"
             >
               Browse Marketplace
             </Link>

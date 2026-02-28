@@ -30,17 +30,23 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       setShopifyConnected(false);
       setConfig({});
       setError(null);
+      return;
     }
 
-    // Check if we're returning from Shopify OAuth
+    // If already connected from a previous OAuth (e.g. onboarding flow), skip connect step
+    const existingToken = sessionStorage.getItem('shopify_token');
+    const existingShop = sessionStorage.getItem('shopify_shop');
+    if (existingToken && existingShop) {
+      setStep('configure');
+      return;
+    }
+
+    // Check if we're returning from Shopify OAuth (marketplace flow)
     const urlParams = new URLSearchParams(window.location.search);
     const shopifySuccess = urlParams.get('shopify_auth_success');
     const shop = urlParams.get('shop');
 
-    if (shopifySuccess === '1' && shop && isOpen) {
-      // Get token from cookie (set by server)
-      // Note: In production, you'd fetch this from an API endpoint that reads the cookie
-      // For now, we'll use a workaround - read from cookie via API
+    if (shopifySuccess === '1' && shop) {
       fetch('/api/auth/shopify/get-token')
         .then(res => res.json())
         .then(data => {
@@ -48,7 +54,6 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
             sessionStorage.setItem('shopify_token', data.token);
             sessionStorage.setItem('shopify_shop', data.shop);
             setStep('configure');
-            // Clean URL
             window.history.replaceState({}, '', window.location.pathname);
           }
         })
@@ -193,13 +198,13 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
                 value={shopifyStoreUrl}
                 onChange={(e) => setShopifyStoreUrl(e.target.value)}
                 placeholder="mystore.myshopify.com"
-                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors"
+                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
               />
             </div>
             <button
               onClick={handleConnectShopify}
               disabled={loading || !shopifyStoreUrl}
-              className="w-full px-4 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Connecting...' : 'Connect Shopify Store'}
             </button>
@@ -226,7 +231,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
               <button
                 onClick={handleInstall}
                 disabled={loading}
-                className="flex-1 px-4 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Installing...' : 'Install Automation'}
               </button>
@@ -236,7 +241,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
 
         {step === 'installing' && (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0066cc] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
             <p className="text-gray-300">Installing automation...</p>
           </div>
         )}

@@ -63,17 +63,19 @@ function MarketplaceContent() {
         if (error) throw error;
         setAutomations(data || []);
 
-        // Fetch metrics for each automation
-        const metricsMap: Record<string, AutomationMetrics> = {};
-        for (const automation of data || []) {
-          try {
+        // Fetch metrics for all automations in parallel
+        const metricsResults = await Promise.allSettled(
+          (data || []).map(async (automation: any) => {
             const response = await fetch(`/api/automations/${automation.id}/metrics`);
-            if (response.ok) {
-              const metricsData = await response.json();
-              metricsMap[automation.id] = metricsData;
-            }
-          } catch (err) {
-            // Silently fail - metrics are optional
+            if (!response.ok) return null;
+            const metricsData = await response.json();
+            return { id: automation.id, metrics: metricsData };
+          })
+        );
+        const metricsMap: Record<string, AutomationMetrics> = {};
+        for (const result of metricsResults) {
+          if (result.status === 'fulfilled' && result.value) {
+            metricsMap[result.value.id] = result.value.metrics;
           }
         }
         setMetrics(metricsMap);
@@ -131,7 +133,7 @@ function MarketplaceContent() {
               onClick={() => setSelectedCategory(category)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 selectedCategory === category
-                  ? 'bg-[#0066cc] text-white'
+                  ? 'bg-[#3b82f6] text-white'
                   : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
               }`}
             >
@@ -143,7 +145,7 @@ function MarketplaceContent() {
         {/* Loading State */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0066cc] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
             <p className="text-gray-400">Loading automations...</p>
           </div>
         ) : filteredAutomations.length === 0 ? (
