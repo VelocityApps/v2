@@ -1,6 +1,12 @@
+import React from 'react';
 import { NextRequest, NextResponse } from 'next/server';
+import { render } from '@react-email/render';
+import { Resend } from 'resend';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { logError } from '@/lib/monitoring';
+import { getEmailFrom } from '@/lib/email/send';
+import { SupportConfirmationEmail } from '@/lib/email/templates/support-confirmation';
+import { SupportAlertEmail } from '@/lib/email/templates/support-alert';
 
 /**
  * POST /api/support/tickets
@@ -31,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create support ticket in support_tickets table (if exists)
+    // Create support ticket
     let ticketId: string | null = null;
     const { data: ticketRow, error: ticketError } = await supabaseAdmin
       .from('support_tickets')
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Log error if it's a bug report
+    // Log high/critical tickets to error monitoring
     if (priority === 'critical' || priority === 'high') {
       await logError(`Support ticket: ${subject}`, {
         component: 'support',
@@ -75,59 +81,78 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Send email notifications (uses SMTP_* and SUPPORT_ALERT_EMAILS from env)
+    // Send email notifications via Resend
     let emailSent = false;
-    try {
-      const smtpConfigured =
-        process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-      const alertEmails = (process.env.SUPPORT_ALERT_EMAILS || '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
+    const apiKey = process.env.RESEND_API_KEY;
+    if (apiKey) {
+      try {
+        const resend = new Resend(apiKey);
+        const from = getEmailFrom();
+        const alertRecipients = (process.env.SUPPORT_ALERT_EMAILS || '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
 
-      if (smtpConfigured && alertEmails.length > 0) {
-        const { sendEmail, sendAlertEmail } = await import('@/lib/email');
-        // Notify support team
-        await sendAlertEmail(
-          `[Support] ${priority.toUpperCase()} - ${subject}`,
-          `
-          <h3>New Support Ticket (${priority})</h3>
-          <p><strong>User:</strong> ${user.email}</p>
-          <p><strong>Ticket ID:</strong> ${ticketId || 'N/A'}</p>
-          <p><strong>Subject:</strong> ${subject}</p>
-          <p><strong>Message:</strong></p>
-          <pre>${message}</pre>
-        `
-        );
-        // Confirm to user
-        if (user.email) {
-          await sendEmail({
-            to: user.email,
-            subject: `We've received your support request: ${subject}`,
-            html: `
-            <p>Hi ${user.email?.split('@')[0]},</p>
-            <p>Thanks for contacting VelocityApps support. We've received your request and will respond within our SLA.</p>
-            <p><strong>Priority:</strong> ${priority}<br/>
-            <strong>Subject:</strong> ${subject}</p>
-            <p>You'll hear from us soon.</p>
-            <p>— VelocityApps Support</p>
-          `,
-          });
-        }
+        const userName = user.email?.split('@')[0];
+
+        // Send both emails concurrently
+        await Promise.all([
+          // Alert the support team
+          alertRecipients.length > 0
+            ? (async () => {
+                const html = await render(
+                  React.createElement(SupportAlertEmail, {
+                    userEmail: user.email ?? 'unknown',
+                    subject,
+                    message,
+                    priority,
+                    ticketId: ticketId ?? undefined,
+                  })
+                );
+                return resend.emails.send({
+                  from,
+                  to: alertRecipients,
+                  replyTo: user.email ?? undefined,
+                  subject: `[${priority.toUpperCase()}] New Support Ticket – ${subject}`,
+                  html,
+                });
+              })()
+            : Promise.resolve(),
+
+          // Confirm to the user
+          user.email
+            ? (async () => {
+                const html = await render(
+                  React.createElement(SupportConfirmationEmail, {
+                    userName,
+                    subject,
+                    message,
+                    priority,
+                    ticketId: ticketId ?? undefined,
+                  })
+                );
+                return resend.emails.send({
+                  from,
+                  to: user.email!,
+                  subject: `We've received your request – ${subject}`,
+                  html,
+                });
+              })()
+            : Promise.resolve(),
+        ]);
+
         emailSent = true;
-      } else {
-        console.warn(
-          '[Support] Email skipped. Add SMTP_HOST, SMTP_USER, SMTP_PASS and SUPPORT_ALERT_EMAILS to .env.local. See SUPPORT_EMAIL_SETUP.md.'
-        );
+      } catch (e) {
+        console.warn('[Support] Email notification failed:', e);
       }
-    } catch (e) {
-      console.warn('[Support] Email notification failed:', e);
+    } else {
+      console.warn('[Support] RESEND_API_KEY not set — skipping email notifications.');
     }
 
     return NextResponse.json({
       success: true,
-      ticketId: ticketId,
-      message: 'Support ticket created. We\'ll respond within 2 hours.',
+      ticketId,
+      message: "Support ticket created. We'll respond within 2 hours.",
       emailSent,
     });
   } catch (error: any) {
@@ -145,7 +170,6 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -158,7 +182,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's support tickets from monitoring_events
+    // Try support_tickets table first, fall back to monitoring_events
+    const { data: tickets, error: ticketsError } = await supabaseAdmin
+      .from('support_tickets')
+      .select('id, subject, message, priority, status, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (!ticketsError && tickets) {
+      return NextResponse.json({ tickets });
+    }
+
+    // Fallback to monitoring_events
     const { data: events } = await supabaseAdmin
       .from('monitoring_events')
       .select('*')
@@ -167,13 +203,13 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    const tickets = (events || []).map(event => ({
+    const fallbackTickets = (events || []).map((event) => ({
       id: event.id,
       ...event.event_data,
       createdAt: event.created_at,
     }));
 
-    return NextResponse.json({ tickets });
+    return NextResponse.json({ tickets: fallbackTickets });
   } catch (error: any) {
     console.error('[Support] Error fetching tickets:', error);
     return NextResponse.json(
@@ -182,4 +218,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

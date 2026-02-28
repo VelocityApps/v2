@@ -3,6 +3,15 @@ import { render } from '@react-email/render';
 import { Resend } from 'resend';
 import { WelcomeEmail } from './templates/welcome';
 
+export function getEmailFrom(): string {
+  if (process.env.FROM_EMAIL) return `VelocityApps <${process.env.FROM_EMAIL}>`;
+  return (
+    process.env.SMTP_FROM ||
+    process.env.RESEND_FROM ||
+    'VelocityApps <onboarding@resend.dev>'
+  );
+}
+
 export interface SendWelcomeEmailResult {
   success?: boolean;
   id?: string;
@@ -23,10 +32,7 @@ export async function sendWelcomeEmail(
     return { error: 'Resend API key not configured' };
   }
 
-  const from =
-    process.env.SMTP_FROM ||
-    process.env.RESEND_FROM ||
-    'VelocityApps <onboarding@resend.dev>';
+  const from = getEmailFrom();
 
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

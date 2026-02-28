@@ -13,7 +13,6 @@ import {
 } from '@react-email/components';
 
 const BRAND_INDIGO = '#4F46E5';
-const BRAND_INDIGO_DARK = '#4338CA';
 const GRAY_600 = '#4B5563';
 const GRAY_700 = '#374151';
 

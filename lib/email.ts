@@ -10,7 +10,11 @@ export interface SendEmailOptions {
   from?: string;
 }
 
-const fromDefault = process.env.SMTP_FROM || process.env.RESEND_FROM || 'VelocityApps <onboarding@resend.dev>';
+const fromDefault = process.env.FROM_EMAIL
+  ? `VelocityApps <${process.env.FROM_EMAIL}>`
+  : process.env.SMTP_FROM ||
+    process.env.RESEND_FROM ||
+    'VelocityApps <onboarding@resend.dev>';
 
 /**
  * Send an email. Uses Resend if RESEND_API_KEY is set, otherwise SMTP (Nodemailer).

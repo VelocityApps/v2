@@ -26,6 +26,7 @@ export default function Navigation() {
     { href: '/', label: 'Home' },
     { href: '/marketplace', label: 'Marketplace' },
     ...(session ? [{ href: '/dashboard', label: 'Dashboard' }] : []),
+    { href: '/support', label: 'Support' },
   ];
 
   const isActive = (href: string) => {
@@ -202,12 +203,23 @@ export default function Navigation() {
                 </Link>
               ))}
               {session && (
-                <button
-                  onClick={handleSignOut}
-                  className="px-4 py-2 text-left rounded-lg font-medium text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
-                >
-                  Sign Out
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      setSupportModalOpen(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="px-4 py-2 text-left rounded-lg font-medium text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                  >
+                    Contact Support
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="px-4 py-2 text-left rounded-lg font-medium text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
               )}
             </div>
           </div>
