@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import AutomationCard from '@/components/automations/AutomationCard';
+import VelocityLogo from '@/components/VelocityLogo';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -53,33 +54,7 @@ export default function LandingPage() {
           <div className="text-center">
             {/* Logo */}
             <div className="flex justify-center mb-8">
-              <div className="flex flex-col items-center gap-4">
-                {/* Logo Graphic - Circular Gradient with V shapes */}
-                <div className="relative w-32 h-32">
-                  <svg width="128" height="128" viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <linearGradient id="landingRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-                        <stop offset="0%" stopColor="#00bcd4" stopOpacity={1} />
-                        <stop offset="50%" stopColor="#00ff88" stopOpacity={1} />
-                        <stop offset="100%" stopColor="#32cd32" stopOpacity={1} />
-                      </linearGradient>
-                    </defs>
-                    {/* Outer gradient ring */}
-                    <circle cx="100" cy="90" r="70" fill="url(#landingRingGradient)"/>
-                    {/* Inner dark teal circle */}
-                    <circle cx="100" cy="90" r="58" fill="#0a0a0a"/>
-                    {/* Upper V shape (orange, pointing down) */}
-                    <path d="M 70 60 L 100 35 L 130 60 Z" fill="#ff6600"/>
-                    {/* Lower V shape (teal, pointing up) */}
-                    <path d="M 70 120 L 100 145 L 130 120 Z" fill="#40e0d0"/>
-                  </svg>
-                </div>
-                {/* Logo Text */}
-                <div className="text-5xl font-bold">
-                  <div className="text-white">VELOCITY</div>
-                  <div className="text-white">APPS</div>
-                </div>
-              </div>
+              <VelocityLogo iconSize={96} layout="column" textClassName="text-5xl font-black" />
             </div>
 
             {/* Hero Text */}

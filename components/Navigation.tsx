@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import SupportTicketModal from './SupportTicketModal';
+import VelocityLogo from './VelocityLogo';
 
 export default function Navigation() {
   const { session, user, signOut } = useAuth();
@@ -59,29 +60,8 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative w-10 h-10">
-              <svg width="40" height="40" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="navRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-                    <stop offset="0%" stopColor="#00bcd4" stopOpacity={1} />
-                    <stop offset="50%" stopColor="#00ff88" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#32cd32" stopOpacity={1} />
-                  </linearGradient>
-                </defs>
-                {/* Outer gradient ring */}
-                <circle cx="80" cy="80" r="56" fill="url(#navRingGradient)"/>
-                {/* Inner dark teal circle */}
-                <circle cx="80" cy="80" r="46" fill="#0a0a0a"/>
-                {/* Upper V shape (orange, pointing down) */}
-                <path d="M 56 48 L 80 28 L 104 48 Z" fill="#ff6600"/>
-                {/* Lower V shape (teal, pointing up) */}
-                <path d="M 56 112 L 80 132 L 104 112 Z" fill="#40e0d0"/>
-              </svg>
-            </div>
-            <div className="text-xl font-bold hidden sm:block text-white">
-              VELOCITY APPS
-            </div>
+          <Link href="/" className="group">
+            <VelocityLogo iconSize={36} textClassName="text-xl font-bold hidden sm:block" />
           </Link>
 
           {/* Desktop Navigation */}

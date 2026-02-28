@@ -1,44 +1,104 @@
-# Launch Blockers – Simple List
+# Launch Blockers
 
-**Last updated:** 2026-02-01
+**Last updated:** 2026-02-27
 
 ---
 
-## ✅ Done (6)
+## ✅ Done
 
-| # | Blocker |
-|---|--------|
+| # | Item |
+|---|------|
 | 1 | Encrypt Shopify tokens |
 | 2 | RLS policies (Supabase) |
 | 3 | Terms of Service page |
 | 4 | Privacy Policy page |
 | 5 | Email verification (Supabase + Resend) |
-| 6 | Password reset (forgot + reset pages, AuthContext, expired-link handling) |
+| 6 | Password reset (forgot/reset pages, expired-link handling) |
+| 7 | **Abandoned Cart Recovery** – full 3-email sequence, real Shopify discount codes, recovery detection |
+| 8 | **Review Request Automator** – fulfillment-triggered scheduling, multi-platform review URLs, cancellation handling |
+| 9 | **Low Stock Alerts** – immediate + daily-digest modes, email + Slack + both, per-product cooldown |
+| 10 | **Best Sellers Collection** – real sales ranking, diff-based collection sync, fixed revenue/pagination |
+| 11 | Pinterest Stock Sync (was already complete) |
+| 12 | Stripe webhook handler (checkout, subscription updated/deleted, invoice paid) |
 
 ---
 
-## ⚠️ Partial (2)
+## ❌ Remaining (4 blockers)
 
-| # | Blocker | What’s left |
-|---|--------|-------------|
-| 7 | 5 automations on 3+ stores | Pinterest Stock Sync done; implement & test Review Request, Low Stock, Abandoned Cart, Best Sellers; test on 3+ stores |
-| 8 | Support email | Resend configured; wire support/alert flow and test |
+### 1. `vercel.json` — Cron Job Config
+**CRITICAL** – without this, no scheduled automation (abandoned cart emails, review requests, low stock digests, best sellers updates) will ever run in production.
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
+```
+
+Also add `CRON_SECRET` to Vercel env vars and to `.env.local`, then update the cron path to `/api/cron?secret=YOUR_SECRET`.
+
+**Time:** 10 minutes
 
 ---
 
-## ☐ Pending (2)
+### 2. Production Environment Variables on Vercel
+These must be set in the Vercel dashboard before deploying:
 
-| # | Blocker |
-|---|--------|
-| 9 | Stripe webhooks fully tested (all events, CLI, prod) |
-| 10 | Sentry error monitoring (account, project, DSN, test, alerts) |
+| Variable | Status |
+|----------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Set locally |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Set locally |
+| `SUPABASE_SERVICE_ROLE_KEY` | Set locally |
+| `SHOPIFY_CLIENT_ID` | Set locally |
+| `SHOPIFY_CLIENT_SECRET` | Set locally |
+| `SHOPIFY_WEBHOOK_SECRET` | Set locally |
+| `STRIPE_SECRET_KEY` | Set locally |
+| `STRIPE_WEBHOOK_SECRET` | Set locally |
+| `RESEND_API_KEY` | Set locally |
+| `NEXT_PUBLIC_APP_URL` | Set to production URL |
+| `CRON_SECRET` | **Not set** – add before deploying |
+| `SUPPORT_ALERT_EMAILS` | **Not set** – needed for low stock alerts fallback |
+| `ENCRYPTION_KEY` | Check if set |
+
+**Time:** 15 minutes
+
+---
+
+### 3. Stripe Webhooks – End-to-End Test
+The handler code is complete. What's needed:
+- [ ] Register the webhook endpoint in Stripe Dashboard → `https://yourdomain.com/api/webhooks/stripe`
+- [ ] Test with Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+- [ ] Trigger test events: `stripe trigger checkout.session.completed`
+- [ ] Verify subscription status updates in Supabase
+- [ ] Test `customer.subscription.deleted` (cancellation → downgrade to free)
+
+**Time:** 30 minutes
+
+---
+
+### 4. Sentry Error Monitoring
+Currently there is zero error monitoring in production. If an automation fails silently, you won't know.
+
+- [ ] Create account at sentry.io
+- [ ] Create a Next.js project
+- [ ] `npm install @sentry/nextjs`
+- [ ] Run `npx @sentry/wizard@latest -i nextjs`
+- [ ] Add `SENTRY_DSN` to Vercel env vars
+- [ ] Test: throw an intentional error, verify it appears in Sentry
+
+**Time:** 30 minutes
 
 ---
 
 ## Summary
 
-- **6 done** – Security, legal, email verification, password reset.
-- **2 partial** – Automations (1/5), support email (Resend ready).
-- **2 pending** – Stripe testing, Sentry.
+| Status | Count |
+|--------|-------|
+| ✅ Done | 12 |
+| ❌ Remaining | 4 |
 
-**Progress:** 6/10 done, 2 partial → **8/10 in good shape.**
+**All 5 automations are complete.** The 4 remaining items are infrastructure/ops tasks (cron config, env vars, Stripe test, Sentry) — none require code changes except `vercel.json`.

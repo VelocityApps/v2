@@ -1,28 +1,16 @@
-<svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Outer gradient ring -->
+<svg width="400" height="80" viewBox="0 0 400 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="outerRingGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop offset="0%" stop-color="#00bcd4" stop-opacity="1" />
-      <stop offset="50%" stop-color="#00ff88" stop-opacity="1" />
-      <stop offset="100%" stop-color="#32cd32" stop-opacity="1" />
+    <linearGradient id="va-g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00bcd4"/>
+      <stop offset="50%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#32cd32"/>
     </linearGradient>
   </defs>
-  
-  <!-- Outer gradient ring circle -->
-  <circle cx="100" cy="90" r="70" fill="url(#outerRingGradient)"/>
-  
-  <!-- Inner dark teal circle -->
-  <circle cx="100" cy="90" r="58" fill="#0a0a0a"/>
-  
-  <!-- Upper V shape (orange, pointing down) -->
-  <path d="M 70 60 L 100 35 L 130 60 Z" fill="#ff6600"/>
-  
-  <!-- Lower V shape (teal, pointing up) -->
-  <path d="M 70 120 L 100 145 L 130 120 Z" fill="#40e0d0"/>
-  
-  <!-- Text: VELOCITY -->
-  <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">VELOCITY</text>
-  
-  <!-- Text: APPS -->
-  <text x="100" y="205" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">APPS</text>
+  <!-- V lightning icon (72x72, centered in 80px height = 4px padding top/bottom) -->
+  <g transform="translate(4, 4)">
+    <path d="M 8 8 L 36 64 L 64 8 L 52 8 L 36 47 L 20 8 Z" fill="url(#va-g)"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="92" y="36" font-family="Arial Black, Arial, sans-serif" font-size="24" font-weight="900" letter-spacing="4" fill="white">VELOCITY</text>
+  <text x="92" y="64" font-family="Arial Black, Arial, sans-serif" font-size="20" font-weight="900" letter-spacing="8" fill="#00bcd4">APPS</text>
 </svg>

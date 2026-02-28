@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 
 interface ConfigSchema {
   [key: string]: {
-    type: 'text' | 'number' | 'select' | 'textarea' | 'json' | 'password';
+    type: 'text' | 'number' | 'select' | 'textarea' | 'json' | 'password' | 'checkbox';
     label: string;
     default?: any;
     required?: boolean;
@@ -55,6 +55,19 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
 
   const handleChange = (key: string, value: any) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Show JSON as pretty-printed; if value is already a string (e.g. from DB), parse then stringify to avoid escaped-quote garbage
+  const formatJsonForDisplay = (val: unknown): string => {
+    if (val === undefined || val === null) return '[]';
+    if (typeof val === 'string') {
+      try {
+        return JSON.stringify(JSON.parse(val), null, 2);
+      } catch {
+        return val;
+      }
+    }
+    return JSON.stringify(val, null, 2);
   };
 
   return (
@@ -117,10 +130,11 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
 
           {schema.type === 'json' && (
             <textarea
-              value={JSON.stringify(config[key] || schema.default || [], null, 2)}
+              value={formatJsonForDisplay(config[key] ?? schema.default ?? [])}
               onChange={(e) => {
                 try {
-                  handleChange(key, JSON.parse(e.target.value));
+                  const parsed = JSON.parse(e.target.value);
+                  handleChange(key, parsed);
                 } catch {
                   // Invalid JSON, ignore
                 }
@@ -129,6 +143,18 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               rows={4}
               className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white font-mono text-sm focus:outline-none focus:border-[#0066cc] transition-colors"
             />
+          )}
+
+          {schema.type === 'checkbox' && (
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={Boolean(config[key] ?? schema.default ?? false)}
+                onChange={(e) => handleChange(key, e.target.checked)}
+                className="w-4 h-4 rounded border-[#333] bg-[#0a0a0a] text-[#0066cc] focus:ring-[#0066cc]"
+              />
+              <span className="text-gray-300 text-sm">Yes</span>
+            </label>
           )}
         </div>
       ))}
