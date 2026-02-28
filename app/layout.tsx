@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -17,9 +17,51 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0a0a0a',
+};
+
 export const metadata: Metadata = {
-  title: "VelocityApps - Shopify Automation Marketplace",
-  description: "Shopify automations that just work. Browse 20+ pre-built automations for your store.",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: 'VelocityApps – Shopify Automation Marketplace',
+    template: '%s | VelocityApps',
+  },
+  description:
+    'Browse 20+ pre-built automations for your Shopify store. Abandoned cart recovery, review requests, low stock alerts, best-sellers collection sync, and more — all with zero code.',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: APP_URL,
+    siteName: 'VelocityApps',
+    title: 'VelocityApps – Shopify Automation Marketplace',
+    description:
+      'Browse 20+ pre-built automations for your Shopify store. Zero code required.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'VelocityApps – Shopify Automation Marketplace',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'VelocityApps – Shopify Automation Marketplace',
+    description:
+      'Browse 20+ pre-built automations for your Shopify store. Zero code required.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
 };
 
 export default function RootLayout({

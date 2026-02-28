@@ -170,12 +170,7 @@ export async function decryptToken(encryptedToken: string): Promise<string> {
     
     return decrypted;
   } catch (error) {
-    // Fallback: assume it's plain text (for development only)
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[TokenDecrypt] Failed to decrypt, using plain text fallback');
-      return encryptedToken;
-    }
-    throw new Error('Failed to decrypt token');
+    throw new Error('Failed to decrypt token: data may be corrupted or the encryption key has changed');
   }
 }
 

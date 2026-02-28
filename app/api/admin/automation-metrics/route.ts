@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllAutomationMetrics, getCriticalErrors } from '@/lib/automation-monitoring';
+import { verifyAdminPassword } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
 /**
- * GET /api/admin/automation-metrics
+ * GET /api/admin/automation-metrics?password=ADMIN_PASSWORD
  * Get metrics for all automations (admin only)
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add admin authentication check
-    // For now, allow access (add proper auth later)
+    if (!verifyAdminPassword(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const metrics = await getAllAutomationMetrics();
     const criticalErrors = await getCriticalErrors(24); // Last 24 hours

@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCriticalErrors } from '@/lib/automation-monitoring';
+import { verifyAdminPassword } from '@/lib/admin-auth';
 
 /**
- * GET /api/admin/error-alerts
+ * GET /api/admin/error-alerts?password=ADMIN_PASSWORD
  * Get critical errors that need attention (for monitoring/alerts)
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add admin authentication
+    if (!verifyAdminPassword(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const hours = parseInt(request.nextUrl.searchParams.get('hours') || '24');
     
     const criticalErrors = await getCriticalErrors(hours);

@@ -11,16 +11,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { getAutomation } from '@/lib/automations/base';
 
-// Verify cron secret (set in environment variables)
-const CRON_SECRET = process.env.CRON_SECRET || '';
+const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret if provided
+    // CRON_SECRET must always be set — reject the request if it isn't configured
+    if (!CRON_SECRET) {
+      console.error('[Cron] CRON_SECRET environment variable is not set');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+
     const authHeader = request.headers.get('authorization');
     const cronSecret = request.nextUrl.searchParams.get('secret');
-    
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && cronSecret !== CRON_SECRET) {
+
+    if (authHeader !== `Bearer ${CRON_SECRET}` && cronSecret !== CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
