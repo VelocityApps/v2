@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import ConfigForm from '@/components/automations/ConfigForm';
 import Link from 'next/link';
@@ -12,6 +12,7 @@ export default function AutomationManagementPage() {
   const { session } = useAuth();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
 
   const [userAutomation, setUserAutomation] = useState<any>(null);
@@ -20,6 +21,7 @@ export default function AutomationManagementPage() {
   const [config, setConfig] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,6 +29,13 @@ export default function AutomationManagementPage() {
       fetchData();
     }
   }, [session, id]);
+
+  // Show success toast when returning from Stripe Checkout
+  useEffect(() => {
+    if (searchParams.get('billing') === 'success') {
+      toast.success('Automation activated!');
+    }
+  }, [searchParams]);
 
   async function fetchData() {
     if (!session) return;
@@ -104,6 +113,144 @@ export default function AutomationManagementPage() {
     }
   }
 
+  async function handleActivate() {
+    if (!session) return;
+
+    setBillingLoading(true);
+    try {
+      const response = await fetch(`/api/automations/${id}/subscribe`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        toast.error(data.error);
+      } else if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to start checkout');
+    } finally {
+      setBillingLoading(false);
+    }
+  }
+
+  async function handlePortal() {
+    if (!session) return;
+
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        toast.error(data.error);
+      } else if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to open billing portal');
+    } finally {
+      setBillingLoading(false);
+    }
+  }
+
+  function renderBillingSection() {
+    if (!userAutomation || !automation) return null;
+
+    const { status, stripe_subscription_id, trial_ends_at } = userAutomation;
+    const priceMonthly = automation.price_monthly;
+
+    const activateBtn = (label: string) => (
+      <button
+        onClick={handleActivate}
+        disabled={billingLoading}
+        className="inline-block mt-3 px-4 py-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg text-sm font-medium disabled:opacity-50"
+      >
+        {billingLoading ? 'Loading…' : label}
+      </button>
+    );
+
+    const portalBtn = (label: string) => (
+      <button
+        onClick={handlePortal}
+        disabled={billingLoading}
+        className="inline-block mt-3 px-4 py-2 bg-[#374151] hover:bg-[#4b5563] text-white rounded-lg text-sm font-medium disabled:opacity-50"
+      >
+        {billingLoading ? 'Loading…' : label}
+      </button>
+    );
+
+    if (status === 'trial') {
+      const end = trial_ends_at ? new Date(trial_ends_at).getTime() : 0;
+      const days = end ? Math.max(0, Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000))) : 0;
+      return (
+        <div className="mb-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+          <p className="text-blue-300 font-medium">
+            Free trial — {days} day{days !== 1 ? 's' : ''} left
+          </p>
+          <p className="text-gray-400 text-sm mt-1">
+            Then £{priceMonthly}/month. Add a card now to continue without interruption.
+          </p>
+          {activateBtn('Activate Automation')}
+        </div>
+      );
+    }
+
+    if (status === 'active' && stripe_subscription_id) {
+      return (
+        <div className="mb-4 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+          <p className="text-green-300 font-medium">Active · £{priceMonthly}/month</p>
+          {portalBtn('Manage subscription')}
+        </div>
+      );
+    }
+
+    if (status === 'paused' && !stripe_subscription_id) {
+      return (
+        <div className="mb-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+          <p className="text-yellow-300 font-medium">Trial ended</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Subscribe for £{priceMonthly}/month to reactivate.
+          </p>
+          {activateBtn('Activate Automation')}
+        </div>
+      );
+    }
+
+    if (status === 'paused' && stripe_subscription_id) {
+      return (
+        <div className="mb-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+          <p className="text-yellow-300 font-medium">Paused — payment issue</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Update your payment method to reactivate.
+          </p>
+          {portalBtn('Manage subscription')}
+        </div>
+      );
+    }
+
+    if (status === 'cancelled') {
+      return (
+        <div className="mb-4 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+          <p className="text-red-300 font-medium">Cancelled</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Resubscribe for £{priceMonthly}/month to reactivate.
+          </p>
+          {activateBtn('Resubscribe')}
+        </div>
+      );
+    }
+
+    return null;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -148,30 +295,11 @@ export default function AutomationManagementPage() {
               userAutomation.status === 'paused' ? 'bg-yellow-500/20 text-yellow-300' :
               'bg-red-500/20 text-red-300'
             }`}>
-              {userAutomation.status === 'trial' ? 'Trial' : userAutomation.status}
+              {userAutomation.status === 'trial' ? 'Trial' : userAutomation.status.charAt(0).toUpperCase() + userAutomation.status.slice(1)}
             </div>
           </div>
 
-          {userAutomation.status === 'trial' && userAutomation.trial_ends_at && (
-            <div className="mb-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-              <p className="text-blue-300 font-medium">
-                Free trial ends {new Date(userAutomation.trial_ends_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
-                {(() => {
-                  const end = new Date(userAutomation.trial_ends_at).getTime();
-                  const days = Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000));
-                  if (days <= 2) return ` — ${days} day${days !== 1 ? 's' : ''} left`;
-                  return ` — ${days} days left`;
-                })()}
-              </p>
-              <p className="text-gray-400 text-sm mt-1">Then £{automation?.price_monthly}/month. Add a payment method to continue without interruption.</p>
-              <Link
-                href="/marketplace"
-                className="inline-block mt-3 px-4 py-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg text-sm font-medium"
-              >
-                Upgrade to Pro
-              </Link>
-            </div>
-          )}
+          {renderBillingSection()}
 
           {userAutomation.error_message && (
             <div className="mb-4 p-3 rounded-lg bg-red-900/30 text-red-300 border border-red-500/50 text-sm">
@@ -248,6 +376,3 @@ export default function AutomationManagementPage() {
     </div>
   );
 }
-
-
-

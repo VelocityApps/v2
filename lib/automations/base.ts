@@ -13,7 +13,8 @@ export interface UserAutomation {
   shopify_store_url: string;
   shopify_access_token_encrypted: string | null;
   config: Record<string, any>;
-  status: 'active' | 'paused' | 'error' | 'trial';
+  status: 'active' | 'paused' | 'error' | 'trial' | 'cancelled';
+  stripe_subscription_id?: string | null;
   last_run_at: string | null;
   next_run_at: string | null;
   error_message: string | null;
@@ -109,7 +110,7 @@ export abstract class BaseAutomation {
    */
   protected async updateStatus(
     userAutomationId: string,
-    status: 'active' | 'paused' | 'error' | 'trial',
+    status: 'active' | 'paused' | 'error' | 'trial' | 'cancelled',
     errorMessage?: string
   ): Promise<void> {
     await supabaseAdmin

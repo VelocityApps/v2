@@ -39,6 +39,14 @@ export async function PATCH(
       );
     }
 
+    // Require an active subscription — prevents bypassing billing wall
+    if (!userAutomation.stripe_subscription_id) {
+      return NextResponse.json(
+        { error: 'A subscription is required to resume this automation' },
+        { status: 402 }
+      );
+    }
+
     // Update status to active
     const { data, error } = await supabaseAdmin
       .from('user_automations')

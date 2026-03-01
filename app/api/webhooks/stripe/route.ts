@@ -30,40 +30,51 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.user_id;
 
-        if (userId && session.subscription) {
-          // Get current profile to determine upgrade from tier
-          const { data: currentProfile } = await supabaseAdmin
-            .from('user_profiles')
-            .select('subscription_status')
-            .eq('user_id', userId)
-            .single();
+        if (session.metadata?.type === 'automation') {
+          // Per-automation subscription checkout completed
+          const userAutomationId = session.metadata.user_automation_id;
+          if (userAutomationId && session.subscription) {
+            await supabaseAdmin
+              .from('user_automations')
+              .update({
+                status: 'active',
+                stripe_subscription_id: session.subscription as string,
+                error_message: null,
+              })
+              .eq('id', userAutomationId);
+          }
+        } else {
+          // Account-level plan checkout
+          const userId = session.metadata?.user_id;
 
-          const fromTier = currentProfile?.subscription_status || 'free';
+          if (userId && session.subscription) {
+            const { data: currentProfile } = await supabaseAdmin
+              .from('user_profiles')
+              .select('subscription_status')
+              .eq('user_id', userId)
+              .single();
 
-          // Use plan_type metadata stored at checkout creation time.
-          // line_items is not populated in webhook payloads without explicit expansion.
-          const toTier = (session.metadata?.plan_type === 'teams') ? 'teams' : 'pro';
+            const fromTier = currentProfile?.subscription_status || 'free';
+            const toTier = (session.metadata?.plan_type === 'teams') ? 'teams' : 'pro';
 
-          // Update user profile to pro/teams
-          await supabaseAdmin
-            .from('user_profiles')
-            .update({
-              subscription_status: toTier,
-              stripe_subscription_id: session.subscription as string,
-              credits_remaining: toTier === 'teams' ? 2000.0 : 500.0,
-              credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            })
-            .eq('user_id', userId);
+            await supabaseAdmin
+              .from('user_profiles')
+              .update({
+                subscription_status: toTier,
+                stripe_subscription_id: session.subscription as string,
+                credits_remaining: toTier === 'teams' ? 2000.0 : 500.0,
+                credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              })
+              .eq('user_id', userId);
 
-          // Log upgrade event
-          if (fromTier !== toTier) {
-            await logUpgrade(userId, {
-              from_tier: fromTier,
-              to_tier: toTier,
-              amount: toTier === 'teams' ? 99 : 29,
-            });
+            if (fromTier !== toTier) {
+              await logUpgrade(userId, {
+                from_tier: fromTier,
+                to_tier: toTier,
+                amount: toTier === 'teams' ? 99 : 29,
+              });
+            }
           }
         }
         break;
@@ -71,85 +82,38 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        
-        // Find user by customer ID
-        const { data: profile } = await supabaseAdmin
-          .from('user_profiles')
-          .select('user_id')
-          .eq('stripe_customer_id', subscription.customer as string)
+
+        // Check if this subscription belongs to a user_automation first
+        const { data: ua } = await supabaseAdmin
+          .from('user_automations')
+          .select('id')
+          .eq('stripe_subscription_id', subscription.id)
           .single();
 
-        if (profile) {
-          const status = subscription.status === 'active' ? 'pro' : 'cancelled';
-          
+        if (ua) {
+          const newStatus = (subscription.status === 'active' || subscription.status === 'trialing')
+            ? 'active'
+            : 'paused';
           await supabaseAdmin
-            .from('user_profiles')
-            .update({
-              subscription_status: status,
-              stripe_subscription_id: subscription.id,
-            })
-            .eq('user_id', profile.user_id);
-        }
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        
-        const { data: profile } = await supabaseAdmin
-          .from('user_profiles')
-          .select('user_id, subscription_status')
-          .eq('stripe_customer_id', subscription.customer as string)
-          .single();
-
-        if (profile) {
-          const previousTier = profile.subscription_status || 'free';
-          
-          // Downgrade to free plan
-          await supabaseAdmin
-            .from('user_profiles')
-            .update({
-              subscription_status: 'free',
-              credits_remaining: 10.0,
-              credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              stripe_subscription_id: null,
-            })
-            .eq('user_id', profile.user_id);
-
-          // Log churn event
-          if (previousTier !== 'free' && previousTier !== 'cancelled') {
-            await logChurn(profile.user_id, {
-              subscription_tier: previousTier,
-            });
-          }
-        }
-        break;
-      }
-
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
-        
-        // Invoice subscription can be a string ID or a Subscription object
-        const invoiceData = invoice as any;
-        const subscriptionId = typeof invoiceData.subscription === 'string' 
-          ? invoiceData.subscription 
-          : invoiceData.subscription?.id || null;
-        
-        if (subscriptionId) {
+            .from('user_automations')
+            .update({ status: newStatus })
+            .eq('id', ua.id);
+        } else {
+          // Fall through to account-level plan logic
           const { data: profile } = await supabaseAdmin
             .from('user_profiles')
-            .select('user_id, subscription_status')
-            .eq('stripe_subscription_id', subscriptionId)
+            .select('user_id')
+            .eq('stripe_customer_id', subscription.customer as string)
             .single();
 
-          if (profile && (profile.subscription_status === 'pro' || profile.subscription_status === 'teams')) {
-            // Reset credits on monthly renewal for both pro and teams
-            const credits = profile.subscription_status === 'teams' ? 2000.0 : 500.0;
+          if (profile) {
+            const status = subscription.status === 'active' ? 'pro' : 'cancelled';
+
             await supabaseAdmin
               .from('user_profiles')
               .update({
-                credits_remaining: credits,
-                credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                subscription_status: status,
+                stripe_subscription_id: subscription.id,
               })
               .eq('user_id', profile.user_id);
           }
@@ -157,7 +121,53 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      case 'invoice.payment_failed': {
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+
+        // Check if this subscription belongs to a user_automation first
+        const { data: ua } = await supabaseAdmin
+          .from('user_automations')
+          .select('id')
+          .eq('stripe_subscription_id', subscription.id)
+          .single();
+
+        if (ua) {
+          await supabaseAdmin
+            .from('user_automations')
+            .update({ status: 'cancelled', stripe_subscription_id: null })
+            .eq('id', ua.id);
+        } else {
+          // Fall through to account-level plan logic
+          const { data: profile } = await supabaseAdmin
+            .from('user_profiles')
+            .select('user_id, subscription_status')
+            .eq('stripe_customer_id', subscription.customer as string)
+            .single();
+
+          if (profile) {
+            const previousTier = profile.subscription_status || 'free';
+
+            await supabaseAdmin
+              .from('user_profiles')
+              .update({
+                subscription_status: 'free',
+                credits_remaining: 10.0,
+                credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                stripe_subscription_id: null,
+              })
+              .eq('user_id', profile.user_id);
+
+            if (previousTier !== 'free' && previousTier !== 'cancelled') {
+              await logChurn(profile.user_id, {
+                subscription_tier: previousTier,
+              });
+            }
+          }
+        }
+        break;
+      }
+
+      case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
         const invoiceData = invoice as any;
         const subscriptionId = typeof invoiceData.subscription === 'string'
@@ -171,18 +181,60 @@ export async function POST(request: NextRequest) {
             .eq('stripe_subscription_id', subscriptionId)
             .single();
 
-          if (profile) {
-            // Log the failure – Stripe will retry automatically (Smart Retries).
-            // We don't downgrade yet; Stripe will fire customer.subscription.deleted
-            // if all retries fail and the subscription is cancelled.
-            console.error(`[Stripe] Payment failed for user ${profile.user_id}, subscription ${subscriptionId}`);
+          if (profile && (profile.subscription_status === 'pro' || profile.subscription_status === 'teams')) {
+            const credits = profile.subscription_status === 'teams' ? 2000.0 : 500.0;
+            await supabaseAdmin
+              .from('user_profiles')
+              .update({
+                credits_remaining: credits,
+                credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              })
+              .eq('user_id', profile.user_id);
+          }
+          // Automation subscriptions don't use credits — no action needed for them
+        }
+        break;
+      }
 
-            // Optionally notify the user via email
-            const { sendAlertEmail } = await import('@/lib/email');
-            await sendAlertEmail(
-              `Payment failed – user ${profile.user_id}`,
-              `<p>Stripe payment failed for subscription <strong>${subscriptionId}</strong> (user: ${profile.user_id}, tier: ${profile.subscription_status}).</p><p>Stripe will retry automatically. No action needed unless retries are exhausted.</p>`
-            ).catch(() => {}); // non-blocking
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const invoiceData = invoice as any;
+        const subscriptionId = typeof invoiceData.subscription === 'string'
+          ? invoiceData.subscription
+          : invoiceData.subscription?.id || null;
+
+        if (subscriptionId) {
+          // Check if this belongs to an automation subscription
+          const { data: ua } = await supabaseAdmin
+            .from('user_automations')
+            .select('id')
+            .eq('stripe_subscription_id', subscriptionId)
+            .single();
+
+          if (ua) {
+            // Pause the automation; Stripe retries automatically.
+            // customer.subscription.deleted fires if all retries are exhausted.
+            await supabaseAdmin
+              .from('user_automations')
+              .update({ status: 'paused' })
+              .eq('id', ua.id);
+          } else {
+            // Account-level plan payment failure
+            const { data: profile } = await supabaseAdmin
+              .from('user_profiles')
+              .select('user_id, subscription_status')
+              .eq('stripe_subscription_id', subscriptionId)
+              .single();
+
+            if (profile) {
+              console.error(`[Stripe] Payment failed for user ${profile.user_id}, subscription ${subscriptionId}`);
+
+              const { sendAlertEmail } = await import('@/lib/email');
+              await sendAlertEmail(
+                `Payment failed – user ${profile.user_id}`,
+                `<p>Stripe payment failed for subscription <strong>${subscriptionId}</strong> (user: ${profile.user_id}, tier: ${profile.subscription_status}).</p><p>Stripe will retry automatically. No action needed unless retries are exhausted.</p>`
+              ).catch(() => {}); // non-blocking
+            }
           }
         }
         break;
@@ -201,4 +253,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
