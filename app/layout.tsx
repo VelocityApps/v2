@@ -6,6 +6,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
+import { PostHogProvider } from "@/components/PostHogProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,8 +69,10 @@ export default function RootLayout({
       <body suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Analytics />
         <ErrorBoundary>
           <AuthProvider>
+            <PostHogProvider>
             <div className="flex flex-col min-h-screen">
               <Navigation />
               <main className="flex-grow">
@@ -100,6 +104,7 @@ export default function RootLayout({
                 },
               }}
             />
+            </PostHogProvider>
           </AuthProvider>
         </ErrorBoundary>
       </body>
