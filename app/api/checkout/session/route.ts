@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { planType = 'pro' } = await request.json();
+
+    if (!['pro', 'teams'].includes(planType)) {
+      return NextResponse.json({ error: 'Invalid plan type' }, { status: 400 });
+    }
     const token = authHeader.replace('Bearer ', '');
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';

@@ -169,10 +169,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Strip encrypted token before returning to client
+    const { shopify_access_token_encrypted: _omit, ...safeAutomation } = userAutomation;
+
     return NextResponse.json({
       success: true,
       userAutomationId: userAutomation.id,
-      userAutomation,
+      userAutomation: safeAutomation,
     });
   } catch (error: any) {
     console.error('Error in POST /api/automations/install:', error);
