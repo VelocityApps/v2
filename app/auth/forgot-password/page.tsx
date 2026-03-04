@@ -42,25 +42,25 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8">
+        <div className="bg-white border border-[#e1e3e5] rounded-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Forgot Password?</h1>
-            <p className="text-gray-400">
+            <h1 className="text-2xl font-bold text-[#202223] mb-2">Forgot Password?</h1>
+            <p className="text-[#6d7175] text-sm">
               Enter your email address and we'll send you a link to reset your password.
             </p>
           </div>
 
           {!sent ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {errorMessage && (
-                <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {errorMessage}
                 </div>
               )}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-[#202223] mb-1.5">
                   Email Address
                 </label>
                 <input
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
                   placeholder="you@example.com"
                 />
               </div>
@@ -77,23 +77,23 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </button>
             </form>
           ) : (
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto bg-green-900/20 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 mx-auto bg-[#e3f9e3] rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-[#008060]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-white">Check Your Email</h2>
-              <p className="text-gray-400">
-                We've sent a password reset link to <strong className="text-white">{email}</strong>
+              <h2 className="text-xl font-semibold text-[#202223]">Check Your Email</h2>
+              <p className="text-[#6d7175] text-sm">
+                We've sent a password reset link to <strong className="text-[#202223]">{email}</strong>
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-[#8c9196]">
                 Didn't receive the email? Check your spam folder or try again.
               </p>
               <button
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                   setSent(false);
                   setEmail('');
                 }}
-                className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors text-sm"
+                className="text-[#2563eb] hover:text-[#1d4ed8] transition-colors text-sm font-medium"
               >
                 Send another email
               </button>
@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
           <div className="mt-6 text-center">
             <Link
               href="/onboarding"
-              className="text-sm text-gray-400 hover:text-[#3b82f6] transition-colors"
+              className="text-sm text-[#6d7175] hover:text-[#2563eb] transition-colors"
             >
               ← Back to Sign In
             </Link>

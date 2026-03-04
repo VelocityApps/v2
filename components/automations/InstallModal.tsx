@@ -166,45 +166,45 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1a1a1a] border border-[#333] rounded-2xl p-8 max-w-2xl w-full">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white border border-[#e1e3e5] rounded-2xl p-8 max-w-2xl w-full shadow-xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Install {automation.name}</h2>
+          <h2 className="text-xl font-bold text-[#202223]">Install {automation.name}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-[#6d7175] hover:text-[#202223] transition-colors"
           >
             ✕
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-900/30 text-red-300 border border-red-500/50 text-sm">
+          <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
             {error}
           </div>
         )}
 
         {step === 'connect' && (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-[#6d7175] text-sm">
               Connect your Shopify store to install this automation.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Shopify Store URL
+              <label className="block text-sm font-medium text-[#202223] mb-1.5">
+                Shopify store URL
               </label>
               <input
                 type="text"
                 value={shopifyStoreUrl}
                 onChange={(e) => setShopifyStoreUrl(e.target.value)}
                 placeholder="mystore.myshopify.com"
-                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
+                className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
               />
             </div>
             <button
               onClick={handleConnectShopify}
               disabled={loading || !shopifyStoreUrl}
-              className="w-full px-4 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {loading ? 'Connecting...' : 'Connect Shopify Store'}
             </button>
@@ -213,7 +213,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
 
         {step === 'configure' && (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-[#6d7175] text-sm">
               Configure your automation settings.
             </p>
             <ConfigForm
@@ -224,14 +224,14 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
             <div className="flex gap-3">
               <button
                 onClick={() => setStep('connect')}
-                className="flex-1 px-4 py-3 bg-[#333] hover:bg-[#444] text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors"
               >
                 Back
               </button>
               <button
                 onClick={handleInstall}
                 disabled={loading}
-                className="flex-1 px-4 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 {loading ? 'Installing...' : 'Install Automation'}
               </button>
@@ -241,8 +241,8 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
 
         {step === 'installing' && (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
-            <p className="text-gray-300">Installing automation...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb] mx-auto mb-4"></div>
+            <p className="text-[#6d7175]">Installing automation...</p>
           </div>
         )}
       </div>

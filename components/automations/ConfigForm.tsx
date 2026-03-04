@@ -74,7 +74,7 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
     <div className="space-y-4">
       {Object.entries(configSchema).map(([key, schema]) => (
         <div key={key}>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#202223] mb-2">
             {schema.label}
             {schema.required && <span className="text-red-400 ml-1">*</span>}
           </label>
@@ -85,7 +85,7 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               value={config[key] || ''}
               onChange={(e) => handleChange(key, e.target.value)}
               required={schema.required}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
               placeholder={schema.type === 'password' ? 'Paste token from developers.pinterest.com' : schema.default}
               autoComplete={schema.type === 'password' ? 'off' : undefined}
             />
@@ -97,7 +97,7 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               value={config[key] || ''}
               onChange={(e) => handleChange(key, Number(e.target.value))}
               required={schema.required}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
               placeholder={schema.default}
             />
           )}
@@ -107,7 +107,7 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               value={config[key] || schema.default || ''}
               onChange={(e) => handleChange(key, e.target.value)}
               required={schema.required}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white focus:outline-none focus:border-[#0066cc] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] focus:outline-none focus:border-[#2563eb] transition-colors"
             >
               {schema.options?.map((option) => (
                 <option key={option} value={option}>
@@ -123,7 +123,7 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               onChange={(e) => handleChange(key, e.target.value)}
               required={schema.required}
               rows={4}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
               placeholder={schema.default}
             />
           )}
@@ -141,7 +141,7 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               }}
               required={schema.required}
               rows={4}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white font-mono text-sm focus:outline-none focus:border-[#0066cc] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] font-mono text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
             />
           )}
 
@@ -151,9 +151,9 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
                 type="checkbox"
                 checked={Boolean(config[key] ?? schema.default ?? false)}
                 onChange={(e) => handleChange(key, e.target.checked)}
-                className="w-4 h-4 rounded border-[#333] bg-[#0a0a0a] text-[#0066cc] focus:ring-[#0066cc]"
+                className="w-4 h-4 rounded border-[#e1e3e5] bg-white text-[#2563eb] focus:ring-[#2563eb]"
               />
-              <span className="text-gray-300 text-sm">Yes</span>
+              <span className="text-[#202223] text-sm">Yes</span>
             </label>
           )}
         </div>

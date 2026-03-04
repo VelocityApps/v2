@@ -34,7 +34,7 @@ interface AutomationMetrics {
 
 export default function MarketplacePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f6f6f7]" />}>
       <MarketplaceContent />
     </Suspense>
   );
@@ -116,12 +116,12 @@ function MarketplaceContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4">Automation Marketplace</h1>
-          <p className="text-gray-400 text-lg">
-            Browse {automations.length > 0 ? `${automations.length}` : '20+'} pre-built automations for your Shopify store
+          <h1 className="text-3xl font-bold text-[#202223] mb-2">Automation Marketplace</h1>
+          <p className="text-[#6d7175] text-lg">
+            Browse {automations.length > 0 ? `${automations.length}` : '15'}+ pre-built automations for your Shopify store
           </p>
         </div>
 
@@ -131,10 +131,10 @@ function MarketplaceContent() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedCategory === category
-                  ? 'bg-[#3b82f6] text-white'
-                  : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
+                  ? 'bg-[#2563eb] text-white'
+                  : 'bg-white border border-[#e1e3e5] text-[#6d7175] hover:border-[#c9cccf] hover:text-[#202223]'
               }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -145,15 +145,15 @@ function MarketplaceContent() {
         {/* Loading State */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading automations...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb] mx-auto mb-4"></div>
+            <p className="text-[#6d7175]">Loading automations...</p>
           </div>
         ) : filteredAutomations.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
-            <p className="text-gray-400 text-lg mb-2">No automations found</p>
-            <p className="text-gray-500 text-sm">
-              {selectedCategory === 'all' 
+            <p className="text-[#6d7175] text-lg mb-2">No automations found</p>
+            <p className="text-[#8c9196] text-sm">
+              {selectedCategory === 'all'
                 ? 'Try running the database migration to seed automations.'
                 : `No automations in the "${selectedCategory}" category.`}
             </p>
@@ -213,7 +213,7 @@ function MarketplaceContent() {
             })()}
             {/* Debug info - remove in production */}
             {process.env.NODE_ENV === 'development' && (
-              <div className="text-center text-gray-500 text-sm mt-8">
+              <div className="text-center text-[#8c9196] text-sm mt-8">
                 Showing {filteredAutomations.length} of {automations.length} automations
                 {selectedCategory !== 'all' && ` (filtered by ${selectedCategory})`}
               </div>

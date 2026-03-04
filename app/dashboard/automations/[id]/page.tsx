@@ -171,7 +171,7 @@ export default function AutomationManagementPage() {
       <button
         onClick={handleActivate}
         disabled={billingLoading}
-        className="inline-block mt-3 px-4 py-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg text-sm font-medium disabled:opacity-50"
+        className="inline-block mt-3 px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg text-sm font-medium disabled:opacity-50 shadow-sm"
       >
         {billingLoading ? 'Loading…' : label}
       </button>
@@ -181,7 +181,7 @@ export default function AutomationManagementPage() {
       <button
         onClick={handlePortal}
         disabled={billingLoading}
-        className="inline-block mt-3 px-4 py-2 bg-[#374151] hover:bg-[#4b5563] text-white rounded-lg text-sm font-medium disabled:opacity-50"
+        className="inline-block mt-3 px-4 py-2 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg text-sm font-medium disabled:opacity-50"
       >
         {billingLoading ? 'Loading…' : label}
       </button>
@@ -191,11 +191,11 @@ export default function AutomationManagementPage() {
       const end = trial_ends_at ? new Date(trial_ends_at).getTime() : 0;
       const days = end ? Math.max(0, Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000))) : 0;
       return (
-        <div className="mb-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-          <p className="text-blue-300 font-medium">
+        <div className="mb-4 p-4 rounded-lg bg-[#e8f0fe] border border-[#bfdbfe]">
+          <p className="text-[#1d4ed8] font-medium">
             Free trial — {days} day{days !== 1 ? 's' : ''} left
           </p>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-[#6d7175] text-sm mt-1">
             Then £{priceMonthly}/month. Add a card now to continue without interruption.
           </p>
           {activateBtn('Activate Automation')}
@@ -205,8 +205,8 @@ export default function AutomationManagementPage() {
 
     if (status === 'active' && stripe_subscription_id) {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-          <p className="text-green-300 font-medium">Active · £{priceMonthly}/month</p>
+        <div className="mb-4 p-4 rounded-lg bg-[#e3f9e3] border border-[#a3e6c4]">
+          <p className="text-[#008060] font-medium">Active · £{priceMonthly}/month</p>
           {portalBtn('Manage subscription')}
         </div>
       );
@@ -214,9 +214,9 @@ export default function AutomationManagementPage() {
 
     if (status === 'paused' && !stripe_subscription_id) {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-          <p className="text-yellow-300 font-medium">Trial ended</p>
-          <p className="text-gray-400 text-sm mt-1">
+        <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+          <p className="text-amber-700 font-medium">Trial ended</p>
+          <p className="text-[#6d7175] text-sm mt-1">
             Subscribe for £{priceMonthly}/month to reactivate.
           </p>
           {activateBtn('Activate Automation')}
@@ -226,9 +226,9 @@ export default function AutomationManagementPage() {
 
     if (status === 'paused' && stripe_subscription_id) {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-          <p className="text-yellow-300 font-medium">Paused — payment issue</p>
-          <p className="text-gray-400 text-sm mt-1">
+        <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+          <p className="text-amber-700 font-medium">Paused — payment issue</p>
+          <p className="text-[#6d7175] text-sm mt-1">
             Update your payment method to reactivate.
           </p>
           {portalBtn('Manage subscription')}
@@ -238,9 +238,9 @@ export default function AutomationManagementPage() {
 
     if (status === 'cancelled') {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-          <p className="text-red-300 font-medium">Cancelled</p>
-          <p className="text-gray-400 text-sm mt-1">
+        <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
+          <p className="text-red-700 font-medium">Cancelled</p>
+          <p className="text-[#6d7175] text-sm mt-1">
             Resubscribe for £{priceMonthly}/month to reactivate.
           </p>
           {activateBtn('Resubscribe')}
@@ -253,18 +253,18 @@ export default function AutomationManagementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
+      <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb]"></div>
       </div>
     );
   }
 
   if (!userAutomation || !automation) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#f6f6f7] text-[#202223] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Automation not found</h2>
-          <Link href="/dashboard" className="text-[#3b82f6] hover:text-[#2563eb]">
+          <Link href="/dashboard" className="text-[#2563eb] hover:text-[#1d4ed8]">
             Back to Dashboard
           </Link>
         </div>
@@ -273,27 +273,27 @@ export default function AutomationManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
           href="/dashboard"
-          className="text-[#3b82f6] hover:text-[#2563eb] mb-6 inline-block"
+          className="text-[#2563eb] hover:text-[#1d4ed8] text-sm font-medium mb-6 inline-flex items-center gap-1"
         >
           ← Back to Dashboard
         </Link>
 
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-8 mb-6">
+        <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 mb-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="text-4xl">{automation.icon}</div>
             <div>
-              <h1 className="text-2xl font-bold">{automation.name}</h1>
-              <p className="text-gray-400">{automation.description}</p>
+              <h1 className="text-2xl font-bold text-[#202223]">{automation.name}</h1>
+              <p className="text-[#6d7175]">{automation.description}</p>
             </div>
-            <div className={`ml-auto px-3 py-1 rounded-full text-sm font-medium ${
-              userAutomation.status === 'active' ? 'bg-green-500/20 text-green-300' :
-              userAutomation.status === 'trial' ? 'bg-blue-500/20 text-blue-300' :
-              userAutomation.status === 'paused' ? 'bg-yellow-500/20 text-yellow-300' :
-              'bg-red-500/20 text-red-300'
+            <div className={`ml-auto px-3 py-1 rounded-full text-xs font-medium ${
+              userAutomation.status === 'active' ? 'bg-[#e3f9e3] text-[#008060]' :
+              userAutomation.status === 'trial' ? 'bg-[#e8f0fe] text-[#2563eb]' :
+              userAutomation.status === 'paused' ? 'bg-amber-50 text-amber-700' :
+              'bg-red-50 text-red-700'
             }`}>
               {userAutomation.status === 'trial' ? 'Trial' : userAutomation.status.charAt(0).toUpperCase() + userAutomation.status.slice(1)}
             </div>
@@ -302,23 +302,23 @@ export default function AutomationManagementPage() {
           {renderBillingSection()}
 
           {userAutomation.error_message && (
-            <div className="mb-4 p-3 rounded-lg bg-red-900/30 text-red-300 border border-red-500/50 text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
               Error: {userAutomation.error_message}
             </div>
           )}
 
           {userAutomation.last_run_at && (
-            <div className="text-sm text-gray-400 mb-4">
+            <div className="text-sm text-[#6d7175] mb-4">
               Last run: {new Date(userAutomation.last_run_at).toLocaleString()}
             </div>
           )}
         </div>
 
         {/* Configuration */}
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-8 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Configuration</h2>
+        <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 mb-6">
+          <h2 className="text-lg font-semibold text-[#202223] mb-4">Configuration</h2>
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-900/30 text-red-300 border border-red-500/50 text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
               {error}
             </div>
           )}
@@ -330,43 +330,43 @@ export default function AutomationManagementPage() {
           <button
             onClick={handleSaveConfig}
             disabled={saving}
-            className="mt-4 px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="mt-4 px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
           >
             {saving ? 'Saving...' : 'Save Configuration'}
           </button>
         </div>
 
         {/* Logs */}
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-8">
-          <h2 className="text-xl font-semibold mb-4">Execution Logs</h2>
+        <div className="bg-white border border-[#e1e3e5] rounded-xl p-8">
+          <h2 className="text-lg font-semibold text-[#202223] mb-4">Execution Logs</h2>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {logs.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No logs yet</p>
+              <p className="text-[#6d7175] text-center py-8">No logs yet</p>
             ) : (
               logs.map((log) => (
                 <div
                   key={log.id}
-                  className={`p-3 rounded-lg border ${
-                    log.event_type === 'success' ? 'bg-green-500/10 border-green-500/30' :
-                    log.event_type === 'error' ? 'bg-red-500/10 border-red-500/30' :
-                    log.event_type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/30' :
-                    'bg-[#0a0a0a] border-[#333]'
+                  className={`p-3 rounded-lg border text-sm ${
+                    log.event_type === 'success' ? 'bg-[#e3f9e3] border-[#a3e6c4]' :
+                    log.event_type === 'error' ? 'bg-red-50 border-red-200' :
+                    log.event_type === 'warning' ? 'bg-amber-50 border-amber-200' :
+                    'bg-[#f6f6f7] border-[#e1e3e5]'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`text-sm font-medium ${
-                      log.event_type === 'success' ? 'text-green-300' :
-                      log.event_type === 'error' ? 'text-red-300' :
-                      log.event_type === 'warning' ? 'text-yellow-300' :
-                      'text-gray-300'
+                    <span className={`text-xs font-semibold tracking-wide ${
+                      log.event_type === 'success' ? 'text-[#008060]' :
+                      log.event_type === 'error' ? 'text-red-700' :
+                      log.event_type === 'warning' ? 'text-amber-700' :
+                      'text-[#6d7175]'
                     }`}>
                       {log.event_type.toUpperCase()}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-[#8c9196]">
                       {new Date(log.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-300">{log.message}</p>
+                  <p className="text-[#202223]">{log.message}</p>
                 </div>
               ))
             )}

@@ -159,24 +159,24 @@ export default function AutomationInfoModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-[#1a1a1a] border border-[#333] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white border border-[#e1e3e5] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-[#1a1a1a] border-b border-[#333] p-6 flex items-start justify-between">
+        <div className="sticky top-0 bg-white border-b border-[#e1e3e5] p-6 flex items-start justify-between">
           <div className="flex items-center gap-4">
             <div className="text-4xl">{automation.icon}</div>
             <div>
-              <h2 className="text-2xl font-bold text-white">{automation.name}</h2>
-              <p className="text-gray-400 capitalize">{automation.category}</p>
+              <h2 className="text-2xl font-bold text-[#202223]">{automation.name}</h2>
+              <p className="text-[#6d7175] capitalize">{automation.category}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-[#333] rounded-lg transition-colors"
+            className="p-2 hover:bg-[#f6f6f7] rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
-              className="w-6 h-6 text-gray-400"
+              className="w-6 h-6 text-[#6d7175]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -195,16 +195,16 @@ export default function AutomationInfoModal({
         <div className="p-6 space-y-8">
           {/* What This Achieves */}
           <div>
-            <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-xl font-semibold text-[#202223] mb-4 flex items-center gap-2">
               <span className="text-green-400">✨</span>
               What This Achieves
             </h3>
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-lg p-6">
+            <div className="bg-[#f6f6f7] border border-[#e1e3e5] rounded-lg p-6">
               <ul className="space-y-3">
                 {info.achievements.map((achievement, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <span className="text-green-400 mt-1 flex-shrink-0">✓</span>
-                    <span className="text-gray-300 leading-relaxed">{achievement}</span>
+                    <span className="text-[#6d7175] leading-relaxed">{achievement}</span>
                   </li>
                 ))}
               </ul>
@@ -214,7 +214,7 @@ export default function AutomationInfoModal({
           {/* Screenshots / Visual Examples */}
           {info.screenshots.length > 0 && (
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-[#202223] mb-4 flex items-center gap-2">
                 <span className="text-blue-400">📸</span>
                 Visual Examples
               </h3>
@@ -222,7 +222,7 @@ export default function AutomationInfoModal({
                 {info.screenshots.map((screenshot, index) => (
                   <div
                     key={index}
-                    className="bg-[#0a0a0a] border border-[#333] rounded-lg overflow-hidden hover:border-[#444] transition-colors"
+                    className="bg-[#f6f6f7] border border-[#e1e3e5] rounded-lg overflow-hidden hover:border-[#2563eb]/40 transition-colors"
                   >
                     <div className="aspect-video bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center relative overflow-hidden">
                       {/* Try to load actual image, fallback to placeholder */}
@@ -240,21 +240,21 @@ export default function AutomationInfoModal({
                             placeholder.className = 'placeholder text-center p-8 w-full h-full flex flex-col items-center justify-center';
                             placeholder.innerHTML = `
                               <div class="text-4xl mb-2">📸</div>
-                              <p class="text-gray-500 text-sm">${screenshot.alt}</p>
-                              <p class="text-gray-600 text-xs mt-2">Screenshot coming soon</p>
+                              <p class="text-[#8c9196] text-sm">${screenshot.alt}</p>
+                              <p class="text-[#8c9196] text-xs mt-2">Screenshot coming soon</p>
                             `;
                             parent.appendChild(placeholder);
                           }
                         }}
                       />
                     </div>
-                    <div className="p-3 bg-[#0a0a0a]">
-                      <p className="text-sm text-gray-400 text-center">{screenshot.alt}</p>
+                    <div className="p-3 bg-[#f6f6f7]">
+                      <p className="text-sm text-[#6d7175] text-center">{screenshot.alt}</p>
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-xs text-[#8c9196] mt-2 text-center">
                 Actual screenshots will be available once automations are live
               </p>
             </div>
@@ -262,16 +262,16 @@ export default function AutomationInfoModal({
 
           {/* Best For */}
           <div>
-            <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-xl font-semibold text-[#202223] mb-4 flex items-center gap-2">
               <span className="text-purple-400">🎯</span>
               Best For
             </h3>
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-lg p-6">
+            <div className="bg-[#f6f6f7] border border-[#e1e3e5] rounded-lg p-6">
               <ul className="space-y-2">
                 {info.useCases.map((useCase, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <span className="text-blue-400 mt-1 flex-shrink-0">•</span>
-                    <span className="text-gray-300">{useCase}</span>
+                    <span className="text-[#6d7175]">{useCase}</span>
                   </li>
                 ))}
               </ul>
@@ -281,7 +281,7 @@ export default function AutomationInfoModal({
           {/* Features */}
           {automation.features && automation.features.length > 0 && (
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-[#202223] mb-4 flex items-center gap-2">
                 <span className="text-yellow-400">⚡</span>
                 Key Features
               </h3>
@@ -289,7 +289,7 @@ export default function AutomationInfoModal({
                 {automation.features.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 text-gray-300 bg-[#0a0a0a] border border-[#333] rounded-lg p-3"
+                    className="flex items-center gap-2 text-[#6d7175] bg-[#f6f6f7] border border-[#e1e3e5] rounded-lg p-3"
                   >
                     <span className="text-[#0066cc] flex-shrink-0">→</span>
                     <span>{feature}</span>
@@ -308,7 +308,7 @@ export default function AutomationInfoModal({
                     <span className="text-green-400 text-xl">💰</span>
                     <h4 className="text-sm font-semibold text-green-300">ROI</h4>
                   </div>
-                  <p className="text-gray-300 text-sm">{info.roi}</p>
+                  <p className="text-[#6d7175] text-sm">{info.roi}</p>
                 </div>
               )}
               {info.setupTime && (
@@ -317,21 +317,21 @@ export default function AutomationInfoModal({
                     <span className="text-blue-400 text-xl">⚡</span>
                     <h4 className="text-sm font-semibold text-blue-300">Setup Time</h4>
                   </div>
-                  <p className="text-gray-300 text-sm">{info.setupTime}</p>
+                  <p className="text-[#6d7175] text-sm">{info.setupTime}</p>
                 </div>
               )}
             </div>
           )}
 
           {/* Pricing */}
-          <div className="bg-[#0a0a0a] border border-[#333] rounded-lg p-4">
+          <div className="bg-[#f6f6f7] border border-[#e1e3e5] rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Starting at</p>
-                <p className="text-2xl font-bold text-white">£{automation.price_monthly}/month</p>
+                <p className="text-[#6d7175] text-sm">Starting at</p>
+                <p className="text-2xl font-bold text-[#202223]">£{automation.price_monthly}/month</p>
               </div>
               <div className="text-right">
-                <p className="text-gray-400 text-sm">{automation.user_count} stores using this</p>
+                <p className="text-[#6d7175] text-sm">{automation.user_count} stores using this</p>
                 {automation.user_count > 0 && (
                   <p className="text-green-400 text-sm">✓ Proven by merchants</p>
                 )}
@@ -341,10 +341,10 @@ export default function AutomationInfoModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-[#1a1a1a] border-t border-[#333] p-6 flex gap-3">
+        <div className="sticky bottom-0 bg-white border-t border-[#e1e3e5] p-6 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-[#333] hover:bg-[#444] text-white rounded-lg font-medium transition-colors"
+            className="flex-1 px-4 py-3 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors"
           >
             Close
           </button>
@@ -353,7 +353,7 @@ export default function AutomationInfoModal({
               onClose();
               onInstall?.();
             }}
-            className="flex-1 px-4 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors"
+            className="flex-1 px-4 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium transition-colors"
           >
             Add to Store
           </button>

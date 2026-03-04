@@ -5,16 +5,78 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import AutomationCard from '@/components/automations/AutomationCard';
-import VelocityLogo from '@/components/VelocityLogo';
+
+const FEATURES = [
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+    title: 'One-click install',
+    description: 'Connect your Shopify store and install any automation in under 60 seconds. No developer needed.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    ),
+    title: 'Secure by default',
+    description: 'AES-256 encrypted tokens, RLS-protected data, and SOC 2-aligned infrastructure. Your store data is safe.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+    title: 'Pay per automation',
+    description: 'Subscribe to only the automations you need. Cancel any individual one at any time.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    ),
+    title: 'Real support',
+    description: 'Email and in-app support with a 4-hour response guarantee. Talk to a human, not a bot.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    title: 'Live execution logs',
+    description: 'See exactly what each automation did, when it ran, and why — with full audit logs.',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    ),
+    title: 'Runs automatically',
+    description: 'Webhook-driven and cron-scheduled. Your automations run 24/7 without you lifting a finger.',
+  },
+];
+
+const AUTOMATIONS = [
+  { icon: '🛒', name: 'Abandoned Cart Recovery', category: 'Revenue', price: 29 },
+  { icon: '⭐', name: 'Review Request Automator', category: 'Social proof', price: 19 },
+  { icon: '📦', name: 'Low Stock Alerts', category: 'Inventory', price: 34 },
+  { icon: '🏆', name: 'Best Sellers Collection', category: 'Merchandising', price: 15 },
+  { icon: '✉️', name: 'Welcome Email Series', category: 'Retention', price: 24 },
+  { icon: '🔁', name: 'Win-Back Campaign', category: 'Retention', price: 29 },
+];
 
 export default function LandingPage() {
   const router = useRouter();
   const { user, session } = useAuth();
-  const [topAutomations, setTopAutomations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [automationCount, setAutomationCount] = useState<number | null>(null);
 
-  // If Supabase redirects here with expired/invalid email link, send to verify-email page
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const hash = window.location.hash || '';
@@ -24,254 +86,186 @@ export default function LandingPage() {
   }, [router]);
 
   useEffect(() => {
-    async function fetchTopAutomations() {
-      try {
-        const { data, error } = await supabase
-          .from('automations')
-          .select('*')
-          .eq('active', true)
-          .order('user_count', { ascending: false })
-          .limit(3);
-
-        if (!error) {
-          setTopAutomations(data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching automations:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchTopAutomations();
+    supabase.from('automations').select('id', { count: 'exact', head: true }).eq('active', true)
+      .then(({ count }) => { if (count) setAutomationCount(count); });
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32">
-          <div className="text-center">
-            {/* Logo */}
-            <div className="flex justify-center mb-8">
-              <VelocityLogo iconSize={96} layout="column" textClassName="text-5xl font-black" />
+    <div className="bg-white text-[#202223]">
+
+      {/* ── Hero ── */}
+      <section className="bg-[#f6f6f7] border-b border-[#e1e3e5]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#e8f0fe] text-[#2563eb] text-xs font-semibold mb-8 uppercase tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
+              Built for Shopify merchants
             </div>
 
-            {/* Hero Text */}
-            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] bg-clip-text text-transparent">
-              Shopify Automations That Just Work
+            <h1 className="text-5xl sm:text-6xl font-extrabold text-[#202223] leading-tight tracking-tight mb-6">
+              Shopify automations<br />
+              <span className="text-[#2563eb]">that just work.</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto">
-              Stop wasting time on manual tasks. Browse 20+ pre-built automations for your Shopify store. 
-              No code, no deployment, just works.
+
+            <p className="text-xl text-[#6d7175] leading-relaxed mb-10 max-w-2xl mx-auto">
+              Browse {automationCount ?? '15'}+ pre-built automations for your store. Abandoned cart recovery, review requests,
+              low stock alerts, and more — installed in seconds. No code, no setup.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
               <Link
                 href="/marketplace"
-                className="px-8 py-4 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-xl font-semibold text-lg transition-all shadow-lg shadow-[#3b82f6]/30 hover:shadow-[#3b82f6]/50 hover:scale-105"
+                className="px-7 py-3.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold text-base transition-colors shadow-sm"
               >
-                Browse All Automations →
+                Browse automations
               </Link>
-              {!session && (
-                <Link
-                  href="/onboarding"
-                  className="px-8 py-4 bg-[#1a1a1a] hover:bg-[#222] border border-[#2a2a2a] text-white rounded-xl font-semibold text-lg transition-all"
-                >
-                  Get Started Free
-                </Link>
-              )}
-              {session && (
+              {session ? (
                 <Link
                   href="/dashboard"
-                  className="px-8 py-4 bg-[#1a1a1a] hover:bg-[#222] border border-[#2a2a2a] text-white rounded-xl font-semibold text-lg transition-all"
+                  className="px-7 py-3.5 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-semibold text-base transition-colors"
                 >
                   Go to Dashboard
                 </Link>
+              ) : (
+                <Link
+                  href="/onboarding"
+                  className="px-7 py-3.5 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-semibold text-base transition-colors"
+                >
+                  Start free trial
+                </Link>
               )}
             </div>
 
-            {/* Social Proof */}
-            <div className="text-gray-500 text-sm">
-              Free 7-day trial · No credit card required · Cancel anytime
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top Automations Showcase */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Most Popular Automations</h2>
-          <p className="text-gray-400 text-lg">
-            Start with these proven automations trusted by hundreds of stores
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6] mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading automations...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {topAutomations.map((automation: any) => (
-              <AutomationCard
-                key={automation.id}
-                automation={{
-                  id: automation.id,
-                  name: automation.name,
-                  slug: automation.slug,
-                  description: automation.description,
-                  category: automation.category,
-                  price_monthly: automation.price_monthly,
-                  icon: automation.icon,
-                  features: automation.features || [],
-                  user_count: automation.user_count || 0,
-                  config_schema: automation.config_schema || {},
-                }}
-                variant="marketplace"
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="text-center">
-          <Link
-            href="/marketplace"
-            className="inline-block px-6 py-3 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-white rounded-lg font-medium transition-colors"
-          >
-            View All Automations
-          </Link>
-        </div>
-      </div>
-
-      {/* What Makes Us Different Section */}
-      <div className="bg-[#1a1a1a] py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Makes Us Different</h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              We built VelocityApps because we were tired of broken Shopify apps. Here's how we're different:
+            <p className="text-sm text-[#8c9196]">
+              7-day free trial · No credit card required · Cancel anytime
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-xl font-semibold mb-2 text-white">One-Click Install</h3>
-              <p className="text-gray-400 mb-4">
-                Connect your store and install automations in seconds. No technical setup required.
-              </p>
-              <div className="text-sm text-gray-500">
-                <span className="line-through">15-step setup</span> → <span className="text-green-400">3 clicks</span>
+        </div>
+      </section>
+
+      {/* ── Stats bar ── */}
+      <section className="border-b border-[#e1e3e5]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-3 gap-8 text-center">
+            {[
+              { value: `${automationCount ?? '15'}+`, label: 'Automations' },
+              { value: '99.9%', label: 'Uptime' },
+              { value: '< 4h', label: 'Support response' },
+            ].map(({ value, label }) => (
+              <div key={label}>
+                <div className="text-3xl font-extrabold text-[#2563eb] mb-1">{value}</div>
+                <div className="text-sm text-[#6d7175]">{label}</div>
               </div>
-            </div>
-            
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6">
-              <div className="text-4xl mb-4">💬</div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Support That Actually Responds</h3>
-              <p className="text-gray-400 mb-4">
-                Get help in hours, not weeks. Personal responses, not generic templates.
-              </p>
-              <div className="text-sm text-gray-500">
-                <span className="line-through">2-7 day response</span> → <span className="text-green-400">&lt;2 hour response</span>
-              </div>
-            </div>
-            
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-semibold mb-2 text-white">It Actually Works</h3>
-              <p className="text-gray-400 mb-4">
-                98% uptime, monitored 24/7. We never break your store.
-              </p>
-              <div className="text-sm text-gray-500">
-                <span className="line-through">Breaks after 2 months</span> → <span className="text-green-400">Reliable & monitored</span>
-              </div>
-            </div>
-            
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6">
-              <div className="text-4xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Transparent Results</h3>
-              <p className="text-gray-400 mb-4">
-                See real conversion rates and success metrics. No hiding failures.
-              </p>
-              <div className="text-sm text-gray-500">
-                <span className="line-through">Hidden metrics</span> → <span className="text-green-400">Public results</span>
-              </div>
-            </div>
-            
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6">
-              <div className="text-4xl mb-4">💰</div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Fair Pricing</h3>
-              <p className="text-gray-400 mb-4">
-                Clear pricing, no surprise upgrades. Grandfather existing users.
-              </p>
-              <div className="text-sm text-gray-500">
-                <span className="line-through">$200/month surprise</span> → <span className="text-green-400">Clear, fair pricing</span>
-              </div>
-            </div>
-            
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6">
-              <div className="text-4xl mb-4">✅</div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Simple & Reliable</h3>
-              <p className="text-gray-400 mb-4">
-                Works out of the box. No complicated setup, no broken tutorials.
-              </p>
-              <div className="text-sm text-gray-500">
-                <span className="line-through">15-step setup</span> → <span className="text-green-400">Works immediately</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Features Section */}
-      <div className="py-16">
+      {/* ── Automation grid ── */}
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-xl font-semibold mb-2">One-Click Install</h3>
-              <p className="text-gray-400">
-                Connect your store and install automations in seconds. No technical setup required.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-semibold mb-2">Secure & Reliable</h3>
-              <p className="text-gray-400">
-                Enterprise-grade security. Your data stays safe with encrypted connections and secure storage.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">💰</div>
-              <h3 className="text-xl font-semibold mb-2">Fair Pricing</h3>
-              <p className="text-gray-400">
-                Pay only for what you use. £19-39/month per automation. Cancel anytime.
-              </p>
-            </div>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-[#202223] mb-3">Popular automations</h2>
+            <p className="text-[#6d7175] text-lg">Start with these — most stores see results within the first week.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+            {AUTOMATIONS.map((a) => (
+              <div
+                key={a.name}
+                className="flex items-center gap-4 p-5 bg-white border border-[#e1e3e5] rounded-xl hover:border-[#2563eb]/40 hover:shadow-sm transition-all"
+              >
+                <div className="text-3xl flex-shrink-0">{a.icon}</div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-[#202223] text-sm leading-snug">{a.name}</div>
+                  <div className="text-xs text-[#6d7175] mt-0.5">{a.category} · from £{a.price}/mo</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-[#e1e3e5] rounded-lg text-sm font-medium text-[#202223] hover:bg-[#f6f6f7] transition-colors"
+            >
+              View all automations
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] rounded-2xl p-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to Automate Your Store?</h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join hundreds of Shopify stores saving hours every week with VelocityApps automations.
+      {/* ── Features ── */}
+      <section className="bg-[#f6f6f7] border-y border-[#e1e3e5] py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-[#202223] mb-3">Everything you need, nothing you don't</h2>
+            <p className="text-[#6d7175] text-lg max-w-2xl mx-auto">
+              Built to be reliable, transparent, and easy to use — because that's what Shopify merchants actually need.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="bg-white border border-[#e1e3e5] rounded-xl p-6">
+                <div className="w-10 h-10 rounded-lg bg-[#e8f0fe] text-[#2563eb] flex items-center justify-center mb-4">
+                  {f.icon}
+                </div>
+                <h3 className="font-semibold text-[#202223] mb-2">{f.title}</h3>
+                <p className="text-[#6d7175] text-sm leading-relaxed">{f.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ── */}
+      <section className="py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-[#202223] mb-3">Up and running in 3 steps</h2>
+          </div>
+          <div className="space-y-6">
+            {[
+              { step: '1', title: 'Create your account', desc: 'Sign up free — no credit card required.' },
+              { step: '2', title: 'Connect your Shopify store', desc: 'OAuth in one click. We request only the permissions each automation needs.' },
+              { step: '3', title: 'Install an automation', desc: 'Browse the marketplace, start a free trial, and the automation runs immediately.' },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="flex gap-5 items-start">
+                <div className="w-9 h-9 rounded-full bg-[#2563eb] text-white text-sm font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {step}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-[#202223] mb-1">{title}</h3>
+                  <p className="text-[#6d7175] text-sm">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="bg-[#2563eb] py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Ready to automate your store?
+          </h2>
+          <p className="text-blue-200 text-lg mb-8">
+            Start your 7-day free trial today. No credit card required.
           </p>
           <Link
-            href={session ? "/dashboard" : "/onboarding"}
-            className="inline-block px-8 py-4 bg-white text-[#3b82f6] rounded-xl font-semibold text-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+            href={session ? '/dashboard' : '/onboarding'}
+            className="inline-block px-8 py-4 bg-white text-[#2563eb] rounded-lg font-semibold text-base hover:bg-[#f0f7ff] transition-colors shadow-sm"
           >
-            Get Started Free
+            {session ? 'Go to Dashboard' : 'Get started free'}
           </Link>
         </div>
-      </div>
+      </section>
+
     </div>
   );
 }
-

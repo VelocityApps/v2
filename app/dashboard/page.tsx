@@ -151,38 +151,38 @@ export default function DashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
+      <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">My Automations</h1>
-            <p className="text-gray-400">Manage your installed automations</p>
+            <h1 className="text-3xl font-bold text-[#202223] mb-1">My Automations</h1>
+            <p className="text-[#6d7175]">Manage your installed automations</p>
           </div>
           <Link
             href="/marketplace"
-            className="px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors"
+            className="px-5 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
           >
             Browse More Automations
           </Link>
         </div>
 
         {userAutomations.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-16 bg-white border border-[#e1e3e5] rounded-xl">
             <div className="text-6xl mb-4">🚀</div>
-            <h2 className="text-2xl font-bold mb-2">No automations installed</h2>
-            <p className="text-gray-400 mb-6">
+            <h2 className="text-xl font-bold text-[#202223] mb-2">No automations installed</h2>
+            <p className="text-[#6d7175] mb-6">
               Get started by installing your first automation
             </p>
             <Link
               href="/marketplace"
-              className="inline-block px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors"
+              className="inline-block px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium transition-colors shadow-sm"
             >
               Browse Marketplace
             </Link>

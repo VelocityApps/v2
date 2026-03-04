@@ -88,12 +88,12 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
       {/* Hero */}
-      <section className="border-b border-[#1a1a1a] py-16 px-4">
+      <section className="border-b border-[#e1e3e5] py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl font-bold mb-4">How can we help?</h1>
-          <p className="text-gray-400 text-lg">
+          <h1 className="text-3xl font-bold text-[#202223] mb-4">How can we help?</h1>
+          <p className="text-[#6d7175] text-lg">
             Browse common questions below or contact us directly. We aim to respond to every ticket
             within 4 hours.
           </p>
@@ -101,10 +101,10 @@ export default function SupportPage() {
           {/* SLA chips */}
           <div className="flex flex-wrap justify-center gap-3 mt-8">
             {[
-              { label: 'Critical', sla: '< 1 hr', color: 'bg-red-900/40 border-red-700/50 text-red-300' },
-              { label: 'High', sla: '< 2 hrs', color: 'bg-orange-900/40 border-orange-700/50 text-orange-300' },
-              { label: 'Medium', sla: '< 4 hrs', color: 'bg-yellow-900/40 border-yellow-700/50 text-yellow-300' },
-              { label: 'Low', sla: '< 24 hrs', color: 'bg-blue-900/40 border-blue-700/50 text-blue-300' },
+              { label: 'Critical', sla: '< 1 hr', color: 'bg-red-50 border-red-200 text-red-700' },
+              { label: 'High', sla: '< 2 hrs', color: 'bg-orange-50 border-orange-200 text-orange-700' },
+              { label: 'Medium', sla: '< 4 hrs', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+              { label: 'Low', sla: '< 24 hrs', color: 'bg-[#e8f0fe] border-[#bfdbfe] text-[#2563eb]' },
             ].map(({ label, sla, color }) => (
               <div
                 key={label}
@@ -120,20 +120,20 @@ export default function SupportPage() {
       <div className="max-w-3xl mx-auto px-4 py-12">
         {/* FAQ */}
         <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-6">Frequently asked questions</h2>
+          <h2 className="text-xl font-bold text-[#202223] mb-6">Frequently asked questions</h2>
           <div className="space-y-2">
             {FAQS.map((faq, i) => (
               <div
                 key={i}
-                className="border border-[#222] rounded-xl overflow-hidden"
+                className="bg-white border border-[#e1e3e5] rounded-xl overflow-hidden"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-[#111] transition-colors"
+                  className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-[#f6f6f7] transition-colors"
                 >
-                  <span className="font-medium text-gray-100 pr-4">{faq.question}</span>
+                  <span className="font-medium text-[#202223] pr-4">{faq.question}</span>
                   <svg
-                    className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 text-[#6d7175] flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -142,8 +142,8 @@ export default function SupportPage() {
                   </svg>
                 </button>
                 {openFaq === i && (
-                  <div className="px-6 pb-5">
-                    <p className="text-gray-400 leading-relaxed">{faq.answer}</p>
+                  <div className="px-6 pb-5 border-t border-[#e1e3e5]">
+                    <p className="text-[#6d7175] leading-relaxed pt-4">{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -153,30 +153,30 @@ export default function SupportPage() {
 
         {/* Contact form */}
         <section>
-          <h2 className="text-2xl font-bold mb-2">Contact support</h2>
-          <p className="text-gray-400 mb-8">
+          <h2 className="text-xl font-bold text-[#202223] mb-2">Contact support</h2>
+          <p className="text-[#6d7175] mb-8">
             Didn't find your answer? Send us a message and we'll get back to you.
           </p>
 
           {!session ? (
-            <div className="bg-[#111] border border-[#222] rounded-xl p-8 text-center">
-              <p className="text-gray-400 mb-4">Sign in to submit a support ticket.</p>
+            <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 text-center">
+              <p className="text-[#6d7175] mb-4">Sign in to submit a support ticket.</p>
               <Link
                 href="/onboarding"
-                className="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors"
+                className="inline-block px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors shadow-sm"
               >
                 Sign In
               </Link>
             </div>
           ) : submitted ? (
-            <div className="bg-[#111] border border-green-800/50 rounded-xl p-8 text-center">
-              <div className="w-12 h-12 bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white border border-[#a3e6c4] rounded-xl p-8 text-center">
+              <div className="w-12 h-12 bg-[#e3f9e3] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[#008060]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-green-300">Ticket submitted</h3>
-              <p className="text-gray-400 mb-6">
+              <h3 className="text-lg font-semibold text-[#202223] mb-2">Ticket submitted</h3>
+              <p className="text-[#6d7175] mb-6">
                 We've sent a confirmation to your email. You'll hear from us soon.
               </p>
               <button
@@ -186,7 +186,7 @@ export default function SupportPage() {
                   setMessage('');
                   setPriority('medium');
                 }}
-                className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+                className="text-sm text-[#2563eb] hover:text-[#1d4ed8] transition-colors font-medium"
               >
                 Submit another ticket
               </button>
@@ -194,11 +194,11 @@ export default function SupportPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
+                <label className="block text-sm font-medium text-[#202223] mb-1.5">Priority</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as Priority)}
-                  className="w-full px-4 py-3 bg-[#111] border border-[#2a2a2a] rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] focus:outline-none focus:border-[#2563eb] transition-colors"
                 >
                   <option value="low">Low — general question</option>
                   <option value="medium">Medium — need help with something</option>
@@ -208,33 +208,33 @@ export default function SupportPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+                <label className="block text-sm font-medium text-[#202223] mb-1.5">Subject</label>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Brief description of your issue"
                   required
-                  className="w-full px-4 py-3 bg-[#111] border border-[#2a2a2a] rounded-lg text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                <label className="block text-sm font-medium text-[#202223] mb-1.5">Message</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Describe your issue in detail. Include any error messages, which automation is affected, and what you've already tried."
                   rows={7}
                   required
-                  className="w-full px-4 py-3 bg-[#111] border border-[#2a2a2a] rounded-lg text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors resize-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading || !subject.trim() || !message.trim()}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors"
+                className="w-full py-3 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors shadow-sm"
               >
                 {loading ? 'Submitting…' : 'Submit Ticket'}
               </button>
@@ -243,10 +243,10 @@ export default function SupportPage() {
         </section>
 
         {/* Direct contact */}
-        <div className="mt-12 pt-12 border-t border-[#1a1a1a] text-center">
-          <p className="text-gray-500 text-sm">
+        <div className="mt-12 pt-12 border-t border-[#e1e3e5] text-center">
+          <p className="text-[#8c9196] text-sm">
             Prefer email?{' '}
-            <a href="mailto:hello@velocityapps.dev" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+            <a href="mailto:hello@velocityapps.dev" className="text-[#2563eb] hover:text-[#1d4ed8] transition-colors">
               hello@velocityapps.dev
             </a>
           </p>

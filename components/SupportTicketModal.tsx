@@ -83,12 +83,12 @@ export default function SupportTicketModal({
 
   const modalContent = (
     <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
-      <div className="my-auto bg-[#1a1a1a] w-full max-w-2xl rounded-2xl border border-[#333] p-8">
+      <div className="my-auto bg-white w-full max-w-2xl rounded-2xl border border-[#e1e3e5] shadow-xl p-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Contact Support</h2>
+          <h2 className="text-xl font-bold text-[#202223]">Contact Support</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-[#6d7175] hover:text-[#202223] transition-colors"
           >
             ✕
           </button>
@@ -96,13 +96,13 @@ export default function SupportTicketModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#202223] mb-1.5">
               Priority
             </label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as any)}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white focus:outline-none focus:border-[#3b82f6] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] focus:outline-none focus:border-[#2563eb] transition-colors"
             >
               <option value="low">Low - General question</option>
               <option value="medium">Medium - Need help</option>
@@ -112,7 +112,7 @@ export default function SupportTicketModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#202223] mb-1.5">
               Subject
             </label>
             <input
@@ -120,13 +120,13 @@ export default function SupportTicketModal({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Brief description of your issue"
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#202223] mb-1.5">
               Message
             </label>
             <textarea
@@ -134,12 +134,12 @@ export default function SupportTicketModal({
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe your issue in detail..."
               rows={6}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors resize-none"
+              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors resize-none"
               required
             />
           </div>
 
-          <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-4 text-sm text-blue-300">
+          <div className="bg-[#e8f0fe] border border-[#bfdbfe] rounded-lg p-4 text-sm text-[#1d4ed8]">
             <strong>Response Time SLA:</strong>
             <ul className="mt-2 space-y-1 list-disc list-inside">
               <li>Critical: &lt;1 hour</li>
@@ -153,14 +153,14 @@ export default function SupportTicketModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-[#333] hover:bg-[#444] text-white rounded-lg font-medium transition-colors"
+              className="flex-1 px-4 py-3 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !subject || !message}
-              className="flex-1 px-4 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Submitting...' : 'Submit Ticket'}
             </button>

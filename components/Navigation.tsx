@@ -23,33 +23,20 @@ export default function Navigation() {
   };
 
   const navLinks = [
-    { href: '/', label: 'Home' },
     { href: '/marketplace', label: 'Marketplace' },
     ...(session ? [{ href: '/dashboard', label: 'Dashboard' }] : []),
     { href: '/support', label: 'Support' },
   ];
 
-  const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/';
-    }
-    return pathname?.startsWith(href);
-  };
+  const isActive = (href: string) => pathname?.startsWith(href);
 
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
 
-  // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.user-menu')) {
-        setUserMenuOpen(false);
-      }
+      if (!target.closest('.user-menu')) setUserMenuOpen(false);
     };
-
     if (userMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -57,24 +44,25 @@ export default function Navigation() {
   }, [userMenuOpen]);
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#2a2a2a]">
+    <nav className="sticky top-0 z-50 bg-white border-b border-[#e1e3e5]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
-          <Link href="/" className="group">
-            <VelocityLogo iconSize={36} textClassName="text-xl font-bold hidden sm:block" />
+          <Link href="/" className="flex-shrink-0">
+            <VelocityLogo iconSize={32} textClassName="text-lg font-bold hidden sm:block" darkText />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop nav links */}
+          <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors pb-0.5 ${
                   isActive(link.href)
-                    ? 'bg-[#3b82f6] text-white'
-                    : 'text-gray-300 hover:bg-[#1a1a1a] hover:text-white'
+                    ? 'text-[#2563eb] border-b-2 border-[#2563eb]'
+                    : 'text-[#6d7175] hover:text-[#202223]'
                 }`}
               >
                 {link.label}
@@ -82,68 +70,65 @@ export default function Navigation() {
             ))}
           </div>
 
-          {/* Right Side - Auth */}
-          <div className="flex items-center gap-4">
+          {/* Right side */}
+          <div className="flex items-center gap-3">
             {session ? (
               <>
-                {/* User Menu - Desktop */}
+                {/* User menu — desktop */}
                 <div className="hidden md:block relative user-menu">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] hover:bg-[#222] border border-[#2a2a2a] transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#e1e3e5] hover:border-[#c9cccf] bg-white transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#60a5fa] flex items-center justify-center text-white text-sm font-semibold">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#2563eb] to-[#60a5fa] flex items-center justify-center text-white text-xs font-semibold">
                       {user?.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
-                    <span className="text-gray-300 text-sm hidden lg:block max-w-[150px] truncate">
+                    <span className="text-[#202223] text-sm hidden lg:block max-w-[140px] truncate">
                       {user?.email}
                     </span>
                     <svg
-                      className={`w-4 h-4 text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      className={`w-4 h-4 text-[#6d7175] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
-                  {/* Dropdown Menu */}
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-xl overflow-hidden">
-                      <div className="px-4 py-3 border-b border-[#2a2a2a]">
-                        <p className="text-sm font-medium text-white truncate">{user?.email}</p>
+                    <div className="absolute right-0 mt-2 w-52 bg-white border border-[#e1e3e5] rounded-xl shadow-lg overflow-hidden">
+                      <div className="px-4 py-3 border-b border-[#e1e3e5] bg-[#f6f6f7]">
+                        <p className="text-xs text-[#6d7175]">Signed in as</p>
+                        <p className="text-sm font-medium text-[#202223] truncate">{user?.email}</p>
                       </div>
                       <Link
                         href="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#222] transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#202223] hover:bg-[#f6f6f7] transition-colors"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         Dashboard
                       </Link>
                       <button
-                        onClick={() => {
-                          setSupportModalOpen(true);
-                          setUserMenuOpen(false);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#222] transition-colors"
+                        onClick={() => { setSupportModalOpen(true); setUserMenuOpen(false); }}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[#202223] hover:bg-[#f6f6f7] transition-colors"
                       >
                         Support
                       </button>
-                      <button
-                        onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#222] transition-colors"
-                      >
-                        Sign Out
-                      </button>
+                      <div className="border-t border-[#e1e3e5]">
+                        <button
+                          onClick={handleSignOut}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[#d72c0d] hover:bg-[#fff4f4] transition-colors"
+                        >
+                          Sign out
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* User Avatar - Mobile */}
+                {/* Avatar — mobile */}
                 <Link
                   href="/dashboard"
-                  className="md:hidden w-8 h-8 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#60a5fa] flex items-center justify-center text-white text-sm font-semibold"
+                  className="md:hidden w-8 h-8 rounded-full bg-gradient-to-br from-[#2563eb] to-[#60a5fa] flex items-center justify-center text-white text-sm font-semibold"
                 >
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </Link>
@@ -152,31 +137,31 @@ export default function Navigation() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/onboarding"
-                  className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors hidden sm:block"
+                  className="hidden sm:block text-sm font-medium text-[#6d7175] hover:text-[#202223] transition-colors px-3 py-2"
                 >
-                  Sign In
+                  Sign in
                 </Link>
                 <Link
                   href="/onboarding"
-                  className="px-4 py-2 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium text-sm transition-all"
+                  className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
                 >
-                  Get Started
+                  Get started
                 </Link>
               </div>
             )}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+              className="md:hidden p-2 rounded-lg text-[#6d7175] hover:bg-[#f6f6f7] transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               )}
@@ -184,18 +169,18 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-[#2a2a2a] mt-2 pt-4">
-            <div className="flex flex-col gap-2">
+          <div className="md:hidden border-t border-[#e1e3e5] py-3">
+            <div className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(link.href)
-                      ? 'bg-[#0066cc] text-white'
-                      : 'text-gray-300 hover:bg-[#1a1a1a] hover:text-white'
+                      ? 'bg-[#f0f7ff] text-[#2563eb]'
+                      : 'text-[#202223] hover:bg-[#f6f6f7]'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -205,20 +190,19 @@ export default function Navigation() {
               {session && (
                 <>
                   <button
-                    onClick={() => {
-                      setSupportModalOpen(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="px-4 py-2 text-left rounded-lg font-medium text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                    onClick={() => { setSupportModalOpen(true); setMobileMenuOpen(false); }}
+                    className="px-3 py-2 text-left rounded-lg text-sm font-medium text-[#202223] hover:bg-[#f6f6f7] transition-colors"
                   >
                     Contact Support
                   </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="px-4 py-2 text-left rounded-lg font-medium text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
-                  >
-                    Sign Out
-                  </button>
+                  <div className="border-t border-[#e1e3e5] mt-1 pt-1">
+                    <button
+                      onClick={handleSignOut}
+                      className="px-3 py-2 text-left rounded-lg text-sm font-medium text-[#d72c0d] hover:bg-[#fff4f4] w-full transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -226,11 +210,7 @@ export default function Navigation() {
         )}
       </div>
 
-      <SupportTicketModal
-        isOpen={supportModalOpen}
-        onClose={() => setSupportModalOpen(false)}
-      />
+      <SupportTicketModal isOpen={supportModalOpen} onClose={() => setSupportModalOpen(false)} />
     </nav>
   );
 }
-

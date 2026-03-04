@@ -9,7 +9,7 @@ import AutomationCard from '@/components/automations/AutomationCard';
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f6f6f7]" />}>
       <OnboardingContent />
     </Suspense>
   );
@@ -166,18 +166,18 @@ function OnboardingContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3b82f6]"></div>
+      <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Welcome to VelocityApps</h1>
-          <p className="text-gray-400 text-lg">
+          <h1 className="text-3xl font-bold text-[#202223] mb-3">Welcome to VelocityApps</h1>
+          <p className="text-[#6d7175] text-lg">
             {step === 'auth'
               ? 'Sign in or create an account to get started'
               : "Let's get your Shopify store set up with automations"}
@@ -185,61 +185,61 @@ function OnboardingContent() {
         </div>
 
         {step === 'auth' && !session && (
-          <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-8 max-w-md mx-auto">
-            <h2 className="text-2xl font-semibold mb-4">Sign in or sign up</h2>
+          <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 max-w-md mx-auto">
+            <h2 className="text-xl font-semibold text-[#202223] mb-6">Sign in or sign up</h2>
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <label className="block text-sm font-medium text-[#202223] mb-1.5">Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
                   placeholder="you@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                <label className="block text-sm font-medium text-[#202223] mb-1.5">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#3b82f6] transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
                   placeholder="••••••••"
                 />
               </div>
               {authError && (
-                <div className="p-3 rounded-lg bg-red-900/30 text-red-300 border border-red-500/50 text-sm">
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
                   {authError}
                 </div>
               )}
               {authSuccess && (
-                <div className="p-3 rounded-lg bg-green-900/30 text-green-300 border border-green-500/50 text-sm">
+                <div className="p-3 rounded-lg bg-[#e3f9e3] text-[#008060] border border-[#a3e6c4] text-sm">
                   {authSuccess}
                 </div>
               )}
               {isSignUp && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#6d7175]">
                   By signing up, you agree to our{' '}
-                  <Link href="/terms" className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors">Terms of Service</Link>
+                  <Link href="/terms" className="text-[#2563eb] hover:text-[#1d4ed8] transition-colors">Terms of Service</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-[#3b82f6] hover:text-[#60a5fa] transition-colors">Privacy Policy</Link>.
+                  <Link href="/privacy" className="text-[#2563eb] hover:text-[#1d4ed8] transition-colors">Privacy Policy</Link>.
                 </p>
               )}
               <button
                 type="submit"
                 disabled={authFormLoading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] hover:from-[#2563eb] hover:to-[#1d4ed8] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="w-full px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 shadow-sm"
               >
-                {authFormLoading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+                {authFormLoading ? 'Loading...' : isSignUp ? 'Create account' : 'Sign in'}
               </button>
             </form>
             <div className="mt-4 space-y-2 text-center">
               {!isSignUp && (
-                <Link href="/auth/forgot-password" className="block text-sm text-gray-400 hover:text-[#3b82f6] transition-colors">
+                <Link href="/auth/forgot-password" className="block text-sm text-[#6d7175] hover:text-[#2563eb] transition-colors">
                   Forgot password?
                 </Link>
               )}
@@ -250,7 +250,7 @@ function OnboardingContent() {
                   setAuthError(null);
                   setAuthSuccess(null);
                 }}
-                className="text-sm text-gray-400 hover:text-[#3b82f6] transition-colors"
+                className="text-sm text-[#6d7175] hover:text-[#2563eb] transition-colors"
               >
                 {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
               </button>
@@ -259,28 +259,28 @@ function OnboardingContent() {
         )}
 
         {(step === 'connect' || (step === 'auth' && session)) && (
-          <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-8">
-            <h2 className="text-2xl font-semibold mb-4">Step 1: Connect Your Shopify Store</h2>
-            <p className="text-gray-400 mb-6">
-              Connect your Shopify store to get started with automations.
+          <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 max-w-lg mx-auto">
+            <h2 className="text-xl font-semibold text-[#202223] mb-2">Connect Your Shopify Store</h2>
+            <p className="text-[#6d7175] text-sm mb-6">
+              Connect your store to get started. We only request permissions each automation needs.
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Shopify Store URL
+                <label className="block text-sm font-medium text-[#202223] mb-1.5">
+                  Shopify store URL
                 </label>
                 <input
                   type="text"
                   value={shopifyStoreUrl}
                   onChange={(e) => setShopifyStoreUrl(e.target.value)}
                   placeholder="mystore.myshopify.com"
-                  className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#333] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#0066cc] transition-colors"
+                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
                 />
               </div>
               <button
                 onClick={handleConnectShopify}
                 disabled={loading || !shopifyStoreUrl}
-                className="w-full px-6 py-3 bg-[#0066cc] hover:bg-[#0052a3] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="w-full px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 shadow-sm"
               >
                 {loading ? 'Connecting...' : 'Connect Shopify Store'}
               </button>
@@ -290,9 +290,9 @@ function OnboardingContent() {
 
         {step === 'select' && (
           <div className="space-y-6">
-            <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-8">
-              <h2 className="text-2xl font-semibold mb-4">Step 2: Choose Your First Automation</h2>
-              <p className="text-gray-400 mb-6">
+            <div className="bg-white border border-[#e1e3e5] rounded-xl p-8">
+              <h2 className="text-xl font-semibold text-[#202223] mb-2">Choose Your First Automation</h2>
+              <p className="text-[#6d7175] text-sm">
                 Pick one of our most popular automations to get started.
               </p>
             </div>
@@ -321,7 +321,7 @@ function OnboardingContent() {
             <div className="text-center">
               <button
                 onClick={() => router.push('/marketplace')}
-                className="px-6 py-3 bg-[#333] hover:bg-[#444] text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-3 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors"
               >
                 Browse All Automations
               </button>
