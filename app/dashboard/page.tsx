@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useCallback } from 'react';
 import AutomationCard from '@/components/automations/AutomationCard';
 import Link from 'next/link';
 
@@ -13,6 +14,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [userAutomations, setUserAutomations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -96,6 +98,27 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error resuming automation:', error);
       toast.error('Failed to resume automation', { id: `resume-${id}` });
+    }
+  }
+
+  async function handleManageBilling() {
+    if (!session || billingLoading) return;
+    setBillingLoading(true);
+    try {
+      const response = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data.error || 'Failed to open billing portal');
+      }
+    } catch {
+      toast.error('Failed to open billing portal');
+    } finally {
+      setBillingLoading(false);
     }
   }
 
@@ -187,11 +210,13 @@ export default function DashboardPage() {
                   }}
                   variant="installed"
                   status={userAutomation.status}
+                  stripeSubscriptionId={userAutomation.stripe_subscription_id}
                   trialEndsAt={userAutomation.trial_ends_at}
                   onConfigure={() => router.push(`/dashboard/automations/${userAutomation.id}`)}
                   onPause={() => handlePause(userAutomation.id)}
                   onResume={() => handleResume(userAutomation.id)}
                   onRemove={() => handleRemove(userAutomation.id)}
+                  onManageBilling={handleManageBilling}
                 />
               );
             })}

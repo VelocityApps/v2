@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { getAutomation } from '@/lib/automations/base';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-11-17.clover',
+});
 
 /**
  * DELETE /api/automations/[id]/remove
@@ -54,6 +59,16 @@ export async function DELETE(
           console.error('Error during automation uninstall:', error);
           // Continue with deletion even if uninstall fails
         }
+      }
+    }
+
+    // Cancel Stripe subscription if one exists
+    if (userAutomation.stripe_subscription_id) {
+      try {
+        await stripe.subscriptions.cancel(userAutomation.stripe_subscription_id);
+      } catch (err: any) {
+        // Log but don't block removal — subscription may already be cancelled
+        console.error('[Remove] Failed to cancel Stripe subscription:', err.message);
       }
     }
 

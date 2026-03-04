@@ -30,7 +30,9 @@ interface AutomationCardProps {
   onPause?: () => void;
   onResume?: () => void;
   onRemove?: () => void;
-  status?: 'active' | 'paused' | 'error' | 'trial';
+  onManageBilling?: () => void;
+  status?: 'active' | 'paused' | 'error' | 'trial' | 'cancelled';
+  stripeSubscriptionId?: string | null;
   trialEndsAt?: string | null;
   /** When true (marketplace), show "£X/month, no trial available" instead of trial badge */
   trialAlreadyUsed?: boolean;
@@ -54,7 +56,9 @@ export default function AutomationCard({
   onPause,
   onResume,
   onRemove,
+  onManageBilling,
   status,
+  stripeSubscriptionId,
   trialEndsAt,
   trialAlreadyUsed,
   metrics,
@@ -86,7 +90,7 @@ export default function AutomationCard({
               status === 'paused' ? 'bg-yellow-500/20 text-yellow-300' :
               'bg-red-500/20 text-red-300'
             }`}>
-              {status === 'active' ? 'Active' : status === 'trial' ? 'Trial' : status === 'paused' ? 'Paused' : 'Error'}
+              {status === 'active' ? 'Active' : status === 'trial' ? 'Trial' : status === 'paused' ? 'Paused' : status === 'cancelled' ? 'Cancelled' : 'Error'}
             </div>
           )}
         </div>
@@ -165,34 +169,44 @@ export default function AutomationCard({
             )}
           </div>
         ) : (
-          <div className="flex gap-2">
-            <button
-              onClick={onConfigure}
-              className="flex-1 px-4 py-2 bg-[#333] hover:bg-[#444] text-white rounded-lg font-medium transition-colors"
-            >
-              Configure
-            </button>
-            {status === 'active' ? (
+          <div className="space-y-2">
+            <div className="flex gap-2">
               <button
-                onClick={onPause}
-                className="px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 rounded-lg font-medium transition-colors"
+                onClick={onConfigure}
+                className="flex-1 px-4 py-2 bg-[#333] hover:bg-[#444] text-white rounded-lg font-medium transition-colors"
               >
-                Pause
+                Configure
               </button>
-            ) : (
+              {status === 'active' || status === 'trial' ? (
+                <button
+                  onClick={onPause}
+                  className="px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 rounded-lg font-medium transition-colors"
+                >
+                  Pause
+                </button>
+              ) : (
+                <button
+                  onClick={onResume}
+                  className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg font-medium transition-colors"
+                >
+                  Resume
+                </button>
+              )}
               <button
-                onClick={onResume}
-                className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg font-medium transition-colors"
+                onClick={onRemove}
+                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg font-medium transition-colors"
               >
-                Resume
+                Remove
+              </button>
+            </div>
+            {stripeSubscriptionId && (
+              <button
+                onClick={onManageBilling}
+                className="w-full px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] text-gray-400 hover:text-gray-200 border border-[#333] rounded-lg text-sm font-medium transition-colors"
+              >
+                Manage subscription / Cancel
               </button>
             )}
-            <button
-              onClick={onRemove}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg font-medium transition-colors"
-            >
-              Remove
-            </button>
           </div>
         )}
       </div>
