@@ -72,6 +72,129 @@ const AUTOMATIONS = [
   { icon: '🔁', name: 'Win-Back Campaign', category: 'Retention', price: 29 },
 ];
 
+const PRO_FEATURES = [
+  'All automations — current & future',
+  'Abandoned Cart Recovery',
+  'Welcome Email Series',
+  'Review Request Automator',
+  'Low Stock Alerts',
+  'Win-Back Campaign',
+  'Best Sellers Collection',
+  'Priority support (< 2 hr response)',
+  'Live execution logs',
+];
+
+function PricingSection({ session }: { session: any }) {
+  const [annual, setAnnual] = useState(false);
+
+  const monthlyPrice = 79;
+  const annualMonthly = 59;
+  const annualTotal = annualMonthly * 12;
+
+  return (
+    <section className="bg-[#f6f6f7] border-y border-[#e1e3e5] py-20">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-[#202223] mb-3">Simple, transparent pricing</h2>
+          <p className="text-[#6d7175] text-lg">Pay per automation, or go PRO for everything.</p>
+
+          {/* Toggle */}
+          <div className="inline-flex items-center gap-3 mt-8 bg-white border border-[#e1e3e5] rounded-lg p-1">
+            <button
+              onClick={() => setAnnual(false)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${!annual ? 'bg-[#2563eb] text-white shadow-sm' : 'text-[#6d7175] hover:text-[#202223]'}`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setAnnual(true)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${annual ? 'bg-[#2563eb] text-white shadow-sm' : 'text-[#6d7175] hover:text-[#202223]'}`}
+            >
+              Annual
+              <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${annual ? 'bg-white/20 text-white' : 'bg-[#e3f9e3] text-[#008060]'}`}>
+                Save 25%
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Pay-per-automation */}
+          <div className="bg-white border border-[#e1e3e5] rounded-xl p-8">
+            <h3 className="text-lg font-bold text-[#202223] mb-1">Starter</h3>
+            <p className="text-sm text-[#6d7175] mb-6">Pick only what you need.</p>
+            <div className="mb-6">
+              <span className="text-4xl font-extrabold text-[#202223]">£15</span>
+              <span className="text-[#6d7175] ml-1">/ automation / mo</span>
+            </div>
+            <ul className="space-y-3 mb-8">
+              {[
+                'Choose individual automations',
+                '7-day free trial per automation',
+                'Cancel any automation anytime',
+                'Standard support (< 4 hr)',
+                'Live execution logs',
+              ].map((f) => (
+                <li key={f} className="flex items-start gap-3 text-sm text-[#202223]">
+                  <svg className="w-4 h-4 text-[#008060] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/marketplace"
+              className="block w-full py-3 text-center border border-[#e1e3e5] rounded-lg text-sm font-semibold text-[#202223] hover:bg-[#f6f6f7] transition-colors"
+            >
+              Browse automations
+            </Link>
+          </div>
+
+          {/* PRO */}
+          <div className="bg-[#2563eb] rounded-xl p-8 relative overflow-hidden">
+            <div className="absolute top-4 right-4 px-2.5 py-1 bg-white/20 rounded-md text-white text-xs font-semibold">
+              Most popular
+            </div>
+            <h3 className="text-lg font-bold text-white mb-1">PRO</h3>
+            <p className="text-sm text-blue-200 mb-6">Everything, for one flat price.</p>
+            <div className="mb-1">
+              <span className="text-4xl font-extrabold text-white">
+                £{annual ? annualMonthly : monthlyPrice}
+              </span>
+              <span className="text-blue-200 ml-1">/ mo</span>
+            </div>
+            {annual && (
+              <p className="text-blue-200 text-sm mb-6">Billed £{annualTotal} annually</p>
+            )}
+            {!annual && <p className="text-blue-200 text-sm mb-6">Billed monthly, cancel anytime</p>}
+            <ul className="space-y-3 mb-8">
+              {PRO_FEATURES.map((f) => (
+                <li key={f} className="flex items-start gap-3 text-sm text-white">
+                  <svg className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href={session ? '/dashboard' : '/onboarding'}
+              className="block w-full py-3 text-center bg-white text-[#2563eb] rounded-lg text-sm font-semibold hover:bg-[#f0f7ff] transition-colors shadow-sm"
+            >
+              {session ? 'Upgrade to PRO' : 'Start free trial'}
+            </Link>
+          </div>
+        </div>
+
+        <p className="text-center text-sm text-[#8c9196] mt-8">
+          All plans include a 7-day free trial. No credit card required to start.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const { user, session } = useAuth();
@@ -247,6 +370,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Pricing ── */}
+      <PricingSection session={session} />
 
       {/* ── CTA ── */}
       <section className="bg-[#2563eb] py-20">

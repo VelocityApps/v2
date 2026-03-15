@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [userAutomations, setUserAutomations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [billingLoading, setBillingLoading] = useState(false);
+  const [tickets, setTickets] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -24,6 +25,7 @@ export default function DashboardPage() {
 
     if (session) {
       fetchUserAutomations();
+      fetchTickets();
     }
   }, [session, authLoading, router]);
 
@@ -46,6 +48,19 @@ export default function DashboardPage() {
       console.error('Error fetching user automations:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchTickets() {
+    if (!session) return;
+    try {
+      const res = await fetch('/api/support/tickets', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      setTickets(data.tickets || []);
+    } catch {
+      // non-critical — silently ignore
     }
   }
 
@@ -220,6 +235,52 @@ export default function DashboardPage() {
                 />
               );
             })}
+          </div>
+        )}
+        {tickets.length > 0 && (
+          <div className="mt-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[#202223]">Support Tickets</h2>
+              <Link href="/support" className="text-sm text-[#2563eb] hover:text-[#1d4ed8] transition-colors font-medium">
+                New ticket
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {tickets.map((ticket: any) => {
+                const priorityStyles: Record<string, string> = {
+                  critical: 'bg-red-50 text-red-700 border-red-200',
+                  high: 'bg-orange-50 text-orange-700 border-orange-200',
+                  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+                  low: 'bg-[#e8f0fe] text-[#2563eb] border-[#bfdbfe]',
+                };
+                const statusStyles: Record<string, string> = {
+                  open: 'bg-[#e8f0fe] text-[#2563eb]',
+                  in_progress: 'bg-amber-50 text-amber-700',
+                  resolved: 'bg-[#e3f9e3] text-[#008060]',
+                  closed: 'bg-[#f6f6f7] text-[#6d7175]',
+                };
+                const priority = ticket.priority || 'medium';
+                const status = ticket.status || 'open';
+                return (
+                  <div key={ticket.id} className="bg-white border border-[#e1e3e5] rounded-xl px-5 py-4 flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-[#202223] truncate">{ticket.subject}</p>
+                      <p className="text-sm text-[#6d7175] mt-0.5">
+                        {new Date(ticket.created_at || ticket.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2.5 py-1 rounded-md border text-xs font-medium capitalize ${priorityStyles[priority] || priorityStyles.medium}`}>
+                        {priority}
+                      </span>
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize ${statusStyles[status] || statusStyles.open}`}>
+                        {status.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
