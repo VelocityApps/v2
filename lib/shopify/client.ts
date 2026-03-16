@@ -230,20 +230,24 @@ export class ShopifyClient {
    * Create webhook
    */
   async createWebhook(topic: string, address: string, format: string = 'json'): Promise<ShopifyWebhook> {
-    const response = await this.request<{ webhook: ShopifyWebhook }>(
-      `/webhooks.json`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          webhook: {
-            topic,
-            address,
-            format,
-          },
-        }),
+    try {
+      const response = await this.request<{ webhook: ShopifyWebhook }>(
+        `/webhooks.json`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ webhook: { topic, address, format } }),
+        }
+      );
+      return response.webhook;
+    } catch (err: any) {
+      // If this topic+address combo already exists, find and return the existing webhook
+      if (err.message?.includes('already been taken')) {
+        const existing = await this.getWebhooks();
+        const match = existing.find(w => w.topic === topic && w.address === address);
+        if (match) return match;
       }
-    );
-    return response.webhook;
+      throw err;
+    }
   }
 
   /**
@@ -266,9 +270,13 @@ export class ShopifyClient {
   }
 
   /**
-   * Create or update collection
+   * Create a custom collection with optional SEO metadata
    */
-  async createCollection(title: string, handle?: string): Promise<ShopifyCollection> {
+  async createCollection(
+    title: string,
+    handle?: string,
+    seo?: { metaTitle?: string; metaDescription?: string; bodyHtml?: string }
+  ): Promise<ShopifyCollection> {
     const response = await this.request<{ custom_collection: ShopifyCollection }>(
       `/custom_collections.json`,
       {
@@ -277,11 +285,44 @@ export class ShopifyClient {
           custom_collection: {
             title,
             handle: handle || title.toLowerCase().replace(/\s+/g, '-'),
+            ...(seo?.bodyHtml ? { body_html: seo.bodyHtml } : {}),
           },
         }),
       }
     );
-    return response.custom_collection;
+    const collection = response.custom_collection;
+
+    // Set SEO title/description via metafields
+    if (seo?.metaTitle || seo?.metaDescription) {
+      await this.setCollectionSeo(collection.id, seo.metaTitle, seo.metaDescription);
+    }
+
+    return collection;
+  }
+
+  /**
+   * Set SEO title and description on a collection via metafields
+   */
+  async setCollectionSeo(
+    collectionId: string,
+    metaTitle?: string,
+    metaDescription?: string
+  ): Promise<void> {
+    const metafields = [
+      metaTitle && { key: 'title_tag', value: metaTitle, type: 'single_line_text_field', namespace: 'global' },
+      metaDescription && { key: 'description_tag', value: metaDescription, type: 'single_line_text_field', namespace: 'global' },
+    ].filter(Boolean);
+
+    for (const metafield of metafields) {
+      try {
+        await this.request(`/collections/${collectionId}/metafields.json`, {
+          method: 'POST',
+          body: JSON.stringify({ metafield }),
+        });
+      } catch {
+        // Non-fatal — SEO fields are best-effort
+      }
+    }
   }
 
   /**

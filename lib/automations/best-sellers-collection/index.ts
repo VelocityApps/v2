@@ -83,7 +83,16 @@ export class BestSellersCollection extends BaseAutomation {
         const ranked = this.rankProducts(salesData, sortBy, collectionSize);
 
         // Step 3: Get or create the collection
-        const collection = await this.getOrCreateCollection(shopify, collectionName, collectionHandle);
+        // Build SEO fields from store name + collection name
+        const storeName = (userAutomation.shopify_store_url || '')
+          .replace(/\.myshopify\.com$/, '')
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, (c: string) => c.toUpperCase());
+        const seo = {
+          metaTitle: storeName ? `${collectionName} | ${storeName}` : collectionName,
+          metaDescription: `Shop our best-selling products${storeName ? ` at ${storeName}` : ''}. Updated regularly based on real sales data.`,
+        };
+        const collection = await this.getOrCreateCollection(shopify, collectionName, collectionHandle, seo);
 
         // Step 4: Sync collection membership (diff-based, avoids momentary empty state)
         const { added, removed } = await this.syncCollectionProducts(shopify, collection, ranked);
@@ -194,11 +203,18 @@ export class BestSellersCollection extends BaseAutomation {
   private async getOrCreateCollection(
     shopify: ShopifyClient,
     title: string,
-    handle: string
+    handle: string,
+    seo?: { metaTitle?: string; metaDescription?: string }
   ): Promise<ShopifyCollection> {
     const existing = await shopify.getCollectionByHandle(handle);
-    if (existing) return existing;
-    return shopify.createCollection(title, handle);
+    if (existing) {
+      // Update SEO on existing collection too
+      if (seo?.metaTitle || seo?.metaDescription) {
+        await shopify.setCollectionSeo(existing.id, seo.metaTitle, seo.metaDescription);
+      }
+      return existing;
+    }
+    return shopify.createCollection(title, handle, seo);
   }
 
   /**
