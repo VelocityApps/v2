@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
   const [replyMessage, setReplyMessage] = useState('');
   const [replySending, setReplySending] = useState(false);
+  const [ticketActionLoading, setTicketActionLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -164,6 +165,45 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error removing automation:', error);
       toast.error('Failed to remove automation', { id: `remove-${id}` });
+    }
+  }
+
+  async function handleResolveTicket(ticketId: string) {
+    if (!session) return;
+    setTicketActionLoading(true);
+    try {
+      const res = await fetch(`/api/support/tickets/${ticketId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ status: 'resolved' }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Ticket marked as resolved');
+      setTickets((prev) => prev.map((t) => t.id === ticketId ? { ...t, status: 'resolved' } : t));
+      setSelectedTicket((prev: any) => prev ? { ...prev, status: 'resolved' } : null);
+    } catch {
+      toast.error('Failed to update ticket');
+    } finally {
+      setTicketActionLoading(false);
+    }
+  }
+
+  async function handleDeleteTicket(ticketId: string) {
+    if (!session) return;
+    setTicketActionLoading(true);
+    try {
+      const res = await fetch(`/api/support/tickets/${ticketId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Ticket deleted');
+      setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+      setSelectedTicket(null);
+    } catch {
+      toast.error('Failed to delete ticket');
+    } finally {
+      setTicketActionLoading(false);
     }
   }
 
@@ -344,20 +384,40 @@ export default function DashboardPage() {
               placeholder="Add more detail or ask a follow-up question..."
               className="w-full px-3 py-2 border border-[#e1e3e5] rounded-lg text-sm text-[#202223] placeholder-[#8c9196] focus:outline-none focus:border-[#2563eb] resize-none"
             />
-            <div className="flex justify-end gap-2 mt-3">
-              <button
-                onClick={() => setSelectedTicket(null)}
-                className="px-4 py-2 text-sm font-medium text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg hover:bg-[#f6f6f7] transition-colors"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => handleReply(selectedTicket.id)}
-                disabled={replySending || !replyMessage.trim()}
-                className="px-4 py-2 text-sm font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {replySending ? 'Sending...' : 'Send reply'}
-              </button>
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex gap-2">
+                {selectedTicket.status !== 'resolved' && (
+                  <button
+                    onClick={() => handleResolveTicket(selectedTicket.id)}
+                    disabled={ticketActionLoading}
+                    className="px-3 py-2 text-sm font-medium bg-[#e3f9e3] hover:bg-[#c6f3c6] text-[#008060] rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    Mark resolved
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDeleteTicket(selectedTicket.id)}
+                  disabled={ticketActionLoading}
+                  className="px-3 py-2 text-sm font-medium bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedTicket(null)}
+                  className="px-4 py-2 text-sm font-medium text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg hover:bg-[#f6f6f7] transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => handleReply(selectedTicket.id)}
+                  disabled={replySending || !replyMessage.trim()}
+                  className="px-4 py-2 text-sm font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {replySending ? 'Sending...' : 'Send reply'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
