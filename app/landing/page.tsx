@@ -123,9 +123,23 @@ function PricingSection({ session }: { session: any }) {
           <div className="bg-white border border-[#e1e3e5] rounded-xl p-8">
             <h3 className="text-lg font-bold text-[#202223] mb-1">Starter</h3>
             <p className="text-sm text-[#6d7175] mb-6">Pick only what you need.</p>
-            <div className="mb-6">
-              <span className="text-4xl font-extrabold text-[#202223]">£15</span>
+            <div className="mb-4">
+              <span className="text-4xl font-extrabold text-[#202223]">from £15</span>
               <span className="text-[#6d7175] ml-1">/ automation / mo</span>
+            </div>
+            <div className="mb-6 grid grid-cols-2 gap-x-4 gap-y-1.5">
+              {[
+                ['Best Sellers Collection', '£15'],
+                ['Review Request Automator', '£19'],
+                ['Welcome Email Series', '£24'],
+                ['Abandoned Cart Recovery', '£29'],
+                ['Low Stock Alerts', '£34'],
+              ].map(([name, price]) => (
+                <div key={name} className="flex items-center justify-between text-xs text-[#6d7175] col-span-2 border-b border-[#f1f1f1] py-1 last:border-0">
+                  <span>{name}</span>
+                  <span className="font-semibold text-[#202223]">{price}/mo</span>
+                </div>
+              ))}
             </div>
             <ul className="space-y-3 mb-8">
               {[
