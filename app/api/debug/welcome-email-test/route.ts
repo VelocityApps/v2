@@ -31,14 +31,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'to_email is required' }, { status: 400 });
   }
 
-  const { data: ua } = await supabaseAdmin
+  const { data: ua, error: uaError } = await supabaseAdmin
     .from('user_automations')
     .select('*')
     .eq('id', userAutomationId)
     .single();
 
   if (!ua) {
-    return NextResponse.json({ error: 'user_automation not found' }, { status: 404 });
+    return NextResponse.json({ error: 'user_automation not found', supabase_error: uaError, id_received: userAutomationId }, { status: 404 });
   }
 
   const automation = getAutomation('welcome-email-series');
