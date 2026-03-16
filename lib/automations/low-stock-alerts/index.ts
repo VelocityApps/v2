@@ -101,7 +101,8 @@ export class LowStockAlerts extends BaseAutomation {
 
     try {
       const shopify = await this.getShopifyClient(userAutomation);
-      const threshold = Number(config.threshold) || 10;
+      const globalThreshold = Number(config.threshold) || 10;
+      const productThresholds: Record<string, number> = config.product_thresholds || {};
 
       // Normalise payload (Shopify sometimes nests under inventory_level)
       const raw = (payload as any).inventory_level ?? payload;
@@ -126,10 +127,7 @@ export class LowStockAlerts extends BaseAutomation {
 
       const availableNum = available != null ? Number(available) : 0;
 
-      // Nothing to do if still above threshold
-      if (availableNum >= threshold) return;
-
-      // Resolve product title and ID
+      // Resolve product title and ID before threshold check so we can look up per-product threshold
       let productTitle = 'Product';
       let productId = inventoryItemId;
 
@@ -141,6 +139,14 @@ export class LowStockAlerts extends BaseAutomation {
           productId = resolvedId;
         }
       } catch { /* use defaults */ }
+
+      // Use per-product threshold if set, otherwise fall back to global
+      const threshold = productThresholds[productId] != null
+        ? Number(productThresholds[productId])
+        : globalThreshold;
+
+      // Nothing to do if still above threshold
+      if (availableNum >= threshold) return;
 
       // Per-product cooldown: skip if we already alerted for this product recently
       const cooldownHours = Number(config.alert_cooldown_hours) || 4;
@@ -178,13 +184,14 @@ export class LowStockAlerts extends BaseAutomation {
     const config = userAutomation.config || {};
     if ((config.frequency || 'immediate') !== 'daily-digest') return;
 
-    const threshold = Number(config.threshold) || 10;
+    const globalThreshold = Number(config.threshold) || 10;
+    const productThresholds: Record<string, number> = config.product_thresholds || {};
 
     try {
       const shopify = await this.getShopifyClient(userAutomation);
 
       // Paginate through all products to find low-stock ones
-      const lowStockItems: { productId: string; title: string; totalQty: number }[] = [];
+      const lowStockItems: { productId: string; title: string; totalQty: number; threshold: number }[] = [];
       let page = 1;
       while (true) {
         const products = await shopify.getProducts(250);
@@ -192,8 +199,11 @@ export class LowStockAlerts extends BaseAutomation {
           const totalQty = (product.variants || []).reduce(
             (sum: number, v: any) => sum + (Number(v.inventory_quantity) || 0), 0
           );
+          const threshold = productThresholds[product.id] != null
+            ? Number(productThresholds[product.id])
+            : globalThreshold;
           if (totalQty < threshold) {
-            lowStockItems.push({ productId: product.id, title: product.title, totalQty });
+            lowStockItems.push({ productId: product.id, title: product.title, totalQty, threshold });
           }
         }
         if (products.length < 250) break;
@@ -207,7 +217,7 @@ export class LowStockAlerts extends BaseAutomation {
       } else {
         await this.dispatchDigestAlerts(config, {
           items: lowStockItems,
-          threshold,
+          threshold: globalThreshold,
           shopifyStoreUrl: userAutomation.shopify_store_url,
           userAutomationId: userAutomation.id,
         });
@@ -215,7 +225,7 @@ export class LowStockAlerts extends BaseAutomation {
           userAutomation.id,
           'success',
           `Daily digest: alerted for ${lowStockItems.length} low-stock product(s)`,
-          { count: lowStockItems.length, threshold }
+          { count: lowStockItems.length, threshold: globalThreshold }
         );
         await this.updateLastRun(userAutomation.id);
       }
