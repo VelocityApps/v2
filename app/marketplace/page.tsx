@@ -9,20 +9,10 @@ import InstallModal from '@/components/automations/InstallModal';
 // Slugs with a full backend implementation — everything else is Coming Soon
 const LIVE_SLUGS = new Set([
   'abandoned-cart-recovery',
-  'auto-restock-alerts',
-  'auto-seo-optimization',
-  'auto-tag-products',
   'best-sellers-collection',
-  'customer-ltv-tracker',
-  'customer-segmentation',
   'low-stock-alerts',
-  'order-status-auto-updates',
-  'pinterest-stock-sync',
-  'post-purchase-upsell',
   'review-request-automator',
-  'sales-report-automator',
   'welcome-email-series',
-  'win-back-campaign',
 ]);
 
 interface AutomationMetrics {
