@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
   if (mode === 'immediate') {
     // Simulate inventory_levels/update webhook with stock below threshold
     const fakePayload = {
+      id: 'TEST-INVENTORY',
       inventory_item_id: '999000111',
       location_id: '111000999',
       available: stock,
