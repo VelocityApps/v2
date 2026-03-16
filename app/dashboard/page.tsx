@@ -16,6 +16,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [billingLoading, setBillingLoading] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [replySending, setReplySending] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -164,6 +167,29 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleReply(ticketId: string) {
+    if (!session || !replyMessage.trim()) return;
+    setReplySending(true);
+    try {
+      const res = await fetch(`/api/support/tickets/${ticketId}/reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ message: replyMessage }),
+      });
+      if (!res.ok) throw new Error('Failed to send reply');
+      toast.success('Reply sent');
+      setReplyMessage('');
+      setSelectedTicket(null);
+    } catch {
+      toast.error('Failed to send reply');
+    } finally {
+      setReplySending(false);
+    }
+  }
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center">
@@ -173,6 +199,7 @@ export default function DashboardPage() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
@@ -262,7 +289,11 @@ export default function DashboardPage() {
                 const priority = ticket.priority || 'medium';
                 const status = ticket.status || 'open';
                 return (
-                  <div key={ticket.id} className="bg-white border border-[#e1e3e5] rounded-xl px-5 py-4 flex items-start gap-4">
+                  <button
+                    key={ticket.id}
+                    onClick={() => { setSelectedTicket(ticket); setReplyMessage(''); }}
+                    className="w-full bg-white border border-[#e1e3e5] rounded-xl px-5 py-4 flex items-start gap-4 hover:border-[#2563eb]/40 hover:shadow-sm transition-all text-left"
+                  >
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-[#202223] truncate">{ticket.subject}</p>
                       <p className="text-sm text-[#6d7175] mt-0.5">
@@ -277,7 +308,7 @@ export default function DashboardPage() {
                         {status.replace('_', ' ')}
                       </span>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -285,6 +316,54 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
+
+    {/* Ticket detail modal */}
+    {selectedTicket && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setSelectedTicket(null)}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="px-6 py-5 border-b border-[#e1e3e5] flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-base font-semibold text-[#202223]">{selectedTicket.subject}</h2>
+              <p className="text-xs text-[#6d7175] mt-0.5">
+                {new Date(selectedTicket.created_at || selectedTicket.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {' · '}
+                <span className="capitalize">{(selectedTicket.status || 'open').replace('_', ' ')}</span>
+              </p>
+            </div>
+            <button onClick={() => setSelectedTicket(null)} className="text-[#6d7175] hover:text-[#202223] text-xl leading-none mt-0.5">×</button>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-sm text-[#202223] whitespace-pre-wrap">{selectedTicket.message}</p>
+          </div>
+          <div className="px-6 pb-5 border-t border-[#e1e3e5] pt-4">
+            <p className="text-xs font-medium text-[#6d7175] mb-2">Add a reply</p>
+            <textarea
+              value={replyMessage}
+              onChange={(e) => setReplyMessage(e.target.value)}
+              rows={3}
+              placeholder="Add more detail or ask a follow-up question..."
+              className="w-full px-3 py-2 border border-[#e1e3e5] rounded-lg text-sm text-[#202223] placeholder-[#8c9196] focus:outline-none focus:border-[#2563eb] resize-none"
+            />
+            <div className="flex justify-end gap-2 mt-3">
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="px-4 py-2 text-sm font-medium text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg hover:bg-[#f6f6f7] transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => handleReply(selectedTicket.id)}
+                disabled={replySending || !replyMessage.trim()}
+                className="px-4 py-2 text-sm font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {replySending ? 'Sending...' : 'Send reply'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
