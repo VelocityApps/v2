@@ -4,11 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 
 interface ConfigSchema {
   [key: string]: {
-    type: 'text' | 'number' | 'select' | 'textarea' | 'json' | 'password' | 'checkbox';
+    type: 'text' | 'number' | 'select' | 'textarea' | 'json' | 'password' | 'checkbox' | 'number-list';
     label: string;
     default?: any;
     required?: boolean;
     options?: string[];
+    description?: string;
+    placeholder?: string;
   };
 }
 
@@ -57,7 +59,17 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Show JSON as pretty-printed; if value is already a string (e.g. from DB), parse then stringify to avoid escaped-quote garbage
+  // Convert an array of numbers to a display string: [0, 3, 7] → "0, 3, 7"
+  const numberListToDisplay = (val: unknown, defaultVal: unknown): string => {
+    const arr = Array.isArray(val) ? val : Array.isArray(defaultVal) ? defaultVal : [];
+    return arr.join(', ');
+  };
+
+  // Parse a comma-separated string to an array of numbers: "0, 3, 7" → [0, 3, 7]
+  const parseNumberList = (raw: string): number[] =>
+    raw.split(',').map(s => s.trim()).filter(s => s !== '').map(Number).filter(n => !isNaN(n));
+
+  // Show JSON as pretty-printed; if value is already a string (e.g. from DB), parse then stringify
   const formatJsonForDisplay = (val: unknown): string => {
     if (val === undefined || val === null) return '[]';
     if (typeof val === 'string') {
@@ -70,23 +82,29 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
     return JSON.stringify(val, null, 2);
   };
 
+  const inputClass = 'w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors';
+
   return (
     <div className="space-y-4">
       {Object.entries(configSchema).map(([key, schema]) => (
         <div key={key}>
-          <label className="block text-sm font-medium text-[#202223] mb-2">
+          <label className="block text-sm font-medium text-[#202223] mb-1.5">
             {schema.label}
             {schema.required && <span className="text-red-400 ml-1">*</span>}
           </label>
-          
+
+          {schema.description && (
+            <p className="text-xs text-[#6d7175] mb-2">{schema.description}</p>
+          )}
+
           {(schema.type === 'text' || schema.type === 'password') && (
             <input
               type={schema.type === 'password' ? 'password' : 'text'}
               value={config[key] || ''}
               onChange={(e) => handleChange(key, e.target.value)}
               required={schema.required}
-              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
-              placeholder={schema.type === 'password' ? 'Paste token from developers.pinterest.com' : schema.default}
+              className={inputClass}
+              placeholder={schema.placeholder ?? (schema.type === 'password' ? 'Paste your access token' : String(schema.default ?? ''))}
               autoComplete={schema.type === 'password' ? 'off' : undefined}
             />
           )}
@@ -94,11 +112,22 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
           {schema.type === 'number' && (
             <input
               type="number"
-              value={config[key] || ''}
+              value={config[key] ?? ''}
               onChange={(e) => handleChange(key, Number(e.target.value))}
               required={schema.required}
-              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
-              placeholder={schema.default}
+              className={inputClass}
+              placeholder={schema.placeholder ?? String(schema.default ?? '')}
+            />
+          )}
+
+          {schema.type === 'number-list' && (
+            <input
+              type="text"
+              value={numberListToDisplay(config[key], schema.default)}
+              onChange={(e) => handleChange(key, parseNumberList(e.target.value))}
+              required={schema.required}
+              className={inputClass}
+              placeholder={schema.placeholder ?? (Array.isArray(schema.default) ? schema.default.join(', ') : '')}
             />
           )}
 
@@ -107,7 +136,7 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               value={config[key] || schema.default || ''}
               onChange={(e) => handleChange(key, e.target.value)}
               required={schema.required}
-              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] focus:outline-none focus:border-[#2563eb] transition-colors"
+              className={inputClass}
             >
               {schema.options?.map((option) => (
                 <option key={option} value={option}>
@@ -123,26 +152,31 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
               onChange={(e) => handleChange(key, e.target.value)}
               required={schema.required}
               rows={4}
-              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
-              placeholder={schema.default}
+              className={inputClass}
+              placeholder={schema.placeholder ?? String(schema.default ?? '')}
             />
           )}
 
           {schema.type === 'json' && (
-            <textarea
-              value={formatJsonForDisplay(config[key] ?? schema.default ?? [])}
-              onChange={(e) => {
-                try {
-                  const parsed = JSON.parse(e.target.value);
-                  handleChange(key, parsed);
-                } catch {
-                  // Invalid JSON, ignore
-                }
-              }}
-              required={schema.required}
-              rows={4}
-              className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] font-mono text-sm focus:outline-none focus:border-[#2563eb] transition-colors"
-            />
+            <>
+              <textarea
+                value={formatJsonForDisplay(config[key] ?? schema.default ?? [])}
+                onChange={(e) => {
+                  try {
+                    const parsed = JSON.parse(e.target.value);
+                    handleChange(key, parsed);
+                  } catch {
+                    // Invalid JSON — ignore until valid
+                  }
+                }}
+                required={schema.required}
+                rows={5}
+                className={`${inputClass} font-mono text-sm`}
+                placeholder={schema.placeholder}
+                spellCheck={false}
+              />
+              <p className="text-xs text-[#8c9196] mt-1">Enter valid JSON</p>
+            </>
           )}
 
           {schema.type === 'checkbox' && (
@@ -161,6 +195,3 @@ export default function ConfigForm({ configSchema, initialConfig, onChange }: Co
     </div>
   );
 }
-
-
-

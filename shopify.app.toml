@@ -1,0 +1,18 @@
+name = "VelocityApps"
+client_id = "2e882a78b51133e4c2f52f3f10972c47"
+application_url = "https://velocityapps.dev"
+embedded = false
+
+[access_scopes]
+scopes = "read_products,write_products,read_orders,read_inventory,write_inventory,read_customers,read_content,write_content,write_price_rules,write_discounts"
+
+[auth]
+redirect_urls = [
+  "https://velocityapps.dev/api/auth/shopify/callback"
+]
+
+[webhooks]
+api_version = "2025-01"
+
+[build]
+automatically_update_urls_on_dev = false

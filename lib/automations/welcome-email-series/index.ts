@@ -23,7 +23,7 @@ const WEBHOOK_ADDRESS = () =>
 
 const CRON_INTERVAL_HOURS = 1;
 const SERIES_EXPIRY_DAYS = 30; // stop trying to send emails older than 30 days
-const DISCOUNT_PERCENT = 10;
+const DEFAULT_DISCOUNT_PERCENT = 10;
 
 export class WelcomeEmailSeries extends BaseAutomation {
   name = 'Welcome Email Series';
@@ -169,6 +169,7 @@ export class WelcomeEmailSeries extends BaseAutomation {
     const config = userAutomation.config || {};
     const emailSequence: number[] = parseSequence(config.email_sequence);
     const includeDiscount: boolean = config.include_discount !== false; // default true
+    const discountPercent: number = Number(config.discount_percent) || DEFAULT_DISCOUNT_PERCENT;
 
     const cutoff = new Date(Date.now() - SERIES_EXPIRY_DAYS * 86_400_000).toISOString();
 
@@ -213,9 +214,9 @@ export class WelcomeEmailSeries extends BaseAutomation {
         if (!row.email_3_sent_at && daysSince >= day3) {
           let discountCode: string | null = null;
           if (includeDiscount) {
-            discountCode = await this.createDiscountCode(userAutomation, row.order_id);
+            discountCode = await this.createDiscountCode(userAutomation, row.order_id, discountPercent);
           }
-          await this.sendSeriesEmail(userAutomation, row, 3, discountCode);
+          await this.sendSeriesEmail(userAutomation, row, 3, discountCode, discountPercent);
           await supabaseAdmin
             .from('welcome_email_series')
             .update({
@@ -241,7 +242,8 @@ export class WelcomeEmailSeries extends BaseAutomation {
     userAutomation: UserAutomation,
     row: any,
     emailNumber: 1 | 2 | 3,
-    discountCode: string | null
+    discountCode: string | null,
+    discountPercent: number = DEFAULT_DISCOUNT_PERCENT
   ): Promise<void> {
     const { sendEmail } = await import('@/lib/email');
 
@@ -263,9 +265,9 @@ export class WelcomeEmailSeries extends BaseAutomation {
       html = this.buildEmail2(customerName, storeName, storeUrl, lineItems);
     } else {
       subject = discountCode
-        ? `A little something for you, ${customerName !== 'there' ? customerName : 'friend'} – ${DISCOUNT_PERCENT}% off your next order`
+        ? `A little something for you, ${customerName !== 'there' ? customerName : 'friend'} – ${discountPercent}% off your next order`
         : `Come back and shop with us again, ${customerName !== 'there' ? customerName : 'friend'}!`;
-      html = this.buildEmail3(customerName, storeName, storeUrl, discountCode);
+      html = this.buildEmail3(customerName, storeName, storeUrl, discountCode, discountPercent);
     }
 
     await sendEmail({
@@ -287,13 +289,14 @@ export class WelcomeEmailSeries extends BaseAutomation {
 
   private async createDiscountCode(
     userAutomation: UserAutomation,
-    orderId: string
+    orderId: string,
+    discountPercent: number = DEFAULT_DISCOUNT_PERCENT
   ): Promise<string | null> {
-    const code = `WELCOME${DISCOUNT_PERCENT}${randomSuffix()}`;
+    const code = `WELCOME${discountPercent}${randomSuffix()}`;
     try {
       const shopify = await this.getShopifyClient(userAutomation);
       const expiresAt = new Date(Date.now() + 30 * 86_400_000); // 30 days
-      const priceRuleId = await shopify.createPriceRule(code, DISCOUNT_PERCENT, 1, expiresAt);
+      const priceRuleId = await shopify.createPriceRule(code, discountPercent, 1, expiresAt);
       await shopify.createDiscountCode(priceRuleId, code);
       return code;
     } catch (err: any) {
@@ -376,7 +379,8 @@ export class WelcomeEmailSeries extends BaseAutomation {
     name: string,
     store: string,
     storeUrl: string,
-    discountCode: string | null
+    discountCode: string | null,
+    discountPercent: number = DEFAULT_DISCOUNT_PERCENT
   ): string {
     const shopUrl = `https://${storeUrl}`;
     const ctaUrl = discountCode ? `${shopUrl}?discount=${discountCode}` : shopUrl;
@@ -394,10 +398,10 @@ export class WelcomeEmailSeries extends BaseAutomation {
       ${discountCode ? `
       <div style="background:#fff8e6;border:2px dashed #f59e0b;border-radius:8px;padding:20px 24px;text-align:center;margin:0 0 28px;">
         <p style="margin:0 0 6px;font-size:28px;font-weight:700;letter-spacing:3px;color:#b45309;">${discountCode}</p>
-        <p style="margin:0;font-size:13px;color:#92400e;">${DISCOUNT_PERCENT}% off your next order — valid for 30 days</p>
+        <p style="margin:0;font-size:13px;color:#92400e;">${discountPercent}% off your next order — valid for 30 days</p>
       </div>` : ''}
 
-      ${buildCTA(ctaUrl, discountCode ? `Shop Now & Save ${DISCOUNT_PERCENT}%` : 'Visit the Store', '#0066cc')}
+      ${buildCTA(ctaUrl, discountCode ? `Shop Now & Save ${discountPercent}%` : 'Visit the Store', '#0066cc')}
 
       <p style="margin:24px 0 0;color:#777;font-size:13px;line-height:1.6;">
         Thanks again for choosing ${store}. We can't wait to serve you again! 🙏

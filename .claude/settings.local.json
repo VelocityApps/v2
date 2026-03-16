@@ -23,7 +23,14 @@
       "Bash(nslookup:*)",
       "Bash(printf:*)",
       "Bash(npm audit:*)",
-      "Bash(npm update:*)"
+      "Bash(npm update:*)",
+      "Bash(git push:*)",
+      "Bash(vercel:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npx:*)",
+      "Bash(git config:*)",
+      "Bash(git credential-manager:*)"
     ]
   }
 }

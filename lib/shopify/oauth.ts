@@ -25,6 +25,8 @@ const DEFAULT_SCOPES = [
   'read_customers',
   'read_content',
   'write_content',
+  'write_price_rules',
+  'write_discounts',
 ];
 
 /**
