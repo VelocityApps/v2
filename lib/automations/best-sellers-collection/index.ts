@@ -83,14 +83,14 @@ export class BestSellersCollection extends BaseAutomation {
         const ranked = this.rankProducts(salesData, sortBy, collectionSize);
 
         // Step 3: Get or create the collection
-        // Build SEO fields from store name + collection name
+        // SEO: use user-configured values if set, otherwise auto-generate from store name
         const storeName = (userAutomation.shopify_store_url || '')
           .replace(/\.myshopify\.com$/, '')
           .replace(/-/g, ' ')
           .replace(/\b\w/g, (c: string) => c.toUpperCase());
         const seo = {
-          metaTitle: storeName ? `${collectionName} | ${storeName}` : collectionName,
-          metaDescription: `Shop our best-selling products${storeName ? ` at ${storeName}` : ''}. Updated regularly based on real sales data.`,
+          metaTitle: config.seo_title || (storeName ? `${collectionName} | ${storeName}` : collectionName),
+          metaDescription: config.seo_description || `Shop our best-selling products${storeName ? ` at ${storeName}` : ''}. Updated regularly based on real sales data.`,
         };
         const collection = await this.getOrCreateCollection(shopify, collectionName, collectionHandle, seo);
 
