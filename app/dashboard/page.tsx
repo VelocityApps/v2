@@ -44,6 +44,7 @@ export default function DashboardPage() {
           automation:automations(*)
         `)
         .eq('user_id', session.user.id)
+        .neq('status', 'uninstalled')
         .order('installed_at', { ascending: false });
 
       if (error) throw error;

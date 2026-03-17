@@ -80,13 +80,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already installed
+    // Check if already installed (ignore soft-deleted rows)
     const { data: existing } = await supabaseAdmin
       .from('user_automations')
       .select('id')
       .eq('user_id', user.id)
       .eq('automation_id', automationId)
       .eq('shopify_store_url', shopifyStoreUrl)
+      .neq('status', 'uninstalled')
       .single();
 
     if (existing) {

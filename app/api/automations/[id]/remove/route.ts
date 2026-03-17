@@ -72,10 +72,15 @@ export async function DELETE(
       }
     }
 
-    // Delete user automation (cascade will handle webhooks and logs)
+    // Soft-delete: preserve trial history so users can't re-trial by uninstalling and reinstalling.
+    // Clear the encrypted token since it's no longer needed.
     const { error: deleteError } = await supabaseAdmin
       .from('user_automations')
-      .delete()
+      .update({
+        status: 'uninstalled',
+        shopify_access_token_encrypted: null,
+        stripe_subscription_id: null,
+      })
       .eq('id', id);
 
     if (deleteError) {
