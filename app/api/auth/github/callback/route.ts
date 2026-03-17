@@ -39,16 +39,21 @@ export async function GET(request: NextRequest) {
     // For now, we'll redirect to the app and let the frontend handle it
     // The frontend will need to call an API to store the token
 
-    // Redirect to app with token (temporary, should be stored server-side)
-    // In production, store token immediately and redirect to success page
+    // Pass token via httpOnly cookie — never expose in URL
     const redirectUrl = new URL(
       `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/github/store`
     );
-    redirectUrl.searchParams.set('token', accessToken);
     redirectUrl.searchParams.set('username', githubUser.username);
-    redirectUrl.searchParams.set('email', githubUser.email || '');
 
-    return NextResponse.redirect(redirectUrl.toString());
+    const response = NextResponse.redirect(redirectUrl.toString());
+    response.cookies.set('github_token_temp', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60,
+      path: '/',
+    });
+    return response;
   } catch (error: any) {
     console.error('[GitHubAuth] Error in callback:', error);
     return NextResponse.redirect(

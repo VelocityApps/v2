@@ -45,7 +45,15 @@ export async function GET(request: NextRequest) {
 
     // Parse state: nonce:installSlug:source
     const oauthState = searchParams.get('state') ?? '';
-    const [, installSlug = '', source = ''] = oauthState.split(':');
+    const [stateNonce, installSlug = '', source = ''] = oauthState.split(':');
+
+    // Verify nonce matches what we set in the authorize step
+    const storedNonce = request.cookies.get('shopify_oauth_nonce')?.value;
+    if (!storedNonce || storedNonce !== stateNonce) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding?shopify_auth_error=${encodeURIComponent('Invalid OAuth state — please try again')}`
+      );
+    }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const destination = source === 'onboarding' ? 'onboarding' : 'marketplace';
@@ -58,6 +66,8 @@ export async function GET(request: NextRequest) {
     
     // Store token in httpOnly cookie (more secure than URL param)
     const response = NextResponse.redirect(redirectUrl.toString());
+    // Clear the nonce cookie — it's single-use
+    response.cookies.delete('shopify_oauth_nonce');
     response.cookies.set('shopify_token_temp', tokenResponse.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

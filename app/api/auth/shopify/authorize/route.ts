@@ -56,7 +56,16 @@ export async function GET(request: NextRequest) {
       state,
     });
 
-    return NextResponse.json({ authUrl });
+    // Store nonce in httpOnly cookie so callback can verify it
+    const res = NextResponse.json({ authUrl });
+    res.cookies.set('shopify_oauth_nonce', nonce, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 300, // 5 minutes — plenty for OAuth flow
+      path: '/',
+    });
+    return res;
   } catch (error: any) {
     console.error('[ShopifyAuth] Error generating auth URL:', error);
     return NextResponse.json(

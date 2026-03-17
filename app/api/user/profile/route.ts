@@ -24,13 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Check if table doesn't exist
     if (profileError && profileError.code === '42P01') {
-      return NextResponse.json(
-        { 
-          error: 'Database tables not set up. Please run the SQL migration in Supabase Dashboard → SQL Editor.',
-          code: 'MISSING_TABLES'
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 500 });
     }
 
     // Create profile if it doesn't exist

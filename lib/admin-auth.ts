@@ -7,12 +7,18 @@
 
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
+import { checkIpRateLimit, getClientIp } from './rate-limit';
 
 /**
  * Verify admin password from Authorization header (Bearer token).
  * Uses timing-safe comparison to prevent timing attacks.
  */
 export function verifyAdminPassword(request: NextRequest): boolean {
+  // Rate limit admin endpoints — max 10 attempts per IP per window
+  const ip = getClientIp(request);
+  const rl = checkIpRateLimit(`admin:${ip}`);
+  if (!rl.allowed) return false;
+
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminPassword) {

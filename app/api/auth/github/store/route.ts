@@ -9,9 +9,9 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const token = searchParams.get('token');
     const username = searchParams.get('username');
-    const email = searchParams.get('email');
+    // Token is passed via httpOnly cookie, not URL param
+    const token = request.cookies.get('github_token_temp')?.value;
 
     if (!token || !username) {
       return NextResponse.redirect(
@@ -19,14 +19,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user from session cookie or token
-    // For now, redirect to frontend which will handle it via API call
-    // The frontend should call POST /api/auth/github/store with the session
-    
-    // Redirect to app with success message
-    return NextResponse.redirect(
+    const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}?github_auth_success=1&github_username=${encodeURIComponent(username)}`
     );
+    // Clear the temp cookie
+    response.cookies.delete('github_token_temp');
+    return response;
   } catch (error: any) {
     console.error('[GitHubAuth] Error storing token:', error);
     return NextResponse.redirect(
