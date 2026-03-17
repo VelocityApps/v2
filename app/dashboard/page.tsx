@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [userAutomations, setUserAutomations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
   const [billingLoading, setBillingLoading] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
@@ -66,6 +67,8 @@ export default function DashboardPage() {
       setTickets(data.tickets || []);
     } catch {
       // non-critical — silently ignore
+    } finally {
+      setTicketsLoading(false);
     }
   }
 
@@ -305,7 +308,7 @@ export default function DashboardPage() {
             })}
           </div>
         )}
-        {tickets.length > 0 && (
+        {(tickets.length > 0 || ticketsLoading) && (
           <div className="mt-12">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#202223]">Support Tickets</h2>
@@ -314,6 +317,9 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="space-y-3">
+              {ticketsLoading ? (
+                <div className="h-16 bg-white border border-[#e1e3e5] rounded-xl animate-pulse" />
+              ) : null}
               {tickets.map((ticket: any) => {
                 const priorityStyles: Record<string, string> = {
                   critical: 'bg-red-50 text-red-700 border-red-200',

@@ -53,9 +53,10 @@ function MarketplaceContent() {
         if (error) throw error;
         setAutomations(data || []);
 
-        // Fetch metrics for all automations in parallel
+        // Fetch metrics only for live automations (skip Coming Soon)
+        const liveAutomations = (data || []).filter((a: any) => LIVE_SLUGS.has(a.slug));
         const metricsResults = await Promise.allSettled(
-          (data || []).map(async (automation: any) => {
+          liveAutomations.map(async (automation: any) => {
             const response = await fetch(`/api/automations/${automation.id}/metrics`);
             if (!response.ok) return null;
             const metricsData = await response.json();
