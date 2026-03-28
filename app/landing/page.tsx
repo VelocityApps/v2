@@ -232,10 +232,31 @@ function PricingSection({ session }: { session: any }) {
   );
 }
 
+const HERO_LINES = [
+  'Save 5 hours a week.',
+  'Recover abandoned carts.',
+  'Get 3× more reviews.',
+  'Win back lapsed customers.',
+  'Never miss a low stock alert.',
+];
+
 export default function LandingPage() {
   const router = useRouter();
   const { user, session } = useAuth();
   const [automationCount, setAutomationCount] = useState<number | null>(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [heroVisible, setHeroVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroVisible(false);
+      setTimeout(() => {
+        setHeroIndex((i) => (i + 1) % HERO_LINES.length);
+        setHeroVisible(true);
+      }, 400);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -271,9 +292,14 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-5xl sm:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
-              Recover abandoned carts.<br />
-              <span className="text-blue-400">Save 5 hours a week.</span><br />
-              Get 3× more reviews.
+              Your Shopify store,<br />
+              <span
+                className="text-blue-400 inline-block transition-opacity duration-300"
+                style={{ opacity: heroVisible ? 1 : 0 }}
+              >
+                {HERO_LINES[heroIndex]}
+              </span><br />
+              On autopilot.
             </h1>
 
             <p className="text-xl text-slate-300 leading-relaxed mb-10 max-w-2xl mx-auto">
@@ -330,36 +356,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Social proof ── */}
-      <section className="py-16 border-b border-[var(--border)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-widest mb-10">
-            Trusted by Shopify merchants
-          </p>
-
-          <div className="max-w-2xl mx-auto bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-8 text-center">
-            <div className="flex justify-center mb-4">
-              {[...Array(5)].map((_, i) => (
-                <svg key={i} className="w-5 h-5 text-[#f59e0b]" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-            <blockquote className="text-[var(--text-primary)] text-lg font-medium leading-relaxed mb-6">
-              "REPLACE WITH REAL QUOTE"
-            </blockquote>
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[var(--border)] flex items-center justify-center text-sm font-bold text-[var(--text-secondary)]">
-                ?
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-semibold text-[var(--text-primary)]">Name, Store</div>
-                <div className="text-xs text-[var(--text-secondary)]">Store type</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── Automation grid ── */}
       <section className="py-20">
