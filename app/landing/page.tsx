@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import ExitIntentPopup from '@/components/ExitIntentPopup';
+import ActivityFeed from '@/components/ActivityFeed';
 
 const AUTOMATIONS = [
   { icon: '🛒', name: 'Abandoned Cart Recovery', category: 'Revenue', price: 29, roi: 'Recover up to 15% of abandoned carts' },
@@ -381,6 +383,8 @@ export default function LandingPage() {
 
   return (
     <div className="bg-[var(--bg-primary)] text-[var(--text-primary)]">
+      <ExitIntentPopup />
+      <ActivityFeed />
 
       {/* ── Hero ── dark, striking */}
       <section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1a2744 50%, #0f172a 100%)' }}>
