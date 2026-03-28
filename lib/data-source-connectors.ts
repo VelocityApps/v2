@@ -49,6 +49,61 @@ export interface DataSourceSchema {
   table?: string;
 }
 
+/**
+ * Reject URLs that point to private/internal networks to prevent SSRF.
+ * Blocks loopback, link-local, private RFC-1918, and non-https schemes.
+ */
+function assertSafeUrl(raw: string): void {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error('Invalid URL');
+  }
+
+  if (url.protocol !== 'https:') {
+    throw new Error('Only HTTPS URLs are allowed');
+  }
+
+  const hostname = url.hostname.toLowerCase();
+
+  // Block loopback
+  if (hostname === 'localhost' || hostname === '::1') {
+    throw new Error('URL targets a disallowed host');
+  }
+
+  // Block by dotted-decimal IPv4
+  const ipv4 = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [, a, b, c, d] = ipv4.map(Number);
+    if (
+      a === 10 ||                                      // 10.0.0.0/8
+      (a === 172 && b >= 16 && b <= 31) ||            // 172.16.0.0/12
+      (a === 192 && b === 168) ||                     // 192.168.0.0/16
+      (a === 169 && b === 254) ||                     // 169.254.0.0/16 link-local
+      a === 127 ||                                    // 127.0.0.0/8 loopback
+      a === 0 ||                                      // 0.0.0.0/8
+      (a === 100 && b >= 64 && b <= 127) ||           // 100.64.0.0/10 shared address
+      a === 192 && b === 0 && c === 2 ||              // TEST-NET-1
+      (a === 198 && b >= 18 && b <= 19) ||            // 198.18.0.0/15 benchmark
+      (a === 203 && b === 0 && c === 113) ||          // TEST-NET-3
+      a >= 224                                        // multicast / reserved
+    ) {
+      throw new Error('URL targets a disallowed host');
+    }
+  }
+
+  // Block metadata endpoints by hostname pattern
+  if (
+    hostname.endsWith('.internal') ||
+    hostname.endsWith('.local') ||
+    hostname === 'metadata.google.internal' ||
+    hostname === '169.254.169.254'
+  ) {
+    throw new Error('URL targets a disallowed host');
+  }
+}
+
 export class DataSourceConnector {
   constructor(private type: DataSourceType, private config: DataSourceConfig) {}
 
@@ -142,6 +197,12 @@ export class DataSourceConnector {
   private async testRestAPI(): Promise<{ success: boolean; error?: string; data?: any }> {
     if (!this.config.baseUrl) {
       return { success: false, error: 'Base URL is required' };
+    }
+
+    try {
+      assertSafeUrl(this.config.baseUrl);
+    } catch (e: any) {
+      return { success: false, error: e.message };
     }
 
     const headers: Record<string, string> = {

@@ -1,32 +1,73 @@
 @import "tailwindcss";
 
+/* ── Light theme (default) ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f6f6f7;
+  --bg-hover: #f0f0f1;
+  --text-primary: #202223;
+  --text-secondary: #6d7175;
+  --text-muted: #8c9196;
+  --border: #e1e3e5;
+  --border-hover: #c9cccf;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-bg: #e8f0fe;
+  --accent-bg-subtle: #f0f7ff;
+  --accent-border: #bfdbfe;
+  --accent-text: #1d4ed8;
+  --success: #008060;
+  --success-bg: #e3f9e3;
+  --success-border: #a3e6c4;
+  --error: #d72c0d;
+  --error-bg: #fff4f4;
+  --error-border: #fecaca;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+}
+
+/* ── Dark theme ── */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-hover: #263548;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #334155;
+  --border-hover: #475569;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-bg: rgba(59,130,246,0.15);
+  --accent-bg-subtle: rgba(59,130,246,0.08);
+  --accent-border: rgba(59,130,246,0.4);
+  --accent-text: #93c5fd;
+  --success: #10b981;
+  --success-bg: rgba(16,185,129,0.12);
+  --success-border: rgba(16,185,129,0.35);
+  --error: #f87171;
+  --error-bg: rgba(239,68,68,0.12);
+  --error-border: rgba(239,68,68,0.35);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245,158,11,0.1);
+  --warning-border: rgba(245,158,11,0.35);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 html {

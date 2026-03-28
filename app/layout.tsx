@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import { Analytics } from "@vercel/analytics/next";
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,6 +71,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Analytics />
+        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
         <ErrorBoundary>
           <AuthProvider>
             <PostHogProvider>
@@ -107,6 +109,7 @@ export default function RootLayout({
             </PostHogProvider>
           </AuthProvider>
         </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   );

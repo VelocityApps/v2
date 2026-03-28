@@ -146,7 +146,7 @@ export class LowStockAlerts extends BaseAutomation {
         : globalThreshold;
 
       // Nothing to do if still above threshold
-      if (availableNum >= threshold) return;
+      if (availableNum > threshold) return;
 
       // Per-product cooldown: skip if we already alerted for this product recently
       const cooldownHours = Number(config.alert_cooldown_hours) || 4;

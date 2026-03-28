@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const { session, loading: authLoading } = useAuth();
   const router = useRouter();
   const [userAutomations, setUserAutomations] = useState<any[]>([]);
+  const [suggestedAutomations, setSuggestedAutomations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(true);
   const [billingLoading, setBillingLoading] = useState(false);
@@ -31,8 +32,36 @@ export default function DashboardPage() {
     if (session) {
       fetchUserAutomations();
       fetchTickets();
+      fetchSuggestedAutomations();
     }
   }, [session, authLoading, router]);
+
+  async function fetchSuggestedAutomations() {
+    try {
+      const { data: installed } = await supabase
+        .from('user_automations')
+        .select('automation_id')
+        .neq('status', 'uninstalled');
+
+      const installedIds = (installed || []).map((ua: any) => ua.automation_id);
+
+      const query = supabase
+        .from('automations')
+        .select('*')
+        .eq('active', true)
+        .order('user_count', { ascending: false })
+        .limit(3);
+
+      if (installedIds.length > 0) {
+        query.not('id', 'in', `(${installedIds.join(',')})`);
+      }
+
+      const { data } = await query;
+      setSuggestedAutomations(data || []);
+    } catch {
+      // non-critical
+    }
+  }
 
   async function fetchUserAutomations() {
     if (!session) return;
@@ -236,39 +265,39 @@ export default function DashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb]"></div>
+      <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)]"></div>
       </div>
     );
   }
 
   return (
     <>
-    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
+    <div className="min-h-screen bg-[var(--bg-secondary)] text-[var(--text-primary)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#202223] mb-1">My Automations</h1>
-            <p className="text-[#6d7175]">Manage your installed automations</p>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-1">My Automations</h1>
+            <p className="text-[var(--text-secondary)]">Manage your installed automations</p>
           </div>
           <Link
             href="/marketplace"
-            className="px-5 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
+            className="px-5 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
           >
             Browse More Automations
           </Link>
         </div>
 
         {userAutomations.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-[#e1e3e5] rounded-xl">
+          <div className="text-center py-16 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl">
             <div className="text-6xl mb-4">🚀</div>
-            <h2 className="text-xl font-bold text-[#202223] mb-2">No automations installed</h2>
-            <p className="text-[#6d7175] mb-6">
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">No automations installed</h2>
+            <p className="text-[var(--text-secondary)] mb-6">
               Get started by installing your first automation
             </p>
             <Link
               href="/marketplace"
-              className="inline-block px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium transition-colors shadow-sm"
+              className="inline-block px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium transition-colors shadow-sm"
             >
               Browse Marketplace
             </Link>
@@ -308,30 +337,77 @@ export default function DashboardPage() {
             })}
           </div>
         )}
+        {/* Referral card */}
+        {session && (
+          <div className="mt-10 p-6 bg-[var(--accent-bg)] border border-[var(--accent-border)] rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="font-semibold text-[var(--accent-text)] mb-1">Refer a merchant, get a free month</p>
+              <p className="text-sm text-[var(--accent)]">Share your link — when a store owner signs up and subscribes, you both get a free month.</p>
+            </div>
+            <button
+              onClick={() => {
+                const code = session.user.id.slice(0, 8);
+                const url = `${window.location.origin}/onboarding?ref=${code}`;
+                navigator.clipboard.writeText(url).then(() => toast.success('Referral link copied!'));
+              }}
+              className="flex-shrink-0 px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+            >
+              Copy referral link
+            </button>
+          </div>
+        )}
+
+        {/* Cross-sell: automations the user hasn't installed */}
+        {suggestedAutomations.length > 0 && (
+          <div className="mt-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">You might also like</h2>
+              <Link href="/marketplace" className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium">
+                Browse all
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {suggestedAutomations.map((automation: any) => (
+                <Link
+                  key={automation.id}
+                  href={`/automations/${automation.slug}`}
+                  className="flex items-center gap-4 p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl hover:border-[var(--accent)]/40 hover:shadow-sm transition-all"
+                >
+                  <div className="text-3xl flex-shrink-0">{automation.icon}</div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-[var(--text-primary)] text-sm leading-snug">{automation.name}</div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-0.5">from £{automation.price_monthly}/mo · 7-day free trial</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {(tickets.length > 0 || ticketsLoading) && (
           <div className="mt-12">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#202223]">Support Tickets</h2>
-              <Link href="/support" className="text-sm text-[#2563eb] hover:text-[#1d4ed8] transition-colors font-medium">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">Support Tickets</h2>
+              <Link href="/support" className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors font-medium">
                 New ticket
               </Link>
             </div>
             <div className="space-y-3">
               {ticketsLoading ? (
-                <div className="h-16 bg-white border border-[#e1e3e5] rounded-xl animate-pulse" />
+                <div className="h-16 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl animate-pulse" />
               ) : null}
               {tickets.map((ticket: any) => {
                 const priorityStyles: Record<string, string> = {
-                  critical: 'bg-red-50 text-red-700 border-red-200',
+                  critical: 'bg-[var(--error-bg)] text-[var(--error)] border-[var(--error-border)]',
                   high: 'bg-orange-50 text-orange-700 border-orange-200',
-                  medium: 'bg-amber-50 text-amber-700 border-amber-200',
-                  low: 'bg-[#e8f0fe] text-[#2563eb] border-[#bfdbfe]',
+                  medium: 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning-border)]',
+                  low: 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent-border)]',
                 };
                 const statusStyles: Record<string, string> = {
-                  open: 'bg-[#e8f0fe] text-[#2563eb]',
-                  in_progress: 'bg-amber-50 text-amber-700',
-                  resolved: 'bg-[#e3f9e3] text-[#008060]',
-                  closed: 'bg-[#f6f6f7] text-[#6d7175]',
+                  open: 'bg-[var(--accent-bg)] text-[var(--accent)]',
+                  in_progress: 'bg-[var(--warning-bg)] text-[var(--warning)]',
+                  resolved: 'bg-[var(--success-bg)] text-[var(--success)]',
+                  closed: 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]',
                 };
                 const priority = ticket.priority || 'medium';
                 const status = ticket.status || 'open';
@@ -339,11 +415,11 @@ export default function DashboardPage() {
                   <button
                     key={ticket.id}
                     onClick={() => { setSelectedTicket(ticket); setReplyMessage(''); }}
-                    className="w-full bg-white border border-[#e1e3e5] rounded-xl px-5 py-4 flex items-start gap-4 hover:border-[#2563eb]/40 hover:shadow-sm transition-all text-left"
+                    className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-5 py-4 flex items-start gap-4 hover:border-[var(--accent)]/40 hover:shadow-sm transition-all text-left"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-[#202223] truncate">{ticket.subject}</p>
-                      <p className="text-sm text-[#6d7175] mt-0.5">
+                      <p className="font-medium text-[var(--text-primary)] truncate">{ticket.subject}</p>
+                      <p className="text-sm text-[var(--text-secondary)] mt-0.5">
                         {new Date(ticket.created_at || ticket.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
@@ -367,29 +443,29 @@ export default function DashboardPage() {
     {/* Ticket detail modal */}
     {selectedTicket && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setSelectedTicket(null)}>
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
-          <div className="px-6 py-5 border-b border-[#e1e3e5] flex items-start justify-between gap-4">
+        <div className="bg-[var(--bg-primary)] rounded-2xl shadow-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="px-6 py-5 border-b border-[var(--border)] flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-base font-semibold text-[#202223]">{selectedTicket.subject}</h2>
-              <p className="text-xs text-[#6d7175] mt-0.5">
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">{selectedTicket.subject}</h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 {new Date(selectedTicket.created_at || selectedTicket.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 {' · '}
                 <span className="capitalize">{(selectedTicket.status || 'open').replace('_', ' ')}</span>
               </p>
             </div>
-            <button onClick={() => setSelectedTicket(null)} className="text-[#6d7175] hover:text-[#202223] text-xl leading-none mt-0.5">×</button>
+            <button onClick={() => setSelectedTicket(null)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xl leading-none mt-0.5">×</button>
           </div>
           <div className="px-6 py-5">
-            <p className="text-sm text-[#202223] whitespace-pre-wrap">{selectedTicket.message}</p>
+            <p className="text-sm text-[var(--text-primary)] whitespace-pre-wrap">{selectedTicket.message}</p>
           </div>
-          <div className="px-6 pb-5 border-t border-[#e1e3e5] pt-4">
-            <p className="text-xs font-medium text-[#6d7175] mb-2">Add a reply</p>
+          <div className="px-6 pb-5 border-t border-[var(--border)] pt-4">
+            <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">Add a reply</p>
             <textarea
               value={replyMessage}
               onChange={(e) => setReplyMessage(e.target.value)}
               rows={3}
               placeholder="Add more detail or ask a follow-up question..."
-              className="w-full px-3 py-2 border border-[#e1e3e5] rounded-lg text-sm text-[#202223] placeholder-[#8c9196] focus:outline-none focus:border-[#2563eb] resize-none"
+              className="w-full px-3 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
             />
             <div className="flex items-center justify-between mt-3">
               <div className="flex gap-2">
@@ -397,7 +473,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => handleResolveTicket(selectedTicket.id)}
                     disabled={ticketActionLoading}
-                    className="px-3 py-2 text-sm font-medium bg-[#e3f9e3] hover:bg-[#c6f3c6] text-[#008060] rounded-lg transition-colors disabled:opacity-50"
+                    className="px-3 py-2 text-sm font-medium bg-[var(--success-bg)] hover:bg-[var(--success-bg)] text-[var(--success)] rounded-lg transition-colors disabled:opacity-50"
                   >
                     Mark resolved
                   </button>
@@ -405,7 +481,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => handleDeleteTicket(selectedTicket.id)}
                   disabled={ticketActionLoading}
-                  className="px-3 py-2 text-sm font-medium bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors disabled:opacity-50"
+                  className="px-3 py-2 text-sm font-medium bg-[var(--error-bg)] hover:bg-[var(--error-bg)] text-[var(--error)] rounded-lg transition-colors disabled:opacity-50"
                 >
                   Delete
                 </button>
@@ -413,14 +489,14 @@ export default function DashboardPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setSelectedTicket(null)}
-                  className="px-4 py-2 text-sm font-medium text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg hover:bg-[#f6f6f7] transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => handleReply(selectedTicket.id)}
                   disabled={replySending || !replyMessage.trim()}
-                  className="px-4 py-2 text-sm font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {replySending ? 'Sending...' : 'Send reply'}
                 </button>

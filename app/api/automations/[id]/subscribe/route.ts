@@ -131,6 +131,9 @@ export async function POST(
       subscription_data: subscriptionData,
       success_url: `${appUrl}/dashboard/automations/${id}?billing=success`,
       cancel_url: `${appUrl}/dashboard/automations/${id}`,
+      custom_text: {
+        submit: { message: `You'll be charged £${automation.price_monthly}/month. Cancel anytime from your dashboard.` },
+      },
       metadata: {
         type: 'automation',
         user_automation_id: id,

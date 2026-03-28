@@ -9,7 +9,7 @@ import AutomationCard from '@/components/automations/AutomationCard';
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f6f6f7]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg-secondary)]" />}>
       <OnboardingContent />
     </Suspense>
   );
@@ -33,6 +33,12 @@ function OnboardingContent() {
   const [authFormLoading, setAuthFormLoading] = useState(false);
 
   useEffect(() => {
+    // Persist referral code across the signup flow
+    const ref = searchParams.get('ref');
+    if (ref) {
+      sessionStorage.setItem('referral_code', ref);
+    }
+
     const shopifySuccess = searchParams.get('shopify_auth_success');
     const shop = searchParams.get('shop');
     const shopifyError = searchParams.get('shopify_auth_error');
@@ -166,18 +172,18 @@ function OnboardingContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb]"></div>
+      <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
+    <div className="min-h-screen bg-[var(--bg-secondary)] text-[var(--text-primary)]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-[#202223] mb-3">Welcome to VelocityApps</h1>
-          <p className="text-[#6d7175] text-lg">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-3">Welcome to VelocityApps</h1>
+          <p className="text-[var(--text-secondary)] text-lg">
             {step === 'auth'
               ? 'Sign in or create an account to get started'
               : "Let's get your Shopify store set up with automations"}
@@ -185,61 +191,61 @@ function OnboardingContent() {
         </div>
 
         {step === 'auth' && !session && (
-          <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 max-w-md mx-auto">
-            <h2 className="text-xl font-semibold text-[#202223] mb-6">Sign in or sign up</h2>
+          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8 max-w-md mx-auto">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6">Sign in or sign up</h2>
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#202223] mb-1.5">Email</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
                   placeholder="you@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#202223] mb-1.5">Password</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
                   placeholder="••••••••"
                 />
               </div>
               {authError && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
+                <div className="p-3 rounded-lg bg-[var(--error-bg)] text-[var(--error)] border border-[var(--error-border)] text-sm">
                   {authError}
                 </div>
               )}
               {authSuccess && (
-                <div className="p-3 rounded-lg bg-[#e3f9e3] text-[#008060] border border-[#a3e6c4] text-sm">
+                <div className="p-3 rounded-lg bg-[var(--success-bg)] text-[var(--success)] border border-[var(--success-border)] text-sm">
                   {authSuccess}
                 </div>
               )}
               {isSignUp && (
-                <p className="text-xs text-[#6d7175]">
+                <p className="text-xs text-[var(--text-secondary)]">
                   By signing up, you agree to our{' '}
-                  <Link href="/terms" className="text-[#2563eb] hover:text-[#1d4ed8] transition-colors">Terms of Service</Link>
+                  <Link href="/terms" className="text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">Terms of Service</Link>
                   {' '}and{' '}
-                  <Link href="/privacy" className="text-[#2563eb] hover:text-[#1d4ed8] transition-colors">Privacy Policy</Link>.
+                  <Link href="/privacy" className="text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">Privacy Policy</Link>.
                 </p>
               )}
               <button
                 type="submit"
                 disabled={authFormLoading}
-                className="w-full px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 shadow-sm"
+                className="w-full px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 shadow-sm"
               >
                 {authFormLoading ? 'Loading...' : isSignUp ? 'Create account' : 'Sign in'}
               </button>
             </form>
             <div className="mt-4 space-y-2 text-center">
               {!isSignUp && (
-                <Link href="/auth/forgot-password" className="block text-sm text-[#6d7175] hover:text-[#2563eb] transition-colors">
+                <Link href="/auth/forgot-password" className="block text-sm text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors">
                   Forgot password?
                 </Link>
               )}
@@ -250,7 +256,7 @@ function OnboardingContent() {
                   setAuthError(null);
                   setAuthSuccess(null);
                 }}
-                className="text-sm text-[#6d7175] hover:text-[#2563eb] transition-colors"
+                className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
               >
                 {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
               </button>
@@ -259,14 +265,14 @@ function OnboardingContent() {
         )}
 
         {(step === 'connect' || (step === 'auth' && session)) && (
-          <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 max-w-lg mx-auto">
-            <h2 className="text-xl font-semibold text-[#202223] mb-2">Connect Your Shopify Store</h2>
-            <p className="text-[#6d7175] text-sm mb-6">
+          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8 max-w-lg mx-auto">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Connect Your Shopify Store</h2>
+            <p className="text-[var(--text-secondary)] text-sm mb-6">
               Connect your store to get started. We only request permissions each automation needs.
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#202223] mb-1.5">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
                   Shopify store URL
                 </label>
                 <input
@@ -274,13 +280,13 @@ function OnboardingContent() {
                   value={shopifyStoreUrl}
                   onChange={(e) => setShopifyStoreUrl(e.target.value)}
                   placeholder="mystore.myshopify.com"
-                  className="w-full px-4 py-3 bg-white border border-[#e1e3e5] rounded-lg text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
                 />
               </div>
               <button
                 onClick={handleConnectShopify}
                 disabled={loading || !shopifyStoreUrl}
-                className="w-full px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 shadow-sm"
+                className="w-full px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-semibold transition-colors disabled:opacity-50 shadow-sm"
               >
                 {loading ? 'Connecting...' : 'Connect Shopify Store'}
               </button>
@@ -290,10 +296,10 @@ function OnboardingContent() {
 
         {step === 'select' && (
           <div className="space-y-6">
-            <div className="bg-white border border-[#e1e3e5] rounded-xl p-8">
-              <h2 className="text-xl font-semibold text-[#202223] mb-2">Choose Your First Automation</h2>
-              <p className="text-[#6d7175] text-sm">
-                Pick one of our most popular automations to get started.
+            <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8">
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Choose Your First Automation</h2>
+              <p className="text-[var(--text-secondary)] text-sm">
+                Pick one to start your free 7-day trial. Most merchants run 2–3 automations together for the best results.
               </p>
             </div>
 
@@ -318,10 +324,18 @@ function OnboardingContent() {
               ))}
             </div>
 
+            <div className="bg-[var(--accent-bg)] border border-[var(--accent-border)] rounded-xl px-6 py-4 flex items-center gap-4">
+              <div className="text-2xl">💡</div>
+              <div>
+                <p className="text-sm font-semibold text-[var(--accent-text)]">Pro tip: pair Abandoned Cart Recovery with Review Request Automator</p>
+                <p className="text-xs text-[var(--accent)] mt-0.5">Merchants who run both recover more revenue and build social proof at the same time.</p>
+              </div>
+            </div>
+
             <div className="text-center">
               <button
                 onClick={() => router.push('/marketplace')}
-                className="px-6 py-3 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors"
+                className="px-6 py-3 bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] rounded-lg font-medium transition-colors"
               >
                 Browse All Automations
               </button>

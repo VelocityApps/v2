@@ -24,9 +24,9 @@ Create or update `.env.local` in your project root:
 
 ```env
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://ofkohtektddpflcdbsma.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ma29odGVrdGRkcGZsY2Ric21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1MjYxODEsImV4cCI6MjA4MTEwMjE4MX0.Md3QIkbmkVQpQdjbS0VSX1ujOWv9ANGv0fs3XW2RabV
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ma29odGVrdGRkcGZsY2Ric21hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTUyNjE4MSwiZXhwIjoyMDgxMTAyMTgxfQ.wo3LMTB_RuGqsVVEM_6TIYDf0iaPFo6crL_Ibta8MK8
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
 **Important:** Replace the `SUPABASE_SERVICE_ROLE_KEY` value with your actual service role key from Supabase!

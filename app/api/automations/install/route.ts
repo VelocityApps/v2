@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       shopify_store_url: shopifyStoreUrl,
       shopify_access_token_encrypted: await encryptToken(shopifyAccessToken),
       config: config || {},
-      status: trialEligible ? 'trial' : 'active',
+      status: trialEligible ? 'trial' : 'requires_payment',
     };
     if (trialEligible) {
       insertRow.trial_started_at = now.toISOString();

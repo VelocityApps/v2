@@ -30,7 +30,6 @@ export default function AutomationManagementPage() {
     }
   }, [session, id]);
 
-  // Show success toast when returning from Stripe Checkout
   useEffect(() => {
     if (searchParams.get('billing') === 'success') {
       toast.success('Automation activated!');
@@ -41,28 +40,20 @@ export default function AutomationManagementPage() {
     if (!session) return;
 
     try {
-      // Fetch user automation with automation details
       const { data: userAuto, error: userAutoError } = await supabase
         .from('user_automations')
-        .select(`
-          *,
-          automation:automations(*)
-        `)
+        .select(`*, automation:automations(*)`)
         .eq('id', id)
         .eq('user_id', session.user.id)
         .single();
 
       if (userAutoError) throw userAutoError;
-      if (!userAuto) {
-        router.push('/dashboard');
-        return;
-      }
+      if (!userAuto) { router.push('/dashboard'); return; }
 
       setUserAutomation(userAuto);
       setAutomation(userAuto.automation);
       setConfig(userAuto.config || {});
 
-      // Fetch logs
       const { data: logsData, error: logsError } = await supabase
         .from('automation_logs')
         .select('*')
@@ -70,9 +61,7 @@ export default function AutomationManagementPage() {
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (!logsError) {
-        setLogs(logsData || []);
-      }
+      if (!logsError) setLogs(logsData || []);
     } catch (error: any) {
       console.error('Error fetching automation:', error);
       setError(error.message);
@@ -83,29 +72,17 @@ export default function AutomationManagementPage() {
 
   async function handleSaveConfig() {
     if (!session) return;
-
     setSaving(true);
     setError(null);
-
     try {
       const response = await fetch(`/api/automations/${id}/configure`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify({ config }),
       });
-
       const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-        toast.error(data.error);
-      } else {
-        setUserAutomation(data.userAutomation);
-        toast.success('Configuration saved successfully!');
-      }
+      if (data.error) { setError(data.error); toast.error(data.error); }
+      else { setUserAutomation(data.userAutomation); toast.success('Configuration saved successfully!'); }
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -115,21 +92,15 @@ export default function AutomationManagementPage() {
 
   async function handleActivate() {
     if (!session) return;
-
     setBillingLoading(true);
     try {
       const response = await fetch(`/api/automations/${id}/subscribe`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
-
       const data = await response.json();
-
-      if (data.error) {
-        toast.error(data.error);
-      } else if (data.url) {
-        window.location.href = data.url;
-      }
+      if (data.error) toast.error(data.error);
+      else if (data.url) window.location.href = data.url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to start checkout');
     } finally {
@@ -139,21 +110,15 @@ export default function AutomationManagementPage() {
 
   async function handlePortal() {
     if (!session) return;
-
     setBillingLoading(true);
     try {
       const response = await fetch('/api/billing/portal', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
-
       const data = await response.json();
-
-      if (data.error) {
-        toast.error(data.error);
-      } else if (data.url) {
-        window.location.href = data.url;
-      }
+      if (data.error) toast.error(data.error);
+      else if (data.url) window.location.href = data.url;
     } catch (error: any) {
       toast.error(error.message || 'Failed to open billing portal');
     } finally {
@@ -163,26 +128,19 @@ export default function AutomationManagementPage() {
 
   function renderBillingSection() {
     if (!userAutomation || !automation) return null;
-
     const { status, stripe_subscription_id, trial_ends_at } = userAutomation;
     const priceMonthly = automation.price_monthly;
 
     const activateBtn = (label: string) => (
-      <button
-        onClick={handleActivate}
-        disabled={billingLoading}
-        className="inline-block mt-3 px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg text-sm font-medium disabled:opacity-50 shadow-sm"
-      >
+      <button onClick={handleActivate} disabled={billingLoading}
+        className="inline-block mt-3 px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg text-sm font-medium disabled:opacity-50 shadow-sm transition-colors">
         {billingLoading ? 'Loading…' : label}
       </button>
     );
 
     const portalBtn = (label: string) => (
-      <button
-        onClick={handlePortal}
-        disabled={billingLoading}
-        className="inline-block mt-3 px-4 py-2 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg text-sm font-medium disabled:opacity-50"
-      >
+      <button onClick={handlePortal} disabled={billingLoading}
+        className="inline-block mt-3 px-4 py-2 bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] rounded-lg text-sm font-medium disabled:opacity-50 transition-colors">
         {billingLoading ? 'Loading…' : label}
       </button>
     );
@@ -191,13 +149,9 @@ export default function AutomationManagementPage() {
       const end = trial_ends_at ? new Date(trial_ends_at).getTime() : 0;
       const days = end ? Math.max(0, Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000))) : 0;
       return (
-        <div className="mb-4 p-4 rounded-lg bg-[#e8f0fe] border border-[#bfdbfe]">
-          <p className="text-[#1d4ed8] font-medium">
-            Free trial — {days} day{days !== 1 ? 's' : ''} left
-          </p>
-          <p className="text-[#6d7175] text-sm mt-1">
-            Then £{priceMonthly}/month. Add a card now to continue without interruption.
-          </p>
+        <div className="mb-4 p-4 rounded-lg bg-[var(--accent-bg)] border border-[var(--accent-border)]">
+          <p className="text-[var(--accent-text)] font-medium">Free trial — {days} day{days !== 1 ? 's' : ''} left</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Then £{priceMonthly}/month. Add a card now to continue without interruption.</p>
           {activateBtn('Activate Automation')}
         </div>
       );
@@ -205,8 +159,8 @@ export default function AutomationManagementPage() {
 
     if (status === 'active' && stripe_subscription_id) {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-[#e3f9e3] border border-[#a3e6c4]">
-          <p className="text-[#008060] font-medium">Active · £{priceMonthly}/month</p>
+        <div className="mb-4 p-4 rounded-lg bg-[var(--success-bg)] border border-[var(--success-border)]">
+          <p className="text-[var(--success)] font-medium">Active · £{priceMonthly}/month</p>
           {portalBtn('Manage subscription')}
         </div>
       );
@@ -214,11 +168,9 @@ export default function AutomationManagementPage() {
 
     if (status === 'paused' && !stripe_subscription_id) {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
-          <p className="text-amber-700 font-medium">Trial ended</p>
-          <p className="text-[#6d7175] text-sm mt-1">
-            Subscribe for £{priceMonthly}/month to reactivate.
-          </p>
+        <div className="mb-4 p-4 rounded-lg bg-[var(--warning-bg)] border border-[var(--warning-border)]">
+          <p className="text-[var(--warning)] font-medium">Trial ended</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Subscribe for £{priceMonthly}/month to reactivate.</p>
           {activateBtn('Activate Automation')}
         </div>
       );
@@ -226,11 +178,9 @@ export default function AutomationManagementPage() {
 
     if (status === 'paused' && stripe_subscription_id) {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
-          <p className="text-amber-700 font-medium">Paused — payment issue</p>
-          <p className="text-[#6d7175] text-sm mt-1">
-            Update your payment method to reactivate.
-          </p>
+        <div className="mb-4 p-4 rounded-lg bg-[var(--warning-bg)] border border-[var(--warning-border)]">
+          <p className="text-[var(--warning)] font-medium">Paused — payment issue</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Update your payment method to reactivate.</p>
           {portalBtn('Manage subscription')}
         </div>
       );
@@ -238,11 +188,9 @@ export default function AutomationManagementPage() {
 
     if (status === 'cancelled') {
       return (
-        <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
-          <p className="text-red-700 font-medium">Cancelled</p>
-          <p className="text-[#6d7175] text-sm mt-1">
-            Resubscribe for £{priceMonthly}/month to reactivate.
-          </p>
+        <div className="mb-4 p-4 rounded-lg bg-[var(--error-bg)] border border-[var(--error-border)]">
+          <p className="text-[var(--error)] font-medium">Cancelled</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Resubscribe for £{priceMonthly}/month to reactivate.</p>
           {activateBtn('Resubscribe')}
         </div>
       );
@@ -253,47 +201,42 @@ export default function AutomationManagementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f6f6f7] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb]"></div>
+      <div className="min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)]"></div>
       </div>
     );
   }
 
   if (!userAutomation || !automation) {
     return (
-      <div className="min-h-screen bg-[#f6f6f7] text-[#202223] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-secondary)] text-[var(--text-primary)] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Automation not found</h2>
-          <Link href="/dashboard" className="text-[#2563eb] hover:text-[#1d4ed8]">
-            Back to Dashboard
-          </Link>
+          <Link href="/dashboard" className="text-[var(--accent)] hover:text-[var(--accent-hover)]">Back to Dashboard</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f6f7] text-[#202223]">
+    <div className="min-h-screen bg-[var(--bg-secondary)] text-[var(--text-primary)]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Link
-          href="/dashboard"
-          className="text-[#2563eb] hover:text-[#1d4ed8] text-sm font-medium mb-6 inline-flex items-center gap-1"
-        >
+        <Link href="/dashboard" className="text-[var(--accent)] hover:text-[var(--accent-hover)] text-sm font-medium mb-6 inline-flex items-center gap-1">
           ← Back to Dashboard
         </Link>
 
-        <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 mb-6">
+        <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8 mb-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="text-4xl">{automation.icon}</div>
             <div>
-              <h1 className="text-2xl font-bold text-[#202223]">{automation.name}</h1>
-              <p className="text-[#6d7175]">{automation.description}</p>
+              <h1 className="text-2xl font-bold text-[var(--text-primary)]">{automation.name}</h1>
+              <p className="text-[var(--text-secondary)]">{automation.description}</p>
             </div>
             <div className={`ml-auto px-3 py-1 rounded-full text-xs font-medium ${
-              userAutomation.status === 'active' ? 'bg-[#e3f9e3] text-[#008060]' :
-              userAutomation.status === 'trial' ? 'bg-[#e8f0fe] text-[#2563eb]' :
-              userAutomation.status === 'paused' ? 'bg-amber-50 text-amber-700' :
-              'bg-red-50 text-red-700'
+              userAutomation.status === 'active' ? 'bg-[var(--success-bg)] text-[var(--success)]' :
+              userAutomation.status === 'trial' ? 'bg-[var(--accent-bg)] text-[var(--accent-text)]' :
+              userAutomation.status === 'paused' ? 'bg-[var(--warning-bg)] text-[var(--warning)]' :
+              'bg-[var(--error-bg)] text-[var(--error)]'
             }`}>
               {userAutomation.status === 'trial' ? 'Trial' : userAutomation.status.charAt(0).toUpperCase() + userAutomation.status.slice(1)}
             </div>
@@ -302,23 +245,23 @@ export default function AutomationManagementPage() {
           {renderBillingSection()}
 
           {userAutomation.error_message && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-[var(--error-bg)] text-[var(--error)] border border-[var(--error-border)] text-sm">
               Error: {userAutomation.error_message}
             </div>
           )}
 
           {userAutomation.last_run_at && (
-            <div className="text-sm text-[#6d7175] mb-4">
+            <div className="text-sm text-[var(--text-secondary)] mb-4">
               Last run: {new Date(userAutomation.last_run_at).toLocaleString()}
             </div>
           )}
         </div>
 
         {/* Configuration */}
-        <div className="bg-white border border-[#e1e3e5] rounded-xl p-8 mb-6">
-          <h2 className="text-lg font-semibold text-[#202223] mb-4">Configuration</h2>
+        <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8 mb-6">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Configuration</h2>
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-[var(--error-bg)] text-[var(--error)] border border-[var(--error-border)] text-sm">
               {error}
             </div>
           )}
@@ -330,43 +273,56 @@ export default function AutomationManagementPage() {
           <button
             onClick={handleSaveConfig}
             disabled={saving}
-            className="mt-4 px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
+            className="mt-4 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
           >
             {saving ? 'Saving...' : 'Save Configuration'}
           </button>
         </div>
 
         {/* Logs */}
-        <div className="bg-white border border-[#e1e3e5] rounded-xl p-8">
-          <h2 className="text-lg font-semibold text-[#202223] mb-4">Execution Logs</h2>
+        <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Execution Logs</h2>
+            {logs.length > 0 && (
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/onboarding?ref=${session?.user.id.slice(0, 8)}`;
+                  navigator.clipboard.writeText(url).then(() => toast.success('Referral link copied!'));
+                }}
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+              >
+                Enjoying this? Refer a merchant →
+              </button>
+            )}
+          </div>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {logs.length === 0 ? (
-              <p className="text-[#6d7175] text-center py-8">No logs yet</p>
+              <p className="text-[var(--text-secondary)] text-center py-8">No logs yet</p>
             ) : (
               logs.map((log) => (
                 <div
                   key={log.id}
                   className={`p-3 rounded-lg border text-sm ${
-                    log.event_type === 'success' ? 'bg-[#e3f9e3] border-[#a3e6c4]' :
-                    log.event_type === 'error' ? 'bg-red-50 border-red-200' :
-                    log.event_type === 'warning' ? 'bg-amber-50 border-amber-200' :
-                    'bg-[#f6f6f7] border-[#e1e3e5]'
+                    log.event_type === 'success' ? 'bg-[var(--success-bg)] border-[var(--success-border)]' :
+                    log.event_type === 'error' ? 'bg-[var(--error-bg)] border-[var(--error-border)]' :
+                    log.event_type === 'warning' ? 'bg-[var(--warning-bg)] border-[var(--warning-border)]' :
+                    'bg-[var(--bg-secondary)] border-[var(--border)]'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-xs font-semibold tracking-wide ${
-                      log.event_type === 'success' ? 'text-[#008060]' :
-                      log.event_type === 'error' ? 'text-red-700' :
-                      log.event_type === 'warning' ? 'text-amber-700' :
-                      'text-[#6d7175]'
+                      log.event_type === 'success' ? 'text-[var(--success)]' :
+                      log.event_type === 'error' ? 'text-[var(--error)]' :
+                      log.event_type === 'warning' ? 'text-[var(--warning)]' :
+                      'text-[var(--text-secondary)]'
                     }`}>
                       {log.event_type.toUpperCase()}
                     </span>
-                    <span className="text-xs text-[#8c9196]">
+                    <span className="text-xs text-[var(--text-muted)]">
                       {new Date(log.created_at).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-[#202223]">{log.message}</p>
+                  <p className="text-[var(--text-primary)]">{log.message}</p>
                 </div>
               ))
             )}

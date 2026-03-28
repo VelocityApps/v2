@@ -5,8 +5,36 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import SupportTicketModal from './SupportTicketModal';
 import VelocityLogo from './VelocityLogo';
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return <div className="w-8 h-8" />;
+
+  return (
+    <button
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+      aria-label="Toggle dark mode"
+    >
+      {theme === 'dark' ? (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export default function Navigation() {
   const { session, user, signOut } = useAuth();
@@ -44,7 +72,7 @@ export default function Navigation() {
   }, [userMenuOpen]);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-[#e1e3e5]">
+    <nav className="sticky top-0 z-50 bg-[var(--bg-primary)] border-b border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
@@ -61,8 +89,8 @@ export default function Navigation() {
                 href={link.href}
                 className={`text-sm font-medium transition-colors pb-0.5 ${
                   isActive(link.href)
-                    ? 'text-[#2563eb] border-b-2 border-[#2563eb]'
-                    : 'text-[#6d7175] hover:text-[#202223]'
+                    ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {link.label}
@@ -72,22 +100,24 @@ export default function Navigation() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
+            <ThemeToggle />
+
             {session ? (
               <>
                 {/* User menu — desktop */}
                 <div className="hidden md:block relative user-menu">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#e1e3e5] hover:border-[#c9cccf] bg-white transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] hover:border-[var(--border-hover)] bg-[var(--bg-primary)] transition-colors"
                   >
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#2563eb] to-[#60a5fa] flex items-center justify-center text-white text-xs font-semibold">
                       {user?.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
-                    <span className="text-[#202223] text-sm hidden lg:block max-w-[140px] truncate">
+                    <span className="text-[var(--text-primary)] text-sm hidden lg:block max-w-[140px] truncate">
                       {user?.email}
                     </span>
                     <svg
-                      className={`w-4 h-4 text-[#6d7175] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                      className={`w-4 h-4 text-[var(--text-secondary)] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -95,28 +125,28 @@ export default function Navigation() {
                   </button>
 
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-white border border-[#e1e3e5] rounded-xl shadow-lg overflow-hidden">
-                      <div className="px-4 py-3 border-b border-[#e1e3e5] bg-[#f6f6f7]">
-                        <p className="text-xs text-[#6d7175]">Signed in as</p>
-                        <p className="text-sm font-medium text-[#202223] truncate">{user?.email}</p>
+                    <div className="absolute right-0 mt-2 w-52 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl shadow-lg overflow-hidden">
+                      <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+                        <p className="text-xs text-[var(--text-secondary)]">Signed in as</p>
+                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">{user?.email}</p>
                       </div>
                       <Link
                         href="/dashboard"
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#202223] hover:bg-[#f6f6f7] transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         Dashboard
                       </Link>
                       <button
                         onClick={() => { setSupportModalOpen(true); setUserMenuOpen(false); }}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[#202223] hover:bg-[#f6f6f7] transition-colors"
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                       >
                         Support
                       </button>
-                      <div className="border-t border-[#e1e3e5]">
+                      <div className="border-t border-[var(--border)]">
                         <button
                           onClick={handleSignOut}
-                          className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[#d72c0d] hover:bg-[#fff4f4] transition-colors"
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors"
                         >
                           Sign out
                         </button>
@@ -137,13 +167,13 @@ export default function Navigation() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/onboarding"
-                  className="hidden sm:block text-sm font-medium text-[#6d7175] hover:text-[#202223] transition-colors px-3 py-2"
+                  className="hidden sm:block text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors px-3 py-2"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/onboarding"
-                  className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
+                  className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
                 >
                   Get started
                 </Link>
@@ -153,7 +183,7 @@ export default function Navigation() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-[#6d7175] hover:bg-[#f6f6f7] transition-colors"
+              className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -171,7 +201,7 @@ export default function Navigation() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-[#e1e3e5] py-3">
+          <div className="md:hidden border-t border-[var(--border)] py-3">
             <div className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <Link
@@ -179,8 +209,8 @@ export default function Navigation() {
                   href={link.href}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(link.href)
-                      ? 'bg-[#f0f7ff] text-[#2563eb]'
-                      : 'text-[#202223] hover:bg-[#f6f6f7]'
+                      ? 'bg-[var(--accent-bg)] text-[var(--accent)]'
+                      : 'text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -191,14 +221,14 @@ export default function Navigation() {
                 <>
                   <button
                     onClick={() => { setSupportModalOpen(true); setMobileMenuOpen(false); }}
-                    className="px-3 py-2 text-left rounded-lg text-sm font-medium text-[#202223] hover:bg-[#f6f6f7] transition-colors"
+                    className="px-3 py-2 text-left rounded-lg text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
                   >
                     Contact Support
                   </button>
-                  <div className="border-t border-[#e1e3e5] mt-1 pt-1">
+                  <div className="border-t border-[var(--border)] mt-1 pt-1">
                     <button
                       onClick={handleSignOut}
-                      className="px-3 py-2 text-left rounded-lg text-sm font-medium text-[#d72c0d] hover:bg-[#fff4f4] w-full transition-colors"
+                      className="px-3 py-2 text-left rounded-lg text-sm font-medium text-[var(--error)] hover:bg-[var(--error-bg)] w-full transition-colors"
                     >
                       Sign out
                     </button>
