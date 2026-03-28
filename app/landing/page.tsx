@@ -292,13 +292,13 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-5xl sm:text-6xl font-extrabold text-white leading-tight tracking-tight mb-6">
-              Your Shopify store,<br />
+              Your Shopify store,
               <span
-                className="text-blue-400 inline-block transition-opacity duration-300"
-                style={{ opacity: heroVisible ? 1 : 0 }}
+                className="text-blue-400 transition-opacity duration-300"
+                style={{ opacity: heroVisible ? 1 : 0, display: 'block', minHeight: '1.25em' }}
               >
                 {HERO_LINES[heroIndex]}
-              </span><br />
+              </span>
               On autopilot.
             </h1>
 
