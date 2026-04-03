@@ -237,19 +237,21 @@ export function getRateLimitRemaining(userId: string): { remaining: number; rese
   return getRateLimiter().getRemaining(userId);
 }
 
-// ── Auth rate limiter: 20 requests / minute / IP ──────────────────────────
+// ── Auth rate limiter: 5 requests / minute / IP ───────────────────────────
+// Tightened from 20 — OAuth flows only need 2-3 attempts at most.
 
 let authLimiter: RateLimiter | null = null;
 function getAuthRateLimiter(): RateLimiter {
-  if (!authLimiter) authLimiter = new RateLimiter(20, 60_000);
+  if (!authLimiter) authLimiter = new RateLimiter(5, 60_000);
   return authLimiter;
 }
 
-// ── Checkout rate limiter: 10 requests / minute / user ───────────────────
+// ── Checkout rate limiter: 3 requests / minute / user ────────────────────
+// Tightened from 10 — a legitimate subscription attempt needs at most 1-2.
 
 let checkoutLimiter: RateLimiter | null = null;
 function getCheckoutRateLimiter(): RateLimiter {
-  if (!checkoutLimiter) checkoutLimiter = new RateLimiter(10, 60_000);
+  if (!checkoutLimiter) checkoutLimiter = new RateLimiter(3, 60_000);
   return checkoutLimiter;
 }
 

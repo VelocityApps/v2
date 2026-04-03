@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { ShopifyClient } from '@/lib/shopify/client';
 import { decryptToken } from '@/lib/shopify/oauth';
+import { validateUUID } from '@/lib/validation';
 
 /**
  * GET /api/shopify/billing/callback
@@ -21,8 +22,26 @@ export async function GET(request: NextRequest) {
   if (!userId || !chargeId) {
     return NextResponse.redirect(`${appUrl}/dashboard/description-writer?billing=error&reason=missing_params`);
   }
+  // Reject non-UUID user_id — prevents path traversal and trivial probing
+  if (!validateUUID(userId)) {
+    return NextResponse.redirect(`${appUrl}/dashboard/description-writer?billing=error&reason=invalid_params`);
+  }
 
   try {
+    // IDOR protection: verify the chargeId was actually issued for this userId.
+    // We stored it as a pending charge when initiating the subscription, so if
+    // an attacker swaps userId for someone else's, the chargeId won't match.
+    const { data: pendingProfile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('user_id')
+      .eq('user_id', userId)
+      .eq('description_writer_charge_id', chargeId)
+      .maybeSingle();
+
+    if (!pendingProfile) {
+      return NextResponse.redirect(`${appUrl}/dashboard/description-writer?billing=error&reason=invalid`);
+    }
+
     // Get user's Shopify connection
     const { data: ua } = await supabaseAdmin
       .from('user_automations')

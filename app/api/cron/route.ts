@@ -15,9 +15,9 @@ const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function GET(request: NextRequest) {
   try {
-    // CRON_SECRET must always be set — reject the request if it isn't configured
-    if (!CRON_SECRET) {
-      console.error('[Cron] CRON_SECRET environment variable is not set');
+    // CRON_SECRET must be a non-empty string of at least 20 chars
+    if (!CRON_SECRET || CRON_SECRET.length < 20) {
+      console.error('[Cron] CRON_SECRET is not set or too short (min 20 chars)');
       return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     }
 

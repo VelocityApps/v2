@@ -4,8 +4,9 @@ import { withSentryConfig } from '@sentry/nextjs';
 // Content-Security-Policy — keeps Next.js hydration + Stripe + Supabase + Sentry working
 const CSP = [
   "default-src 'self'",
-  // Next.js requires unsafe-inline for its runtime scripts; Babel standalone (preview page) needs unsafe-eval
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://unpkg.com https://us-assets.i.posthog.com",
+  // Next.js requires unsafe-inline for its runtime scripts.
+  // unsafe-eval is intentionally excluded here — it is added back only for /preview/* via middleware.ts
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://unpkg.com https://us-assets.i.posthog.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   // Broad img-src: Shopify product images, CDNs, data URIs

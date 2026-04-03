@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     res.cookies.set('shopify_oauth_nonce', nonce, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 300, // 5 minutes — plenty for OAuth flow
       path: '/',
     });

@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase-server';
+import { ShopifyClient } from '@/lib/shopify/client';
+import { decryptToken } from '@/lib/shopify/oauth';
 import { checkCheckoutRateLimit } from '@/lib/rate-limit';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-11-17.clover',
-});
+import { validateUUID } from '@/lib/validation';
 
 /**
  * POST /api/automations/[id]/subscribe
- * Create a Stripe Checkout session for a per-automation subscription.
- * Returns { url } — the client should redirect to it.
+ * Creates a Shopify AppSubscription charge for a per-automation subscription.
+ * Returns { url } — the confirmation URL the merchant must visit to approve billing.
  */
 export async function POST(
   request: NextRequest,
@@ -39,7 +37,10 @@ export async function POST(
 
     const { id } = await params;
 
-    // Fetch user_automations + joined automation, verify ownership
+    if (!validateUUID(id)) {
+      return NextResponse.json({ error: 'Invalid automation ID' }, { status: 400 });
+    }
+
     const { data: userAutomation, error: fetchError } = await supabaseAdmin
       .from('user_automations')
       .select('*, automation:automations(*)')
@@ -51,101 +52,57 @@ export async function POST(
       return NextResponse.json({ error: 'Automation not found' }, { status: 404 });
     }
 
-    // Already active with a subscription — nothing to do
-    if (userAutomation.status === 'active' && userAutomation.stripe_subscription_id) {
+    // Already active with a Shopify subscription — nothing to do
+    if (userAutomation.status === 'active' && userAutomation.shopify_charge_id) {
       return NextResponse.json(
         { error: 'This automation already has an active subscription' },
         { status: 400 }
       );
     }
 
+    if (!userAutomation.shopify_access_token_encrypted) {
+      return NextResponse.json({ error: 'Shopify store not connected' }, { status: 400 });
+    }
+
     const automation = userAutomation.automation;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev';
 
-    // Lazy-create Stripe Product + Price if not yet created for this automation
-    let stripePriceId: string = automation.stripe_price_id;
-
-    if (!stripePriceId) {
-      const product = await stripe.products.create({
-        name: automation.name,
-        metadata: {
-          automation_id: automation.id,
-          slug: automation.slug,
-        },
-      });
-
-      const price = await stripe.prices.create({
-        product: product.id,
-        unit_amount: Math.round((automation.price_monthly || 0) * 100),
-        currency: 'gbp',
-        recurring: { interval: 'month' },
-      });
-
-      stripePriceId = price.id;
-
-      // Persist the price ID so future subscribers reuse it
-      await supabaseAdmin
-        .from('automations')
-        .update({ stripe_price_id: stripePriceId })
-        .eq('id', automation.id);
-    }
-
-    // Get or create Stripe customer from user_profiles
-    const { data: profile } = await supabaseAdmin
-      .from('user_profiles')
-      .select('stripe_customer_id')
-      .eq('user_id', user.id)
-      .single();
-
-    let customerId: string = profile?.stripe_customer_id;
-
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { user_id: user.id },
-      });
-      customerId = customer.id;
-
-      await supabaseAdmin
-        .from('user_profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('user_id', user.id);
-    }
-
-    // Carry forward remaining trial days if still in trial
-    let subscriptionData: Stripe.Checkout.SessionCreateParams['subscription_data'] | undefined;
+    // Carry forward remaining trial days if still within trial
+    let trialDays = 0;
     if (userAutomation.status === 'trial' && userAutomation.trial_ends_at) {
-      const trialEndsAt = new Date(userAutomation.trial_ends_at).getTime();
-      if (trialEndsAt > Date.now()) {
-        subscriptionData = {
-          trial_end: Math.floor(trialEndsAt / 1000),
-        };
+      const msRemaining = new Date(userAutomation.trial_ends_at).getTime() - Date.now();
+      if (msRemaining > 0) {
+        trialDays = Math.ceil(msRemaining / 86_400_000);
       }
     }
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [{ price: stripePriceId, quantity: 1 }],
-      subscription_data: subscriptionData,
-      success_url: `${appUrl}/dashboard/automations/${id}?billing=success`,
-      cancel_url: `${appUrl}/dashboard/automations/${id}`,
-      custom_text: {
-        submit: { message: `You'll be charged £${automation.price_monthly}/month. Cancel anytime from your dashboard.` },
-      },
-      metadata: {
-        type: 'automation',
-        user_automation_id: id,
-        user_id: user.id,
-      },
+    const accessToken = await decryptToken(userAutomation.shopify_access_token_encrypted);
+    const shopify = new ShopifyClient(userAutomation.shopify_store_url, accessToken);
+
+    const returnUrl = `${appUrl}/api/billing/shopify/callback?user_automation_id=${id}`;
+    const isTest = process.env.NODE_ENV !== 'production';
+
+    const { confirmationUrl, gid } = await shopify.createAppSubscription({
+      name: automation.name,
+      returnUrl,
+      priceMonthly: automation.price_monthly || 0,
+      currencyCode: 'GBP',
+      trialDays,
+      test: isTest,
     });
 
-    return NextResponse.json({ url: session.url });
+    // Store the pending GID so we can look it up on callback
+    const numericId = gid.split('/').pop() || '';
+    await supabaseAdmin
+      .from('user_automations')
+      .update({ shopify_charge_id: numericId })
+      .eq('id', id);
+
+    return NextResponse.json({ url: confirmationUrl });
   } catch (error: any) {
-    console.error('[subscribe] Error creating checkout session:', error);
+    console.error('[subscribe] Error creating Shopify subscription:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create checkout session' },
+      { error: error.message || 'Failed to create subscription' },
       { status: 500 }
     );
   }

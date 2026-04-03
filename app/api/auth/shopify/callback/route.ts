@@ -71,14 +71,14 @@ export async function GET(request: NextRequest) {
     response.cookies.set('shopify_token_temp', tokenResponse.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 60, // 1 minute - frontend should read and clear immediately
       path: '/',
     });
     response.cookies.set('shopify_shop_temp', shop, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 60,
       path: '/',
     });

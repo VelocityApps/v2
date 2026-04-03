@@ -25,6 +25,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Reject any shop domain that isn't a legitimate myshopify.com host
+    if (!shop.endsWith('.myshopify.com') || shop.includes('/') || shop.includes('..')) {
+      return NextResponse.json({ error: 'Invalid shop domain' }, { status: 400 });
+    }
+
     // Verify webhook signature — mandatory
     const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET;
     if (!webhookSecret) {
