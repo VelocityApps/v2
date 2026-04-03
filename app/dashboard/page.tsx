@@ -38,26 +38,14 @@ export default function DashboardPage() {
 
   async function fetchSuggestedAutomations() {
     try {
-      const { data: installed } = await supabase
-        .from('user_automations')
-        .select('automation_id')
-        .neq('status', 'uninstalled');
+      // Run both queries in parallel instead of sequentially
+      const [{ data: installed }, { data: all }] = await Promise.all([
+        supabase.from('user_automations').select('automation_id').neq('status', 'uninstalled'),
+        supabase.from('automations').select('*').eq('active', true).order('user_count', { ascending: false }).limit(10),
+      ]);
 
-      const installedIds = (installed || []).map((ua: any) => ua.automation_id);
-
-      const query = supabase
-        .from('automations')
-        .select('*')
-        .eq('active', true)
-        .order('user_count', { ascending: false })
-        .limit(3);
-
-      if (installedIds.length > 0) {
-        query.not('id', 'in', `(${installedIds.join(',')})`);
-      }
-
-      const { data } = await query;
-      setSuggestedAutomations(data || []);
+      const installedIds = new Set((installed || []).map((ua: any) => ua.automation_id));
+      setSuggestedAutomations((all || []).filter((a: any) => !installedIds.has(a.id)).slice(0, 3));
     } catch {
       // non-critical
     }

@@ -48,85 +48,90 @@ export async function GET(request: NextRequest) {
   // Fetch products page
   const products = await shopify.getProducts(250);
   const page = products.slice(offset, offset + limit);
+  const productIds = page.map((p: any) => String(p.id));
 
-  const scores = await Promise.all(
-    page.map(async (product: any) => {
-      // Check cache
-      if (!refresh) {
-        const { data: cached } = await supabaseAdmin
-          .from('description_health_scores')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('product_id', String(product.id))
-          .maybeSingle();
-        if (cached) return cached;
-      }
+  // Single batch cache lookup instead of one query per product
+  let cachedMap = new Map<string, any>();
+  if (!refresh) {
+    const { data: cached } = await supabaseAdmin
+      .from('description_health_scores')
+      .select('*')
+      .eq('user_id', user.id)
+      .in('product_id', productIds);
+    cachedMap = new Map((cached ?? []).map((s: any) => [s.product_id, s]));
+  }
 
-      const html: string = product.body_html ?? '';
-      const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-      const words = text.split(/\s+/).filter(Boolean);
-      const wordCount = words.length;
+  // Score only products not already cached
+  const toScore = page.filter((p: any) => !cachedMap.has(String(p.id)));
+  const scannedAt = new Date().toISOString();
 
-      // ── Scoring ──────────────────────────────────────────────────────────
-      // Length score: ideal 150-300 words
-      const lengthScore = wordCount === 0 ? 0
-        : wordCount < 50 ? 20
-        : wordCount < 100 ? 40
-        : wordCount < 150 ? 60
-        : wordCount <= 300 ? 100
-        : wordCount <= 400 ? 80
-        : 60;
+  const newScores: any[] = toScore.map((product: any) => {
+    const html: string = product.body_html ?? '';
+    const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const words = text.split(/\s+/).filter(Boolean);
+    const wordCount = words.length;
 
-      // SEO score: product title keyword present, description not empty
-      const titleWords = product.title.toLowerCase().split(/\s+/);
-      const descLower = text.toLowerCase();
-      const keywordHits = titleWords.filter((w: string) => w.length > 3 && descLower.includes(w)).length;
-      const seoScore = wordCount === 0 ? 0
-        : Math.min(100, Math.round((keywordHits / Math.max(titleWords.length, 1)) * 100));
+    // ── Scoring ──────────────────────────────────────────────────────────
+    const lengthScore = wordCount === 0 ? 0
+      : wordCount < 50 ? 20
+      : wordCount < 100 ? 40
+      : wordCount < 150 ? 60
+      : wordCount <= 300 ? 100
+      : wordCount <= 400 ? 80
+      : 60;
 
-      // Readability: simple Flesch proxy (avg sentence + word length)
-      const sentences = text.split(/[.!?]+/).filter((s: string) => s.trim().length > 5);
-      const avgWordsPerSentence = sentences.length > 0 ? wordCount / sentences.length : wordCount;
-      const avgWordLength = wordCount > 0 ? text.replace(/\s/g, '').length / wordCount : 0;
-      const fleschProxy = Math.max(0, Math.min(100,
-        Math.round(206.835 - 1.015 * avgWordsPerSentence - 84.6 * (avgWordLength / 5))
-      ));
-      const readabilityScore = wordCount === 0 ? 0 : fleschProxy;
+    const titleWords = product.title.toLowerCase().split(/\s+/);
+    const descLower = text.toLowerCase();
+    const keywordHits = titleWords.filter((w: string) => w.length > 3 && descLower.includes(w)).length;
+    const seoScore = wordCount === 0 ? 0
+      : Math.min(100, Math.round((keywordHits / Math.max(titleWords.length, 1)) * 100));
 
-      // CTA score: presence of action words
-      const ctaWords = ['buy', 'shop', 'order', 'get', 'grab', 'try', 'add to cart', 'discover', 'explore'];
-      const ctaScore = ctaWords.some((w) => descLower.includes(w)) ? 100 : 0;
+    const sentences = text.split(/[.!?]+/).filter((s: string) => s.trim().length > 5);
+    const avgWordsPerSentence = sentences.length > 0 ? wordCount / sentences.length : wordCount;
+    const avgWordLength = wordCount > 0 ? text.replace(/\s/g, '').length / wordCount : 0;
+    const fleschProxy = Math.max(0, Math.min(100,
+      Math.round(206.835 - 1.015 * avgWordsPerSentence - 84.6 * (avgWordLength / 5))
+    ));
+    const readabilityScore = wordCount === 0 ? 0 : fleschProxy;
 
-      // Benefit score: "you" language ratio
-      const youWords = ['you', 'your', 'yours'];
-      const youCount = words.filter((w: string) => youWords.includes(w.toLowerCase())).length;
-      const benefitScore = wordCount === 0 ? 0 : Math.min(100, Math.round((youCount / wordCount) * 1000));
+    const ctaWords = ['buy', 'shop', 'order', 'get', 'grab', 'try', 'add to cart', 'discover', 'explore'];
+    const ctaScore = ctaWords.some((w) => descLower.includes(w)) ? 100 : 0;
 
-      const overall = Math.round(
-        (lengthScore * 0.25 + seoScore * 0.25 + readabilityScore * 0.2 + ctaScore * 0.15 + benefitScore * 0.15)
-      );
+    const youWords = ['you', 'your', 'yours'];
+    const youCount = words.filter((w: string) => youWords.includes(w.toLowerCase())).length;
+    const benefitScore = wordCount === 0 ? 0 : Math.min(100, Math.round((youCount / wordCount) * 1000));
 
-      const scoreRow = {
-        user_id: user.id,
-        product_id: String(product.id),
-        product_title: product.title,
-        overall_score: overall,
-        readability_score: readabilityScore,
-        length_score: lengthScore,
-        seo_score: seoScore,
-        cta_score: ctaScore,
-        benefit_score: benefitScore,
-        word_count: wordCount,
-        scanned_at: new Date().toISOString(),
-      };
+    const overall = Math.round(
+      (lengthScore * 0.25 + seoScore * 0.25 + readabilityScore * 0.2 + ctaScore * 0.15 + benefitScore * 0.15)
+    );
 
-      await supabaseAdmin
-        .from('description_health_scores')
-        .upsert(scoreRow, { onConflict: 'user_id,product_id' });
+    return {
+      user_id: user.id,
+      product_id: String(product.id),
+      product_title: product.title,
+      overall_score: overall,
+      readability_score: readabilityScore,
+      length_score: lengthScore,
+      seo_score: seoScore,
+      cta_score: ctaScore,
+      benefit_score: benefitScore,
+      word_count: wordCount,
+      scanned_at: scannedAt,
+    };
+  });
 
-      return scoreRow;
-    })
-  );
+  // Single batch upsert instead of one per product
+  if (newScores.length > 0) {
+    await supabaseAdmin
+      .from('description_health_scores')
+      .upsert(newScores, { onConflict: 'user_id,product_id' });
+  }
+
+  // Merge cached + newly scored, preserving page order
+  const newScoreMap = new Map(newScores.map((s) => [s.product_id, s]));
+  const scores = productIds
+    .map((id) => cachedMap.get(id) ?? newScoreMap.get(id))
+    .filter(Boolean);
 
   // Sort worst first
   scores.sort((a: any, b: any) => a.overall_score - b.overall_score);

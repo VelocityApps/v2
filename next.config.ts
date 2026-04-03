@@ -5,12 +5,12 @@ import { withSentryConfig } from '@sentry/nextjs';
 const CSP = [
   "default-src 'self'",
   // Next.js requires unsafe-inline for its runtime scripts; Babel standalone (preview page) needs unsafe-eval
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://unpkg.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://unpkg.com https://us-assets.i.posthog.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   // Broad img-src: Shopify product images, CDNs, data URIs
   "img-src 'self' data: blob: https:",
-  // API connections: Supabase (HTTP + WS), Stripe, Sentry
+  // API connections: Supabase (HTTP + WS), Stripe, Sentry, PostHog
   [
     "connect-src 'self'",
     "https://*.supabase.co",
@@ -18,6 +18,9 @@ const CSP = [
     "https://api.stripe.com",
     "https://*.sentry.io",
     "https://o4510963733889024.ingest.de.sentry.io",
+    "https://*.posthog.com",
+    "https://us.i.posthog.com",
+    "https://us-assets.i.posthog.com",
   ].join(' '),
   // Stripe's payment iframes
   "frame-src https://js.stripe.com https://hooks.stripe.com",
@@ -30,6 +33,20 @@ const CSP = [
 const nextConfig: NextConfig = {
   async headers() {
     return [
+      {
+        // Cache public read-only API endpoints at the CDN edge (5 min)
+        source: '/api/public/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=60' },
+        ],
+      },
+      {
+        // Immutable static assets — Next.js already does this but be explicit
+        source: '/_next/static/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
       {
         // Apply security headers to every response
         source: '/(.*)',

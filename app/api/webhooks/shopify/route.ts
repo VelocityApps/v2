@@ -74,17 +74,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    const shopNormalized = shop.replace(/^https?:\/\//i, '').toLowerCase().split('/')[0];
-
-    // Find all active automations for this shop that listen to this topic.
-    // Match shopify_store_url with or without protocol (Shopify sends host only).
-    const { data: allForTopic, error } = await supabaseAdmin
+    // Filter by shop in the DB and inner-join to only get automations
+    // that have a webhook registered for this topic — avoids fetching
+    // all automations and per-automation webhook lookups.
+    const { data: userAutomations, error } = await supabaseAdmin
       .from('user_automations')
       .select(`
         *,
-        automation:automations(*)
+        automation:automations(*),
+        shopify_webhooks!inner(id)
       `)
-      .in('status', ['active', 'trial']);
+      .in('status', ['active', 'trial'])
+      .or(`shopify_store_url.eq.${shop},shopify_store_url.eq.https://${shop}`)
+      .eq('shopify_webhooks.topic', topic);
 
     if (error) {
       console.error('Error fetching user automations:', error);
@@ -94,30 +96,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userAutomations = (allForTopic || []).filter((ua: any) => {
-      const stored = (ua.shopify_store_url || '').replace(/^https?:\/\//i, '').toLowerCase().split('/')[0];
-      return stored === shopNormalized || ua.shopify_store_url === shop;
-    });
-
-    if (userAutomations.length === 0) {
+    if (!userAutomations || userAutomations.length === 0) {
       return NextResponse.json({ success: true });
     }
 
-    // Process webhook for each automation
+    // Process webhook for each matching automation
     const promises = userAutomations.map(async (userAutomation: any) => {
       const automation = userAutomation.automation;
       if (!automation) return;
-
-      // Check if this automation has a webhook registered for this topic
-      const { data: webhooks } = await supabaseAdmin
-        .from('shopify_webhooks')
-        .select('*')
-        .eq('user_automation_id', userAutomation.id)
-        .eq('topic', topic);
-
-      if (!webhooks || webhooks.length === 0) {
-        return; // This automation doesn't listen to this topic
-      }
 
       // Get automation instance and handle webhook
       const automationInstance = getAutomation(automation.slug);

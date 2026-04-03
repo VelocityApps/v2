@@ -23,9 +23,14 @@ export async function GET() {
         installed_at: row.installed_at,
       }));
 
-    return NextResponse.json({ events: events.length >= 3 ? events : getFallback() });
+    const payload = events.length >= 3 ? events : getFallback();
+    return NextResponse.json({ events: payload }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' },
+    });
   } catch {
-    return NextResponse.json({ events: getFallback() });
+    return NextResponse.json({ events: getFallback() }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' },
+    });
   }
 }
 

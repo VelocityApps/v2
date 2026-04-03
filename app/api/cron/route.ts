@@ -54,60 +54,42 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const results = [];
-    
-    // Run each scheduled automation
-    for (const userAutomation of userAutomations) {
-      try {
+    // Run all automations in parallel — each failure is isolated
+    const settled = await Promise.allSettled(
+      userAutomations.map(async (userAutomation) => {
         const automationSlug = (userAutomation as any).automations?.slug;
-        if (!automationSlug) {
-          console.error(`[Cron] No slug found for automation ${userAutomation.automation_id}`);
-          continue;
-        }
+        if (!automationSlug) throw new Error(`No slug for automation_id ${userAutomation.automation_id}`);
 
         const automation = getAutomation(automationSlug);
-        if (!automation) {
-          console.error(`[Cron] Automation not found: ${automationSlug}`);
-          continue;
-        }
+        if (!automation) throw new Error(`Automation not found: ${automationSlug}`);
+        if (!automation.runScheduled) return { skipped: true, slug: automationSlug };
 
-        // Check if automation has runScheduled method
-        if (!automation.runScheduled) {
-          console.log(`[Cron] Automation ${automationSlug} does not support scheduled runs`);
-          continue;
-        }
-
-        console.log(`[Cron] Running scheduled automation: ${automationSlug} for user ${userAutomation.user_id}`);
-
-        // Run the scheduled automation
+        console.log(`[Cron] Running: ${automationSlug} for user ${userAutomation.user_id}`);
         await automation.runScheduled(userAutomation);
+        return { slug: automationSlug };
+      })
+    );
 
-        results.push({
-          automation_id: userAutomation.id,
-          automation_slug: automationSlug,
-          status: 'success',
-        });
+    // Persist error status for failed automations
+    await Promise.all(
+      settled.map(async (result, i) => {
+        if (result.status === 'rejected') {
+          const ua = userAutomations[i];
+          console.error(`[Cron] Error running automation ${ua.id}:`, result.reason);
+          await supabaseAdmin
+            .from('user_automations')
+            .update({ status: 'error', error_message: result.reason?.message, updated_at: new Date().toISOString() })
+            .eq('id', ua.id);
+        }
+      })
+    );
 
-      } catch (error: any) {
-        console.error(`[Cron] Error running automation ${userAutomation.id}:`, error);
-        
-        // Update automation status to error
-        await supabaseAdmin
-          .from('user_automations')
-          .update({
-            status: 'error',
-            error_message: error.message,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', userAutomation.id);
-
-        results.push({
-          automation_id: userAutomation.id,
-          status: 'error',
-          error: error.message,
-        });
-      }
-    }
+    const results = settled.map((result, i) => ({
+      automation_id: userAutomations[i].id,
+      ...(result.status === 'fulfilled'
+        ? { status: (result.value as any)?.skipped ? 'skipped' : 'success' }
+        : { status: 'error', error: result.reason?.message }),
+    }));
 
     return NextResponse.json({
       message: `Processed ${userAutomations.length} automations`,
