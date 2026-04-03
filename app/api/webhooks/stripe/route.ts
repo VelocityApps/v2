@@ -31,7 +31,19 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        if (session.metadata?.type === 'automation') {
+        if (session.metadata?.type === 'description_writer') {
+          // AI Description Writer add-on
+          const userId = session.metadata.user_id;
+          if (userId && session.subscription) {
+            await supabaseAdmin
+              .from('user_profiles')
+              .update({
+                has_description_writer: true,
+                description_writer_charge_id: session.subscription as string,
+              })
+              .eq('user_id', userId);
+          }
+        } else if (session.metadata?.type === 'automation') {
           // Per-automation subscription checkout completed
           const userAutomationId = session.metadata.user_automation_id;
           if (userAutomationId && session.subscription) {
@@ -123,6 +135,21 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
+
+        // Check if this is a description writer subscription
+        const { data: dwProfile } = await supabaseAdmin
+          .from('user_profiles')
+          .select('user_id')
+          .eq('description_writer_charge_id', subscription.id)
+          .maybeSingle();
+
+        if (dwProfile) {
+          await supabaseAdmin
+            .from('user_profiles')
+            .update({ has_description_writer: false, description_writer_charge_id: null })
+            .eq('user_id', dwProfile.user_id);
+          break;
+        }
 
         // Check if this subscription belongs to a user_automation first
         const { data: ua } = await supabaseAdmin

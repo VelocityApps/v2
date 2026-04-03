@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase-server';
-import { ShopifyClient } from '@/lib/shopify/client';
-import { decryptToken } from '@/lib/shopify/oauth';
 import { checkCheckoutRateLimit } from '@/lib/rate-limit';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-11-17.clover',
+});
 
 /**
  * POST /api/shopify/billing/description-writer
- * Creates a Shopify AppSubscription charge for the AI Description Writer add-on (£19/mo).
- * Returns { url } — the Shopify confirmation URL the merchant must visit to approve billing.
+ * Creates a Stripe checkout session for the AI Description Writer add-on (£19/mo).
+ * Returns { url } — redirect the user to this Stripe-hosted checkout page.
  */
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -25,10 +28,10 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // Check if already subscribed
+  // Already subscribed
   const { data: profile } = await supabaseAdmin
     .from('user_profiles')
-    .select('has_description_writer')
+    .select('has_description_writer, stripe_customer_id')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -36,53 +39,39 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Already subscribed to AI Description Writer' }, { status: 400 });
   }
 
-  // Find a connected Shopify store from any active/trial automation
-  const { data: userAutomation } = await supabaseAdmin
-    .from('user_automations')
-    .select('shopify_store_url, shopify_access_token_encrypted')
-    .eq('user_id', user.id)
-    .in('status', ['active', 'trial'])
-    .not('shopify_access_token_encrypted', 'is', null)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!userAutomation) {
-    return NextResponse.json(
-      { error: 'No connected Shopify store found. Please install an automation first to link your store.' },
-      { status: 400 }
-    );
+  // Get or create Stripe customer
+  let customerId = profile?.stripe_customer_id ?? null;
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email ?? undefined,
+      metadata: { user_id: user.id },
+    });
+    customerId = customer.id;
+    await supabaseAdmin
+      .from('user_profiles')
+      .upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: 'user_id' });
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev';
-  const accessToken = await decryptToken(userAutomation.shopify_access_token_encrypted);
-  const shopify = new ShopifyClient(userAutomation.shopify_store_url, accessToken);
+  const priceId = process.env.STRIPE_PRICE_ID_DESCRIPTION_WRITER;
 
-  const returnUrl = `${appUrl}/api/shopify/billing/callback?user_id=${user.id}`;
-  const isTest = process.env.NODE_ENV !== 'production';
+  if (!priceId) {
+    console.error('[description-writer/billing] STRIPE_PRICE_ID_DESCRIPTION_WRITER is not set');
+    return NextResponse.json({ error: 'Billing not configured' }, { status: 500 });
+  }
 
-  const { confirmationUrl, gid } = await shopify.createAppSubscription({
-    name: 'AI Description Writer',
-    returnUrl,
-    priceMonthly: 19.00,
-    currencyCode: 'GBP',
-    trialDays: 0,
-    test: isTest,
+  const session = await stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: 'subscription',
+    payment_method_types: ['card'],
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: `${appUrl}/dashboard/description-writer?activated=true`,
+    cancel_url: `${appUrl}/dashboard/description-writer?billing=declined`,
+    metadata: {
+      user_id: user.id,
+      type: 'description_writer',
+    },
   });
 
-  const numericId = gid.split('/').pop() || '';
-
-  // Persist pending charge so the callback can verify it
-  await supabaseAdmin
-    .from('user_profiles')
-    .upsert(
-      {
-        user_id: user.id,
-        description_writer_charge_id: numericId,
-        description_writer_shopify_store: userAutomation.shopify_store_url,
-      },
-      { onConflict: 'user_id' }
-    );
-
-  return NextResponse.json({ url: confirmationUrl });
+  return NextResponse.json({ url: session.url });
 }
