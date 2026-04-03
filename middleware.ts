@@ -1,33 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Middleware: scoped Content-Security-Policy overrides.
+ * Middleware: per-path Content-Security-Policy and framing overrides.
  *
- * The global CSP in next.config.ts intentionally omits 'unsafe-eval'.
- * The /preview/* pages use Babel standalone which requires eval() to
- * transpile user-submitted React code in the browser. We add it back
- * here for that path only, keeping every other route eval-free.
+ * /shopify/*  — Shopify admin embedded routes. Must allow framing by
+ *               admin.shopify.com and *.myshopify.com. The global
+ *               X-Frame-Options: DENY set in next.config.ts is removed here.
+ *
+ * /preview/*  — Babel standalone code runner. Needs unsafe-eval for
+ *               transpilation. Scope it tightly so the rest of the app
+ *               stays eval-free.
  */
+
+const PREVIEW_CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "frame-src 'none'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join('; ');
+
+const SHOPIFY_FRAME_ANCESTORS =
+  "frame-ancestors https://admin.shopify.com https://*.myshopify.com 'self'";
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ── Shopify embedded routes ──────────────────────────────────────────────
+  if (pathname.startsWith('/shopify/')) {
+    const response = NextResponse.next();
+
+    // Remove the blanket DENY from next.config.ts
+    response.headers.delete('X-Frame-Options');
+
+    // Inject frame-ancestors that permits Shopify admin only
+    const existingCSP = response.headers.get('Content-Security-Policy') || '';
+    const updatedCSP = existingCSP
+      // Replace any existing frame-ancestors directive
+      .replace(/frame-ancestors[^;]*(;|$)/g, '')
+      .trimEnd()
+      .replace(/;$/, '') +
+      '; ' + SHOPIFY_FRAME_ANCESTORS;
+
+    response.headers.set('Content-Security-Policy', updatedCSP);
+    return response;
+  }
+
+  // ── Preview pages ────────────────────────────────────────────────────────
   if (pathname.startsWith('/preview/')) {
     const response = NextResponse.next();
-    // Override CSP for preview pages to allow Babel standalone's eval()
-    response.headers.set(
-      'Content-Security-Policy',
-      [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com",
-        "style-src 'self' 'unsafe-inline'",
-        "font-src 'self'",
-        "img-src 'self' data: blob: https:",
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-        "frame-src 'none'",
-        "object-src 'none'",
-        "base-uri 'self'",
-      ].join('; ')
-    );
+    response.headers.set('Content-Security-Policy', PREVIEW_CSP);
     return response;
   }
 
@@ -35,6 +62,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Only run on preview pages — skip static assets and API routes
-  matcher: ['/preview/:path*'],
+  matcher: ['/preview/:path*', '/shopify/:path*'],
 };

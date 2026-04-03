@@ -43,9 +43,11 @@ export async function GET(request: NextRequest) {
     // For now, we'll use a secure cookie to pass token to frontend
     // In production, consider storing in database immediately
 
-    // Parse state: nonce:installSlug:source
+    // Parse state: nonce:installSlug:source:encodedHost
+    // encodedHost is present when the install was initiated from the App Store
     const oauthState = searchParams.get('state') ?? '';
-    const [stateNonce, installSlug = '', source = ''] = oauthState.split(':');
+    const [stateNonce, installSlug = '', source = '', encodedHost = ''] = oauthState.split(':');
+    const embeddedHost = encodedHost ? decodeURIComponent(encodedHost) : (searchParams.get('host') ?? '');
 
     // Verify nonce matches what we set in the authorize step
     const storedNonce = request.cookies.get('shopify_oauth_nonce')?.value;
@@ -56,12 +58,24 @@ export async function GET(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const destination = source === 'onboarding' ? 'onboarding' : 'marketplace';
-    const redirectUrl = new URL(`${baseUrl}/${destination}`);
-    redirectUrl.searchParams.set('shopify_auth_success', '1');
-    redirectUrl.searchParams.set('shop', shop);
-    if (installSlug && destination === 'marketplace') {
-      redirectUrl.searchParams.set('install', installSlug);
+
+    // Embedded install (from App Store or Partner dashboard) → send to embed-init
+    // so App Bridge can be initialised before the merchant sees any UI.
+    let redirectUrl: URL;
+    if (source === 'embedded' && embeddedHost) {
+      redirectUrl = new URL(`${baseUrl}/shopify/embed-init`);
+      redirectUrl.searchParams.set('shop', shop);
+      redirectUrl.searchParams.set('host', embeddedHost);
+      redirectUrl.searchParams.set('installed', '1');
+    } else {
+      // Standalone web install — keep existing behaviour
+      const destination = source === 'onboarding' ? 'onboarding' : 'marketplace';
+      redirectUrl = new URL(`${baseUrl}/${destination}`);
+      redirectUrl.searchParams.set('shopify_auth_success', '1');
+      redirectUrl.searchParams.set('shop', shop);
+      if (installSlug && destination === 'marketplace') {
+        redirectUrl.searchParams.set('install', installSlug);
+      }
     }
     
     // Store token in httpOnly cookie (more secure than URL param)

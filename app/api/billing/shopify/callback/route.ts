@@ -17,6 +17,11 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const userAutomationId = searchParams.get('user_automation_id');
   const chargeId = searchParams.get('charge_id');
+  const isEmbedded = searchParams.get('embedded') === '1';
+  const embeddedHost = searchParams.get('host') ?? '';
+  // Embedded merchants go to /shopify/dashboard, standalone to /dashboard
+  const dashBase = isEmbedded ? '/shopify/dashboard' : '/dashboard';
+  const hostSuffix = isEmbedded && embeddedHost ? `&host=${encodeURIComponent(embeddedHost)}` : '';
 
   // Reject obviously invalid params before hitting the DB
   if (!userAutomationId || !chargeId) {
@@ -69,20 +74,18 @@ export async function GET(request: NextRequest) {
         .eq('id', userAutomationId);
 
       return NextResponse.redirect(
-        `${appUrl}/dashboard/automations/${userAutomationId}?billing=success`
+        `${appUrl}${dashBase}/automations/${userAutomationId}?billing=success${hostSuffix}`
       );
     }
 
     if (shopifyStatus === 'DECLINED') {
-      // Merchant chose not to approve — keep them in trial/paused state
       return NextResponse.redirect(
-        `${appUrl}/dashboard/automations/${userAutomationId}?billing=declined`
+        `${appUrl}${dashBase}/automations/${userAutomationId}?billing=declined${hostSuffix}`
       );
     }
 
-    // Any other status (EXPIRED, FROZEN, etc.)
     return NextResponse.redirect(
-      `${appUrl}/dashboard/automations/${userAutomationId}?billing=error&reason=${shopifyStatus.toLowerCase()}`
+      `${appUrl}${dashBase}/automations/${userAutomationId}?billing=error&reason=${shopifyStatus.toLowerCase()}${hostSuffix}`
     );
   } catch (err: any) {
     console.error('[billing/shopify/callback] Error:', err);

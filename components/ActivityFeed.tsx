@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ActivityEvent {
   name: string;
@@ -23,13 +23,16 @@ export default function ActivityFeed() {
   const [visible, setVisible] = useState(false);
   const [slideIn, setSlideIn] = useState(false);
 
+  // Ref so setTimeout callbacks always see the current events length
+  const eventsRef = useRef<ActivityEvent[]>([]);
+
   useEffect(() => {
     fetch('/api/public/activity')
       .then((r) => r.json())
-      .then(({ events }) => {
-        if (events?.length) {
-          setEvents(events);
-          // Start showing after a 4s delay
+      .then(({ events: fetched }: { events: ActivityEvent[] }) => {
+        if (fetched?.length) {
+          eventsRef.current = fetched;
+          setEvents(fetched);
           setTimeout(() => show(), 4000);
         }
       })
@@ -39,20 +42,22 @@ export default function ActivityFeed() {
   function show() {
     setVisible(true);
     setSlideIn(true);
-    // Auto-hide after 4s, then cycle
     setTimeout(() => {
       setSlideIn(false);
       setTimeout(() => {
         setVisible(false);
-        setIndex((i) => (i + 1) % events.length);
-        setTimeout(() => show(), 3000);
+        const len = eventsRef.current.length;
+        if (len > 0) {
+          setIndex((i) => (i + 1) % len);
+          setTimeout(() => show(), 3000);
+        }
       }, 400);
     }, 4000);
   }
 
   if (!visible || !events.length) return null;
 
-  const event = events[index];
+  const event = events[index] ?? events[0];
 
   return (
     <div

@@ -67,6 +67,11 @@ export async function POST(
     const automation = userAutomation.automation;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev';
 
+    // Optional: embedded context passes host so billing callback can redirect
+    // back into the Shopify admin rather than the standalone dashboard.
+    const body = await request.json().catch(() => ({}));
+    const embeddedHost: string = typeof body.host === 'string' ? body.host : '';
+
     // Carry forward remaining trial days if still within trial
     let trialDays = 0;
     if (userAutomation.status === 'trial' && userAutomation.trial_ends_at) {
@@ -79,7 +84,9 @@ export async function POST(
     const accessToken = await decryptToken(userAutomation.shopify_access_token_encrypted);
     const shopify = new ShopifyClient(userAutomation.shopify_store_url, accessToken);
 
-    const returnUrl = `${appUrl}/api/billing/shopify/callback?user_automation_id=${id}`;
+    const returnUrl = embeddedHost
+      ? `${appUrl}/api/billing/shopify/callback?user_automation_id=${id}&embedded=1&host=${encodeURIComponent(embeddedHost)}`
+      : `${appUrl}/api/billing/shopify/callback?user_automation_id=${id}`;
     const isTest = process.env.NODE_ENV !== 'production';
 
     const { confirmationUrl, gid } = await shopify.createAppSubscription({

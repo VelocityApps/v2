@@ -6,12 +6,12 @@ const CSP = [
   "default-src 'self'",
   // Next.js requires unsafe-inline for its runtime scripts.
   // unsafe-eval is intentionally excluded here — it is added back only for /preview/* via middleware.ts
-  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://unpkg.com https://us-assets.i.posthog.com",
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://unpkg.com https://us-assets.i.posthog.com https://cdn.shopify.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   // Broad img-src: Shopify product images, CDNs, data URIs
   "img-src 'self' data: blob: https:",
-  // API connections: Supabase (HTTP + WS), Stripe, Sentry, PostHog
+  // API connections: Supabase (HTTP + WS), Stripe, Sentry, PostHog, Shopify
   [
     "connect-src 'self'",
     "https://*.supabase.co",
@@ -22,9 +22,13 @@ const CSP = [
     "https://*.posthog.com",
     "https://us.i.posthog.com",
     "https://us-assets.i.posthog.com",
+    "https://cdn.shopify.com",
+    "https://*.shopify.com",
   ].join(' '),
-  // Stripe's payment iframes
-  "frame-src https://js.stripe.com https://hooks.stripe.com",
+  // Stripe iframes + Shopify admin CDN
+  "frame-src https://js.stripe.com https://hooks.stripe.com https://cdn.shopify.com",
+  // By default no framing — middleware overrides this for /shopify/* routes
+  "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

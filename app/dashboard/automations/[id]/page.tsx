@@ -31,8 +31,13 @@ export default function AutomationManagementPage() {
   }, [session, id]);
 
   useEffect(() => {
-    if (searchParams.get('billing') === 'success') {
+    const billing = searchParams.get('billing');
+    if (billing === 'success') {
       toast.success('Automation activated!');
+    } else if (billing === 'declined') {
+      toast.error('Billing approval was declined. You can try again any time.');
+    } else if (billing === 'error') {
+      toast.error('Something went wrong with billing. Please try again.');
     }
   }, [searchParams]);
 
@@ -128,8 +133,9 @@ export default function AutomationManagementPage() {
 
   function renderBillingSection() {
     if (!userAutomation || !automation) return null;
-    const { status, stripe_subscription_id, trial_ends_at } = userAutomation;
+    const { status, shopify_charge_id, stripe_subscription_id, trial_ends_at, shopify_store_url } = userAutomation;
     const priceMonthly = automation.price_monthly;
+    const hasActiveSub = shopify_charge_id || stripe_subscription_id;
 
     const activateBtn = (label: string) => (
       <button onClick={handleActivate} disabled={billingLoading}
@@ -138,12 +144,22 @@ export default function AutomationManagementPage() {
       </button>
     );
 
-    const portalBtn = (label: string) => (
+    // Shopify billing — link to Shopify Admin billing settings
+    const shopifyManageLink = shopify_store_url
+      ? `https://${shopify_store_url.replace(/^https?:\/\//i, '').replace(/\/$/, '')}/admin/settings/billing`
+      : null;
+
+    const manageBtn = stripe_subscription_id ? (
       <button onClick={handlePortal} disabled={billingLoading}
         className="inline-block mt-3 px-4 py-2 bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] rounded-lg text-sm font-medium disabled:opacity-50 transition-colors">
-        {billingLoading ? 'Loading…' : label}
+        {billingLoading ? 'Loading…' : 'Manage subscription'}
       </button>
-    );
+    ) : shopifyManageLink ? (
+      <a href={shopifyManageLink} target="_blank" rel="noopener noreferrer"
+        className="inline-block mt-3 px-4 py-2 bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] rounded-lg text-sm font-medium transition-colors">
+        Manage in Shopify Admin
+      </a>
+    ) : null;
 
     if (status === 'trial') {
       const end = trial_ends_at ? new Date(trial_ends_at).getTime() : 0;
@@ -151,37 +167,37 @@ export default function AutomationManagementPage() {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--accent-bg)] border border-[var(--accent-border)]">
           <p className="text-[var(--accent-text)] font-medium">Free trial — {days} day{days !== 1 ? 's' : ''} left</p>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">Then £{priceMonthly}/month. Add a card now to continue without interruption.</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Then £{priceMonthly}/month. Activate now to continue without interruption.</p>
           {activateBtn('Activate Automation')}
         </div>
       );
     }
 
-    if (status === 'active' && stripe_subscription_id) {
+    if (status === 'active' && hasActiveSub) {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--success-bg)] border border-[var(--success-border)]">
           <p className="text-[var(--success)] font-medium">Active · £{priceMonthly}/month</p>
-          {portalBtn('Manage subscription')}
+          {manageBtn}
         </div>
       );
     }
 
-    if (status === 'paused' && !stripe_subscription_id) {
+    if (status === 'paused' && hasActiveSub) {
+      return (
+        <div className="mb-4 p-4 rounded-lg bg-[var(--warning-bg)] border border-[var(--warning-border)]">
+          <p className="text-[var(--warning)] font-medium">Paused — payment issue</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Update your payment method to reactivate.</p>
+          {manageBtn}
+        </div>
+      );
+    }
+
+    if (status === 'paused' || status === 'requires_payment') {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--warning-bg)] border border-[var(--warning-border)]">
           <p className="text-[var(--warning)] font-medium">Trial ended</p>
           <p className="text-[var(--text-secondary)] text-sm mt-1">Subscribe for £{priceMonthly}/month to reactivate.</p>
           {activateBtn('Activate Automation')}
-        </div>
-      );
-    }
-
-    if (status === 'paused' && stripe_subscription_id) {
-      return (
-        <div className="mb-4 p-4 rounded-lg bg-[var(--warning-bg)] border border-[var(--warning-border)]">
-          <p className="text-[var(--warning)] font-medium">Paused — payment issue</p>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">Update your payment method to reactivate.</p>
-          {portalBtn('Manage subscription')}
         </div>
       );
     }

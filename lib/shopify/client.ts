@@ -479,6 +479,94 @@ export class ShopifyClient {
   async updateProductTags(productId: string, tags: string): Promise<void> {
     await this.updateProduct(productId, { tags } as any);
   }
+
+  /**
+   * Create a recurring app subscription charge via Shopify Billing API.
+   * Returns the confirmation URL the merchant must visit to approve, and the GID.
+   */
+  async createAppSubscription(params: {
+    name: string;
+    returnUrl: string;
+    priceMonthly: number;
+    currencyCode?: string;
+    trialDays?: number;
+    test?: boolean;
+  }): Promise<{ confirmationUrl: string; gid: string }> {
+    const { name, returnUrl, priceMonthly, currencyCode = 'GBP', trialDays = 0, test = false } = params;
+
+    const data = await this.graphql<{
+      appSubscriptionCreate: {
+        appSubscription: { id: string; status: string } | null;
+        confirmationUrl: string | null;
+        userErrors: Array<{ field: string[]; message: string }>;
+      };
+    }>(
+      `mutation AppSubscriptionCreate(
+        $name: String!
+        $returnUrl: URL!
+        $lineItems: [AppSubscriptionLineItemInput!]!
+        $trialDays: Int
+        $test: Boolean
+      ) {
+        appSubscriptionCreate(
+          name: $name
+          returnUrl: $returnUrl
+          lineItems: $lineItems
+          trialDays: $trialDays
+          test: $test
+        ) {
+          appSubscription { id status }
+          confirmationUrl
+          userErrors { field message }
+        }
+      }`,
+      {
+        name,
+        returnUrl,
+        trialDays,
+        test,
+        lineItems: [
+          {
+            plan: {
+              appRecurringPricingDetails: {
+                price: { amount: priceMonthly.toFixed(2), currencyCode },
+                interval: 'EVERY_30_DAYS',
+              },
+            },
+          },
+        ],
+      }
+    );
+
+    const result = data.appSubscriptionCreate;
+    if (result.userErrors?.length) {
+      throw new Error(result.userErrors.map((e) => e.message).join('; '));
+    }
+    if (!result.confirmationUrl || !result.appSubscription) {
+      throw new Error('Shopify did not return a confirmation URL');
+    }
+
+    return { confirmationUrl: result.confirmationUrl, gid: result.appSubscription.id };
+  }
+
+  /**
+   * Query the status of an existing app subscription by GID.
+   */
+  async getAppSubscription(gid: string): Promise<{ id: string; status: string; name: string } | null> {
+    try {
+      const data = await this.graphql<{
+        appSubscription: { id: string; status: string; name: string } | null;
+      }>(
+        `query GetAppSubscription($id: ID!) {
+          appSubscription(id: $id) { id status name }
+        }`,
+        { id: gid }
+      );
+      return data.appSubscription;
+    } catch {
+      return null;
+    }
+  }
 }
 
 
