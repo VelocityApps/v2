@@ -6,13 +6,22 @@ import { supabase } from '@/lib/supabase';
 import AutomationCard from '@/components/automations/AutomationCard';
 import InstallModal from '@/components/automations/InstallModal';
 
-// Slugs with a full backend implementation — everything else is Coming Soon
+// All automations are fully implemented
 const LIVE_SLUGS = new Set([
   'abandoned-cart-recovery',
+  'auto-restock-alerts',
+  'auto-seo-optimization',
+  'auto-tag-products',
   'best-sellers-collection',
+  'customer-ltv-tracker',
+  'customer-segmentation',
   'low-stock-alerts',
+  'order-status-auto-updates',
+  'pinterest-stock-sync',
   'review-request-automator',
+  'sales-report-automator',
   'welcome-email-series',
+  'win-back-campaign',
 ]);
 
 interface AutomationMetrics {
@@ -53,7 +62,6 @@ function MarketplaceContent() {
         if (error) throw error;
         setAutomations(data || []);
 
-        // Fetch metrics only for live automations (skip Coming Soon)
         const liveAutomations = (data || []).filter((a: any) => LIVE_SLUGS.has(a.slug));
         const metricsResults = await Promise.allSettled(
           liveAutomations.map(async (automation: any) => {
