@@ -41,13 +41,13 @@ export default function VelocityLogo({
 
       {showText && layout === 'row' && (
         <span className={`tracking-tight leading-none ${textClassName}`}>
-          <span className={darkText ? 'text-[#202223]' : 'text-white'}>Velocity</span>
+          <span className={darkText ? 'text-[var(--text-primary)]' : 'text-white'}>Velocity</span>
           <span className="text-[#2563eb]">Apps</span>
         </span>
       )}
       {showText && layout === 'column' && (
         <div className={`text-center tracking-tight ${textClassName}`}>
-          <div className={`leading-tight ${darkText ? 'text-[#202223]' : 'text-white'}`}>Velocity</div>
+          <div className={`leading-tight ${darkText ? 'text-[var(--text-primary)]' : 'text-white'}`}>Velocity</div>
           <div className="text-[#2563eb] leading-tight">Apps</div>
         </div>
       )}
