@@ -407,7 +407,7 @@ export default function LandingPage() {
               Your Shopify store,
               <span
                 className="text-blue-400 transition-opacity duration-300"
-                style={{ opacity: heroVisible ? 1 : 0, display: 'block', minHeight: '2.5em' }}
+                style={{ opacity: heroVisible ? 1 : 0, display: 'block', height: '3em', overflow: 'hidden' }}
               >
                 {HERO_LINES[heroIndex]}
               </span>

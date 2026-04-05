@@ -49,6 +49,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    // ── Immediate app uninstall (fires the moment merchant uninstalls) ────────
+    if (topic === 'app/uninstalled') {
+      await handleAppUninstalled(shop);
+      return NextResponse.json({ success: true });
+    }
+
     // ── Description Writer: auto-generate on new product ─────────────────────
     if (topic === 'products/create') {
       // Fire-and-forget — respond 200 immediately to stay within Shopify's 5s window
@@ -314,7 +320,49 @@ Output clean semantic HTML for the Shopify product editor: one intro <p>, a <ul>
 Never use generic filler phrases. Be specific and vivid.${brandVoice ? `\n\nBrand voice: ${brandVoice}` : ''}`;
 }
 
-// ── customers/redact ─────────────────────────────────────────────────────────
+// ── app/uninstalled ──────────────────────────────���────────────────────────────
+// Fires immediately when a merchant uninstalls. Cancel automations and clear
+// the now-revoked access token. Shopify auto-cancels AppSubscriptions and will
+// fire app_subscriptions/update CANCELLED for each one — this handler just
+// makes the state change synchronous so automations stop running right away.
+
+async function handleAppUninstalled(shop: string): Promise<void> {
+  try {
+    const shopNormalized = shop.replace(/^https?:\/\//i, '').toLowerCase();
+
+    const { data: uas } = await supabaseAdmin
+      .from('user_automations')
+      .select('id')
+      .ilike('shopify_store_url', `%${shopNormalized}%`)
+      .in('status', ['active', 'trial', 'paused']);
+
+    if (!uas?.length) return;
+
+    const uaIds = uas.map((ua: any) => ua.id);
+
+    // Cancel automations and wipe the revoked token immediately
+    await supabaseAdmin
+      .from('user_automations')
+      .update({
+        status: 'cancelled',
+        shopify_access_token_encrypted: null,
+        error_message: 'App uninstalled by merchant',
+      })
+      .in('id', uaIds);
+
+    // Remove webhook registrations — Shopify already deleted them on their side
+    await supabaseAdmin
+      .from('shopify_webhooks')
+      .delete()
+      .in('user_automation_id', uaIds);
+
+    console.log(`[app/uninstalled] Cancelled ${uaIds.length} automations for ${shop}`);
+  } catch (err: any) {
+    console.error('[app/uninstalled] Error:', err.message);
+  }
+}
+
+// ── customers/redact ───────────────────────────────────���─────────────────────
 // Delete any personal data we hold for this customer (email, name).
 // Affects: abandoned_carts, scheduled_review_requests.
 

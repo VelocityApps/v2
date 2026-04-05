@@ -6,23 +6,6 @@ import { supabase } from '@/lib/supabase';
 import AutomationCard from '@/components/automations/AutomationCard';
 import InstallModal from '@/components/automations/InstallModal';
 
-// All automations are fully implemented
-const LIVE_SLUGS = new Set([
-  'abandoned-cart-recovery',
-  'auto-restock-alerts',
-  'auto-seo-optimization',
-  'auto-tag-products',
-  'best-sellers-collection',
-  'customer-ltv-tracker',
-  'customer-segmentation',
-  'low-stock-alerts',
-  'order-status-auto-updates',
-  'pinterest-stock-sync',
-  'review-request-automator',
-  'sales-report-automator',
-  'welcome-email-series',
-  'win-back-campaign',
-]);
 
 interface AutomationMetrics {
   automationId: string;
@@ -62,9 +45,8 @@ function MarketplaceContent() {
         if (error) throw error;
         setAutomations(data || []);
 
-        const liveAutomations = (data || []).filter((a: any) => LIVE_SLUGS.has(a.slug));
         const metricsResults = await Promise.allSettled(
-          liveAutomations.map(async (automation: any) => {
+          (data || []).map(async (automation: any) => {
             const response = await fetch(`/api/automations/${automation.id}/metrics`);
             if (!response.ok) return null;
             const metricsData = await response.json();
@@ -179,7 +161,6 @@ function MarketplaceContent() {
                   variant="marketplace"
                   trialAlreadyUsed={trialedAutomationIds.has(automation.id)}
                   metrics={metrics[automation.id]}
-                  comingSoon={!LIVE_SLUGS.has(automation.slug)}
                 />
               ))}
             </div>

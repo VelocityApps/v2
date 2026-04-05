@@ -25,7 +25,7 @@ export default function EmbedInitPage() {
   const host = searchParams.get('host') ?? '';
   const shop = searchParams.get('shop') ?? '';
 
-  const [mode, setMode] = useState<'signin' | 'signup'>('signup');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'verify'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -51,10 +51,10 @@ export default function EmbedInitPage() {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const redirectTo = `${window.location.origin}/shopify/embed-init?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+        const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
         if (error) throw error;
-        toast.success('Account created! Check your email to verify, then sign in.');
-        setMode('signin');
+        setMode('verify');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -84,6 +84,35 @@ export default function EmbedInitPage() {
     );
   }
 
+  if (mode === 'verify') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+          <div className="text-4xl mb-4">📧</div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Check your email</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            We sent a verification link to <strong>{email}</strong>. Click it to verify your account — you'll be signed in automatically.
+          </p>
+          <p className="text-xs text-gray-400 mb-4">
+            The link will open in a new tab. Once verified, return here and sign in.
+          </p>
+          <button
+            onClick={() => setMode('signin')}
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition-colors"
+          >
+            I've verified — sign in
+          </button>
+          <button
+            onClick={() => setMode('signup')}
+            className="w-full mt-2 py-2 text-xs text-gray-400 hover:text-gray-600"
+          >
+            Use a different email
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -91,9 +120,7 @@ export default function EmbedInitPage() {
           <div className="text-3xl mb-2">⚡</div>
           <h1 className="text-xl font-bold text-gray-900">VelocityApps</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {mode === 'signup'
-              ? 'Create an account to get started'
-              : 'Sign in to your account'}
+            {mode === 'signup' ? 'Create an account to get started' : 'Sign in to your account'}
           </p>
         </div>
 
@@ -127,11 +154,7 @@ export default function EmbedInitPage() {
             disabled={submitting}
             className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition-colors disabled:opacity-60"
           >
-            {submitting
-              ? 'Please wait…'
-              : mode === 'signup'
-              ? 'Create account'
-              : 'Sign in'}
+            {submitting ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Sign in'}
           </button>
         </form>
 
