@@ -107,6 +107,7 @@ function MarketplaceContent() {
         </div>
 
         {/* Category Filter */}
+        <h2 className="sr-only">Browse by category</h2>
         <div className="mb-8 flex gap-2 flex-wrap">
           {categories.map((category) => (
             <button
@@ -142,6 +143,9 @@ function MarketplaceContent() {
         ) : (
           <>
             {/* Automation Grid */}
+            <h2 className="sr-only">
+              {selectedCategory === 'all' ? 'All automations' : `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} automations`}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {filteredAutomations.map((automation: any) => (
                 <AutomationCard

@@ -1,8 +1,39 @@
+import type { Metadata } from 'next';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 export const revalidate = 60;
+
+const APP_URL = 'https://velocityapps.dev';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const { data: automation } = await supabaseAdmin
+    .from('automations')
+    .select('name, description, price_monthly, category')
+    .eq('slug', slug)
+    .eq('active', true)
+    .single();
+
+  if (!automation) return {};
+
+  const title = `${automation.name} for Shopify`;
+  const description = `${automation.description} Start with a 7-day free trial. No code required.`;
+  const url = `${APP_URL}/automations/${slug}`;
+
+  return {
+    title,
+    description,
+    openGraph: { title: `${title} – VelocityApps`, description, url },
+    twitter: { title: `${title} – VelocityApps`, description },
+    alternates: { canonical: url },
+  };
+}
 
 export default async function AutomationDetailPage({
   params,
@@ -22,7 +53,38 @@ export default async function AutomationDetailPage({
     notFound();
   }
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: automation.name,
+    description: automation.long_description || automation.description,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Shopify',
+    url: `${APP_URL}/automations/${slug}`,
+    offers: {
+      '@type': 'Offer',
+      price: automation.price_monthly,
+      priceCurrency: 'GBP',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: automation.price_monthly,
+        priceCurrency: 'GBP',
+        unitCode: 'MON',
+      },
+    },
+    provider: {
+      '@type': 'Organization',
+      name: 'VelocityApps',
+      url: APP_URL,
+    },
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
@@ -87,6 +149,7 @@ export default async function AutomationDetailPage({
         </div>
       </div>
     </div>
+    </>
   );
 }
 

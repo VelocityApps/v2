@@ -48,10 +48,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@velocityapps',
     title: 'VelocityApps – Shopify Automation Marketplace',
     description:
       'Browse 20+ pre-built automations for your Shopify store. Zero code required.',
-    // twitter:image falls back to og:image from opengraph-image.tsx
+  },
+  alternates: {
+    canonical: APP_URL,
   },
   robots: {
     index: true,
@@ -65,11 +68,44 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const orgJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'VelocityApps',
+    url: APP_URL,
+    logo: `${APP_URL}/icon.png`,
+    description: 'Pre-built Shopify automation marketplace. Install automations in 60 seconds, no code required.',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'support@velocityapps.dev',
+      contactType: 'customer support',
+    },
+    sameAs: [
+      'https://twitter.com/velocityapps',
+    ],
+  };
+
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'VelocityApps',
+    url: APP_URL,
+    description: 'Browse 20+ pre-built automations for your Shopify store.',
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <Analytics />
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
         <ErrorBoundary>
