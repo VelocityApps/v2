@@ -1,6 +1,7 @@
-# Launch Blockers
+# Shopify App Store Launch Checklist
 
-**Last updated:** 2026-02-28
+**Last updated:** 2026-04-06
+**Target:** Shopify App Store submission
 
 ---
 
@@ -8,67 +9,117 @@
 
 | # | Item |
 |---|------|
-| 1 | Encrypt Shopify tokens |
+| 1 | Encrypt Shopify tokens (AES-256-GCM) |
 | 2 | RLS policies (Supabase) |
 | 3 | Terms of Service page |
 | 4 | Privacy Policy page |
 | 5 | Email verification (Supabase + Resend) |
-| 6 | Password reset (forgot/reset pages, expired-link handling) |
-| 7 | **Abandoned Cart Recovery** – full 3-email sequence, real Shopify discount codes, recovery detection |
-| 8 | **Review Request Automator** – fulfillment-triggered scheduling, multi-platform review URLs, cancellation handling |
-| 9 | **Low Stock Alerts** – immediate + daily-digest modes, email + Slack + both, per-product cooldown |
-| 10 | **Best Sellers Collection** – real sales ranking, diff-based collection sync, fixed revenue/pagination |
-| 11 | **Pinterest Stock Sync** (was already complete) |
-| 12 | **Welcome Email Series** – first-time buyer detection, 3-email sequence, optional discount code, cron-driven |
-| 13 | Stripe webhook handler (checkout, subscription updated/deleted, invoice paid) |
-| 14 | Vercel cron job config (`vercel.json` – runs `/api/cron` hourly) |
-| 15 | Sentry error monitoring (installed, configured, global error boundary) |
-| 16 | Automation registry fix (`load-all.ts` – all automations now load in webhook/cron/install routes) |
-| 17 | `welcome_email_series` DB table + config_schema migrations applied |
+| 6 | Password reset flow |
+| 7 | **Abandoned Cart Recovery** – 3-email sequence, discount codes, recovery detection |
+| 8 | **Review Request Automator** – fulfillment-triggered, multi-platform, cancellation handling |
+| 9 | **Low Stock Alerts** – immediate + daily-digest, email + Slack, per-product cooldown |
+| 10 | **Best Sellers Collection** – real sales ranking, diff-based collection sync |
+| 11 | **Pinterest Stock Sync** |
+| 12 | **Welcome Email Series** – first-time buyer detection, 3-email sequence, cron-driven |
+| 13 | Shopify Billing API (AppSubscription per automation — not Stripe) |
+| 14 | Vercel cron job (`vercel.json` – runs `/api/cron` hourly) |
+| 15 | Sentry error monitoring |
+| 16 | Automation registry (`load-all.ts` – all automations load in webhook/cron/install routes) |
+| 17 | GDPR webhooks — `customers/data_request`, `customers/redact`, `shop/redact` |
+| 18 | Embedded app (App Bridge 3.x, `/shopify/` route group, no nav chrome) |
+| 19 | Install entry point (`/api/auth/shopify/install` — HMAC-validated, embedded-aware) |
+| 20 | CSP + frame-ancestors configured for `admin.shopify.com` and `*.myshopify.com` |
+| 21 | `app/uninstalled` webhook — cancels automations and clears revoked tokens immediately |
+| 22 | Embedded signup UX — `emailRedirectTo` brings merchant back after verification |
+| 23 | Coming soon labels removed — all automations show "Add to Store" |
 
 ---
 
-## ❌ Remaining (2 blockers)
+## ❌ Remaining
 
-### 1. Production Environment Variables on Vercel
+### 🔴 Priority 1 — Partner Dashboard config (required before review)
 
-Set these in the Vercel dashboard before deploying:
-
-| Variable | Status |
-|----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Set locally ✓ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Set locally ✓ |
-| `SUPABASE_SERVICE_ROLE_KEY` | Set locally ✓ |
-| `SHOPIFY_CLIENT_ID` | Set locally ✓ |
-| `SHOPIFY_CLIENT_SECRET` | Set locally ✓ |
-| `SHOPIFY_WEBHOOK_SECRET` | Set locally ✓ |
-| `STRIPE_SECRET_KEY` | Set locally ✓ |
-| `STRIPE_WEBHOOK_SECRET` | Set locally ✓ |
-| `RESEND_API_KEY` | Set locally ✓ |
-| `FROM_EMAIL` | Set locally ✓ |
-| `SUPPORT_ALERT_EMAILS` | Set locally ✓ |
-| `CRON_SECRET` | Set locally ✓ |
-| `ENCRYPTION_KEY` | **Verify this is set** |
-| `NEXT_PUBLIC_APP_URL` | Set to production URL (https://velocityapps.dev) |
-| `NEXT_PUBLIC_SENTRY_DSN` | **Not set** – create account at sentry.io first |
-| `SENTRY_ORG` | **Not set** |
-| `SENTRY_PROJECT` | **Not set** |
-| `SENTRY_AUTH_TOKEN` | **Not set** (only needed for source map uploads in CI) |
+- [ ] **App URL** → `https://velocityapps.dev/api/auth/shopify/install`
+- [ ] **Allowed redirect URL** → `https://velocityapps.dev/api/auth/shopify/callback`
+- [ ] **Embedded in admin** → Yes
+- [ ] **Register mandatory webhooks** in Partner dashboard:
+  - `app/uninstalled` → `https://velocityapps.dev/api/webhooks/shopify`
+  - `customers/data_request` → `https://velocityapps.dev/api/webhooks/shopify`
+  - `customers/redact` → `https://velocityapps.dev/api/webhooks/shopify`
+  - `shop/redact` → `https://velocityapps.dev/api/webhooks/shopify`
+- [ ] **Scopes declared** in Partner dashboard match what the app requests:
+  `read_products`, `write_products`, `read_orders`, `read_inventory`, `write_inventory`, `read_customers`, `read_content`, `write_content`, `write_price_rules`, `write_discounts`
 
 **Time:** 15 minutes
 
 ---
 
-### 2. Stripe Webhooks – End-to-End Test
+### 🔴 Priority 2 — App listing (required before submitting for review)
 
-The handler code is complete. What's needed:
-- [ ] Register the webhook endpoint in Stripe Dashboard → `https://velocityapps.dev/api/webhooks/stripe`
-- [ ] Test with Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
-- [ ] Trigger test events: `stripe trigger checkout.session.completed`
-- [ ] Verify subscription status updates in Supabase
-- [ ] Test `customer.subscription.deleted` (cancellation → downgrade to free)
+- [ ] **App icon** — 1024×1024 PNG, no rounded corners (Shopify adds them)
+- [ ] **App name** — confirm final name shown on App Store
+- [ ] **Tagline** — one sentence, max 100 chars
+- [ ] **Description** — up to 2800 chars; lead with the problem you solve, then features
+- [ ] **Screenshots** — minimum 3, max 10 (1600×900 desktop or 900×1600 mobile)
+- [ ] **Support email** — e.g. `support@velocityapps.dev`
+- [ ] **Privacy policy URL** — `https://velocityapps.dev/privacy`
+- [ ] **Pricing** — per-automation pricing listed on the listing must match in-app pricing
 
-**Time:** 30 minutes
+**Time:** 1–2 hours (most time will be screenshots)
+
+---
+
+### 🟡 Priority 3 — End-to-end testing on a dev store
+
+- [ ] Install app on a Shopify development store via the Partner dashboard
+- [ ] Complete the embedded OAuth + account creation flow
+- [ ] Install one automation and verify billing prompt appears
+- [ ] Approve billing and confirm automation status goes `active` in Supabase
+- [ ] Trigger a test webhook (e.g. set a product out of stock) and verify automation fires
+- [ ] Uninstall the app and verify `app/uninstalled` fires — automations marked `cancelled` in Supabase
+- [ ] Test GDPR webhooks using the Partner dashboard test tool
+
+**Time:** 1 hour
+
+---
+
+### 🟡 Priority 4 — Production environment variables
+
+Verify these are all set in the Vercel dashboard:
+
+| Variable | Status |
+|----------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✓ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✓ |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✓ |
+| `SHOPIFY_CLIENT_ID` | ✓ |
+| `SHOPIFY_CLIENT_SECRET` | ✓ |
+| `SHOPIFY_WEBHOOK_SECRET` | ✓ |
+| `RESEND_API_KEY` | ✓ |
+| `FROM_EMAIL` | ✓ |
+| `SUPPORT_ALERT_EMAILS` | ✓ |
+| `CRON_SECRET` | ✓ |
+| `ENCRYPTION_KEY` | **verify** |
+| `NEXT_PUBLIC_APP_URL` | must be `https://velocityapps.dev` |
+| `NEXT_PUBLIC_SHOPIFY_CLIENT_ID` | needed for App Bridge client-side init |
+| `NEXT_PUBLIC_SENTRY_DSN` | optional — set up sentry.io if desired |
+
+**Note:** `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` are no longer needed for the App Store version — billing goes through Shopify.
+
+**Time:** 10 minutes
+
+---
+
+### 🟢 Priority 5 — Submit for review
+
+- [ ] Run through Shopify's pre-submission checklist in the Partner dashboard
+- [ ] Submit app for review
+- [ ] Monitor for reviewer feedback (typical turnaround: 5–10 business days)
+- [ ] Common rejection reasons to pre-empt:
+  - GDPR webhooks not responding (they'll send test payloads)
+  - Billing not activating correctly
+  - App crashes during install flow
+  - Missing support contact
 
 ---
 
@@ -76,31 +127,23 @@ The handler code is complete. What's needed:
 
 | Status | Count |
 |--------|-------|
-| ✅ Done | 17 |
-| ❌ Remaining | 2 |
+| ✅ Done | 23 |
+| ❌ Remaining | 5 tasks |
 
-**All 15 automations complete. 2 remaining items are ops/infra tasks — no more code changes needed to launch.**
+**No more code changes needed. Everything remaining is config, listing content, and testing.**
 
 ---
 
-## 🗺️ Post-Launch Roadmap
+## 🗺️ Post-Launch: Automations Pending Third-Party Integrations
 
-### Automations – Pending Third-Party Integrations
+These are in the marketplace but need external API work before they're functional:
 
-These 5 automations are built as "Coming Soon" placeholders in the marketplace. Each requires external API credentials that merchants must supply.
+| Automation | Blocker | Est. effort |
+|---|---|---|
+| **Social Media Auto-Post** | Facebook/Instagram Graph API + per-merchant OAuth | 2–3 days |
+| **Google Shopping Feed Sync** | Google Merchant Center API + OAuth per merchant | 2 days |
+| **Competitor Price Monitoring** | Web scraping legally grey; needs paid scraping API | 1–2 days |
+| **Product Image Optimizer** | Image pipeline (Sharp + re-upload to Shopify CDN) | 1 day |
+| **Inventory Sync Across Channels** | Amazon SP-API / eBay / Etsy (start Amazon-only) | 3–5 days |
 
-| Automation | Slug | Blocker | Notes |
-|---|---|---|---|
-| **Social Media Auto-Post** | `social-media-auto-post` | Facebook/Instagram Graph API OAuth per merchant; Twitter (X) API v2 | Each merchant needs their own app credentials — significant per-user OAuth setup |
-| **Google Shopping Feed Sync** | `google-shopping-feed-sync` | Google Merchant Center API + OAuth per merchant | Need to register as a Google partner; per-store OAuth flow |
-| **Competitor Price Monitoring** | `competitor-price-monitoring` | Web scraping legally grey; blocked by bot protection on most retail sites | Consider using a paid scraping API (ScraperAPI, Bright Data) |
-| **Product Image Optimizer** | `product-image-optimizer` | Image processing pipeline needed (Sharp, Cloudinary, or imgix) | Images must be downloaded, processed, re-uploaded to Shopify CDN |
-| **Inventory Sync Across Channels** | `inventory-sync-channels` | Amazon SP-API, eBay API, Etsy API — each requires separate OAuth + app approval | High complexity; consider launching Amazon-only first |
-
-### Implementation order (when ready)
-
-1. **Product Image Optimizer** — self-contained, no per-user OAuth. Use `sharp` + re-upload to Shopify via Admin API. Estimated: 1 day.
-2. **Social Media Auto-Post** — start with Facebook/Instagram only (Graph API). Estimated: 2–3 days.
-3. **Google Shopping Feed Sync** — generate a static feed URL; simpler than full sync. Estimated: 2 days.
-4. **Inventory Sync Across Channels** — start with Amazon SP-API only. Estimated: 3–5 days.
-5. **Competitor Price Monitoring** — integrate a paid scraping service. Estimated: 1–2 days.
+**Recommended order:** Product Image Optimizer → Social Media → Google Shopping → Inventory Sync → Competitor Monitoring
