@@ -9,6 +9,8 @@ export interface ShopifyProduct {
   id: string;
   title: string;
   handle: string;
+  body_html?: string;
+  tags?: string;
   variants: Array<{
     id: string;
     inventory_quantity: number;

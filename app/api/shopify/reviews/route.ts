@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
   for (const ns of REVIEW_NAMESPACES) {
     try {
-      const resp = await (shopify as any).request<{ metafields: any[] }>(
+      const resp = await (shopify as any).request(
         `/products/${productId}/metafields.json?namespace=${ns}&limit=250`
       );
       const metafields: any[] = resp.metafields ?? [];
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
   // Fallback: try the Shopify Product Reviews REST endpoint (only available with the app)
   if (reviewTexts.length === 0) {
     try {
-      const resp = await (shopify as any).request<{ product_reviews: any[] }>(
+      const resp = await (shopify as any).request(
         `/products/${productId}/product_reviews.json?limit=50`
       );
       for (const r of resp.product_reviews ?? []) {

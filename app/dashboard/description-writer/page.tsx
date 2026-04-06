@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -49,7 +51,7 @@ const LANGUAGES = [
   { code: 'ko', label: 'Korean' },
 ];
 
-export default function DescriptionWriterPage() {
+function DescriptionWriterPage() {
   const { session, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -775,4 +777,8 @@ export default function DescriptionWriterPage() {
       )}
     </div>
   );
+}
+
+export default function DescriptionWriterPageWrapper() {
+  return <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>}><DescriptionWriterPage /></Suspense>;
 }
