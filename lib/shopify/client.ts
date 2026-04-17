@@ -332,15 +332,21 @@ export class ShopifyClient {
    */
   async addProductsToCollection(collectionId: string, productIds: string[]): Promise<void> {
     for (const productId of productIds) {
-      await this.request(`/collects.json`, {
-        method: 'POST',
-        body: JSON.stringify({
-          collect: {
-            collection_id: collectionId,
-            product_id: productId,
-          },
-        }),
-      });
+      try {
+        await this.request(`/collects.json`, {
+          method: 'POST',
+          body: JSON.stringify({
+            collect: {
+              collection_id: collectionId,
+              product_id: productId,
+            },
+          }),
+        });
+      } catch (err: any) {
+        // Skip if product is already in the collection
+        if (err?.message?.includes('already exists')) continue;
+        throw err;
+      }
     }
   }
 
@@ -348,14 +354,19 @@ export class ShopifyClient {
    * Remove all products from collection
    */
   async clearCollection(collectionId: string): Promise<void> {
-    const collects = await this.request<{ collects: Array<{ id: string }> }>(
-      `/collects.json?collection_id=${collectionId}`
-    );
-    
-    for (const collect of collects.collects) {
-      await this.request(`/collects/${collect.id}.json`, {
-        method: 'DELETE',
-      });
+    let page = 1;
+    while (true) {
+      const collects = await this.request<{ collects: Array<{ id: string }> }>(
+        `/collects.json?collection_id=${collectionId}&limit=250&page=${page}`
+      );
+      if (!collects.collects.length) break;
+      for (const collect of collects.collects) {
+        await this.request(`/collects/${collect.id}.json`, {
+          method: 'DELETE',
+        });
+      }
+      if (collects.collects.length < 250) break;
+      page++;
     }
   }
 
@@ -373,10 +384,17 @@ export class ShopifyClient {
    * Get products in a collection
    */
   async getCollectionProducts(collectionId: string): Promise<Array<{ id: string }>> {
-    const collects = await this.request<{ collects: Array<{ product_id: string }> }>(
-      `/collects.json?collection_id=${collectionId}`
-    );
-    return collects.collects.map(c => ({ id: c.product_id }));
+    const all: Array<{ id: string }> = [];
+    let page = 1;
+    while (true) {
+      const collects = await this.request<{ collects: Array<{ product_id: string }> }>(
+        `/collects.json?collection_id=${collectionId}&limit=250&page=${page}`
+      );
+      all.push(...collects.collects.map(c => ({ id: c.product_id })));
+      if (collects.collects.length < 250) break;
+      page++;
+    }
+    return all;
   }
 
   /**
