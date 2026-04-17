@@ -43,11 +43,24 @@ export async function GET(request: NextRequest) {
     // For now, we'll use a secure cookie to pass token to frontend
     // In production, consider storing in database immediately
 
-    // Parse state: nonce:installSlug:source:encodedHost
-    // encodedHost is present when the install was initiated from the App Store
+    // Parse state — expected to be base64url-encoded JSON produced by the install route.
     const oauthState = searchParams.get('state') ?? '';
-    const [stateNonce, installSlug = '', source = '', encodedHost = ''] = oauthState.split(':');
-    const embeddedHost = encodedHost ? decodeURIComponent(encodedHost) : (searchParams.get('host') ?? '');
+    let stateNonce: string;
+    let installSlug: string = '';
+    let source: string = '';
+    let embeddedHost: string = searchParams.get('host') ?? '';
+
+    try {
+      const parsed = JSON.parse(Buffer.from(oauthState, 'base64url').toString());
+      stateNonce = parsed.nonce ?? '';
+      // embedded:true means install was initiated from the App Store / Partner dashboard
+      if (parsed.embedded) source = 'embedded';
+      embeddedHost = parsed.host || embeddedHost;
+    } catch {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding?shopify_auth_error=${encodeURIComponent('Invalid OAuth state — please try again')}`
+      );
+    }
 
     // Verify nonce matches what we set in the authorize step
     const storedNonce = request.cookies.get('shopify_oauth_nonce')?.value;

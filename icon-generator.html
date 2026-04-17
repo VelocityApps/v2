@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VelocityApps Icon Generator</title>
+  <style>
+    body { background: #111827; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: sans-serif; gap: 24px; }
+    canvas { box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+    button { background: #0ea5e9; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #0284c7; }
+    p { color: #94a3b8; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <canvas id="icon" width="1200" height="1200"></canvas>
+  <button onclick="download()">Download velocityapps-icon.png</button>
+  <p>1200 × 1200 px — no rounded corners (Shopify adds them)</p>
+
+  <script>
+    const canvas = document.getElementById('icon');
+    const ctx = canvas.getContext('2d');
+    const S = 1200;
+    const cx = S / 2;
+    const cy = S / 2;
+
+    // ── Background ──────────────────────────────────────────────
+    const bg = ctx.createRadialGradient(cx, cy - 100, 80, cx, cy, 700);
+    bg.addColorStop(0, '#0d2340');
+    bg.addColorStop(0.5, '#091a30');
+    bg.addColorStop(1, '#060e1c');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, S, S);
+
+    // ── Glow bloom behind mark ───────────────────────────────────
+    const bloom = ctx.createRadialGradient(cx, cy, 50, cx, cy, 480);
+    bloom.addColorStop(0, 'rgba(56, 200, 255, 0.18)');
+    bloom.addColorStop(0.5, 'rgba(56, 200, 255, 0.06)');
+    bloom.addColorStop(1, 'rgba(56, 200, 255, 0)');
+    ctx.fillStyle = bloom;
+    ctx.fillRect(0, 0, S, S);
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function setStroke(color, width, blur = 0, blurColor = color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.shadowColor = blurColor;
+      ctx.shadowBlur = blur;
+    }
+    function clearShadow() { ctx.shadowBlur = 0; }
+
+    // ── V mark dimensions ────────────────────────────────────────
+    // Left arm: top-left → bottom-center
+    // Right arm: bottom-center → top-right (becomes arrow)
+    // Speed lines: horizontal, from mid-right outward
+
+    const vBottom = { x: cx - 30, y: cy + 260 };  // bottom tip of V
+    const vTopLeft = { x: cx - 310, y: cy - 260 }; // top-left corner
+    const arrowTip = { x: cx + 220, y: cy - 320 }; // arrow tip (top-right)
+    const arrowBase = { x: cx + 50, y: cy - 60 };  // where right arm meets arrow base
+
+    const lineGap = 36;  // gap between parallel strokes
+    const lineCount = 3;
+
+    // Compute unit normals for offsetting parallel lines
+    function norm(ax, ay, bx, by) {
+      const dx = bx - ax, dy = by - ay;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      return { nx: -dy/len, ny: dx/len };
+    }
+
+    const cyanBright  = '#7ee8fa';
+    const cyanMid     = '#38b8e8';
+    const cyanDeep    = '#1a6fa8';
+    const navyDark    = '#0d2d52';
+
+    // ── Draw parallel lines for an arm ──────────────────────────
+    function drawArm(x1, y1, x2, y2, lineW, blur) {
+      const { nx, ny } = norm(x1, y1, x2, y2);
+      for (let i = 0; i < lineCount; i++) {
+        const offset = (i - (lineCount - 1) / 2) * lineGap;
+        const ox = nx * offset, oy = ny * offset;
+        // colour: outermost line darkest, innermost brightest
+        const t = i / (lineCount - 1); // 0 = left/outer, 1 = right/inner
+        const colors = [cyanDeep, cyanMid, cyanBright];
+        setStroke(colors[i], lineW, blur, cyanBright);
+        ctx.beginPath();
+        ctx.moveTo(x1 + ox, y1 + oy);
+        ctx.lineTo(x2 + ox, y2 + oy);
+        ctx.stroke();
+      }
+      clearShadow();
+    }
+
+    // ── Left arm (triple parallel) ───────────────────────────────
+    ctx.lineCap = 'round';
+    drawArm(vTopLeft.x, vTopLeft.y, vBottom.x, vBottom.y, 22, 18);
+
+    // ── Right arm (triple parallel, from bottom to arrow base) ──
+    drawArm(vBottom.x, vBottom.y, arrowBase.x, arrowBase.y, 22, 18);
+
+    // ── Arrow head ───────────────────────────────────────────────
+    // Direction of right arm continued upward
+    const armDx = arrowBase.x - vBottom.x;
+    const armDy = arrowBase.y - vBottom.y;
+    const armLen = Math.sqrt(armDx*armDx + armDy*armDy);
+    const ux = armDx / armLen, uy = armDy / armLen; // unit along arm
+    const perpX = -uy, perpY = ux;                   // perp
+
+    const arrowShaftEnd = { x: arrowTip.x - ux * 90, y: arrowTip.y - uy * 90 };
+    const headWidth = 90;
+
+    // Shaft (single bright line)
+    setStroke(cyanBright, 22, 30, cyanBright);
+    ctx.beginPath();
+    ctx.moveTo(arrowBase.x, arrowBase.y);
+    ctx.lineTo(arrowShaftEnd.x, arrowShaftEnd.y);
+    ctx.stroke();
+    clearShadow();
+
+    // Arrowhead triangle
+    ctx.beginPath();
+    ctx.moveTo(arrowTip.x, arrowTip.y);
+    ctx.lineTo(arrowShaftEnd.x + perpX * headWidth, arrowShaftEnd.y + perpY * headWidth);
+    ctx.lineTo(arrowShaftEnd.x - perpX * headWidth, arrowShaftEnd.y - perpY * headWidth);
+    ctx.closePath();
+    const arrowGrad = ctx.createLinearGradient(arrowShaftEnd.x, arrowShaftEnd.y, arrowTip.x, arrowTip.y);
+    arrowGrad.addColorStop(0, cyanMid);
+    arrowGrad.addColorStop(1, cyanBright);
+    ctx.fillStyle = arrowGrad;
+    ctx.shadowColor = cyanBright;
+    ctx.shadowBlur = 40;
+    ctx.fill();
+    clearShadow();
+
+    // ── Speed lines (horizontal, right side) ─────────────────────
+    const speedOriginX = cx + 60;
+    const speedOriginY = cy + 60;
+    const speedLines = [
+      { y: -10, len: 130, w: 10 },
+      { y: 20,  len: 190, w: 8  },
+      { y: 48,  len: 145, w: 6  },
+      { y: 72,  len: 100, w: 5  },
+    ];
+
+    speedLines.forEach(({ y, len, w }, i) => {
+      const sy = speedOriginY + y;
+      const grad = ctx.createLinearGradient(speedOriginX, sy, speedOriginX + len, sy);
+      grad.addColorStop(0, cyanMid);
+      grad.addColorStop(1, 'rgba(56, 184, 232, 0)');
+      setStroke(grad, w, 10, cyanMid);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(speedOriginX, sy);
+      ctx.lineTo(speedOriginX + len, sy);
+      ctx.stroke();
+    });
+    clearShadow();
+
+    function download() {
+      const a = document.createElement('a');
+      a.download = 'velocityapps-icon.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    }
+  </script>
+</body>
+</html>

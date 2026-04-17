@@ -1,10 +1,15 @@
 /**
  * Rate Limiting Library
- * 
+ *
  * Tracks user requests to prevent abuse.
  * Uses in-memory Map for simplicity (can be upgraded to Redis in production).
- * 
+ *
  * Limits: 5 generations per minute per user
+ *
+ * TODO: Migrate rate limiter storage from in-memory Map to Redis (e.g. Upstash).
+ * The current implementation resets on every cold start / deploy, which means
+ * rate limit windows do not persist across serverless function instances and
+ * burst traffic can bypass limits on multi-instance deployments.
  */
 
 interface RateLimitEntry {

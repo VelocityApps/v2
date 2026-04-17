@@ -333,7 +333,7 @@ async function handleAppUninstalled(shop: string): Promise<void> {
     const { data: uas } = await supabaseAdmin
       .from('user_automations')
       .select('id')
-      .ilike('shopify_store_url', `%${shopNormalized}%`)
+      .or(`shopify_store_url.eq.${shopNormalized},shopify_store_url.eq.https://${shopNormalized}`)
       .in('status', ['active', 'trial', 'paused']);
 
     if (!uas?.length) return;
@@ -377,7 +377,7 @@ async function handleCustomerRedact(payload: any, shop: string): Promise<void> {
     const { data: uas } = await supabaseAdmin
       .from('user_automations')
       .select('id')
-      .ilike('shopify_store_url', `%${shopNormalized}%`);
+      .or(`shopify_store_url.eq.${shopNormalized},shopify_store_url.eq.https://${shopNormalized}`);
 
     if (!uas?.length) return;
 
@@ -415,7 +415,7 @@ async function handleShopRedact(shop: string): Promise<void> {
     const { data: uas } = await supabaseAdmin
       .from('user_automations')
       .select('id')
-      .ilike('shopify_store_url', `%${shopNormalized}%`);
+      .or(`shopify_store_url.eq.${shopNormalized},shopify_store_url.eq.https://${shopNormalized}`);
 
     if (!uas?.length) return;
 

@@ -63,10 +63,11 @@ export async function GET(request: NextRequest) {
   }
 
   const nonce = crypto.randomBytes(16).toString('hex');
-  // State format: nonce::embedded:encodedHost
-  // Slot 2 (installSlug) is empty; slot 3 is "embedded" marker; slot 4 is host
-  const encodedHost = host ? encodeURIComponent(host) : '';
-  const state = `${nonce}::embedded:${encodedHost}`;
+  // State is base64url-encoded JSON — more robust than colon-delimited strings
+  // and safely handles edge cases where the host value itself contains colons.
+  const state = Buffer.from(
+    JSON.stringify({ nonce, embedded: true, host: host ?? '' })
+  ).toString('base64url');
 
   const scopes = [
     'read_products',

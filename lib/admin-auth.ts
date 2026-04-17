@@ -31,13 +31,15 @@ export function verifyAdminPassword(request: NextRequest): boolean {
 
   const provided = authHeader.slice(7);
 
+  // Hash both values with SHA-256 before comparing so the comparison is on
+  // fixed-length digests — this prevents length-based timing leaks and avoids
+  // exposing the raw env var value through side channels.
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(provided),
-      Buffer.from(adminPassword),
-    );
+    const hashProvided = crypto.createHash('sha256').update(provided).digest();
+    const hashExpected = crypto.createHash('sha256').update(adminPassword).digest();
+    return crypto.timingSafeEqual(hashProvided, hashExpected);
   } catch {
-    // Buffers differ in length — definitely not equal
+    // Should never happen with sha256 digests, but guard defensively
     return false;
   }
 }

@@ -120,6 +120,11 @@ function generateState(): string {
   return require('crypto').randomBytes(32).toString('hex');
 }
 
+/** Identifies which encryption key was used to encrypt a token blob.
+ *  Increment when rotating ENCRYPTION_KEY so old tokens can be re-encrypted
+ *  before the previous key is retired. */
+const KEY_VERSION = 'v1';
+
 /**
  * Encrypt Shopify access token for storage
  */
@@ -143,6 +148,7 @@ export async function encryptToken(token: string): Promise<string> {
   const authTag = cipher.getAuthTag();
 
   return JSON.stringify({
+    keyVersion: KEY_VERSION,
     encrypted,
     iv: iv.toString('hex'),
     authTag: authTag.toString('hex'),
@@ -164,6 +170,14 @@ export async function decryptToken(encryptedToken: string): Promise<string> {
 
     if (!data.authTag) {
       throw new Error('Token missing authentication tag — data is corrupted or tampered');
+    }
+
+    // keyVersion identifies which key was used; absent on legacy tokens → assume v1.
+    // When rotating keys, check this field to select the correct key material.
+    const keyVersion: string = data.keyVersion ?? 'v1';
+    if (keyVersion !== KEY_VERSION) {
+      // Log so ops can identify tokens that need re-encryption after a key rotation.
+      console.warn(`[decryptToken] Token encrypted with key version ${keyVersion}, current version is ${KEY_VERSION}`);
     }
 
     const crypto = require('crypto');
