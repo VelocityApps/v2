@@ -64,11 +64,11 @@ export default async function AutomationDetailPage({
     offers: {
       '@type': 'Offer',
       price: automation.price_monthly,
-      priceCurrency: 'GBP',
+      priceCurrency: 'USD',
       priceSpecification: {
         '@type': 'UnitPriceSpecification',
         price: automation.price_monthly,
-        priceCurrency: 'GBP',
+        priceCurrency: 'USD',
         unitCode: 'MON',
       },
     },
@@ -134,7 +134,7 @@ export default async function AutomationDetailPage({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-3xl font-bold mb-1">
-                  £{automation.price_monthly}/month
+                  ${automation.price_monthly}/month
                 </div>
                 <p className="text-gray-400 text-sm">Per automation</p>
               </div>

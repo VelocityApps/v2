@@ -94,11 +94,11 @@ export default function AutomationCard({
           <div className="mb-4 space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
               {trialAlreadyUsed ? (
-                <span className="text-sm text-[#6d7175]">£{automation.price_monthly}/month — no trial available</span>
+                <span className="text-sm text-[#6d7175]">${automation.price_monthly}/month — no trial available</span>
               ) : (
                 <>
                   <span className="px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#2563eb] text-xs font-medium">7-day free trial</span>
-                  <span className="text-sm text-[#6d7175]">then £{automation.price_monthly}/mo</span>
+                  <span className="text-sm text-[#6d7175]">then ${automation.price_monthly}/mo</span>
                 </>
               )}
             </div>

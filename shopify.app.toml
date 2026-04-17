@@ -1,18 +1,23 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "db13fdd2d4ebf003e30f20820cf87ad0"
 name = "VelocityApps"
-client_id = "2e882a78b51133e4c2f52f3f10972c47"
-application_url = "https://velocityapps.dev"
-embedded = false
-
-[access_scopes]
-scopes = "read_products,write_products,read_orders,read_inventory,write_inventory,read_customers,read_content,write_content,write_price_rules,write_discounts"
-
-[auth]
-redirect_urls = [
-  "https://velocityapps.dev/api/auth/shopify/callback"
-]
-
-[webhooks]
-api_version = "2025-01"
+application_url = "https://velocityapps.dev/api/auth/shopify/install"
+embedded = true
 
 [build]
 automatically_update_urls_on_dev = false
+
+[webhooks]
+api_version = "2026-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "https://velocityapps.dev/api/webhooks/shopify"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_content,read_customers,read_inventory,read_orders,read_products,write_content,write_discounts,write_inventory,write_price_rules,write_products"
+
+[auth]
+redirect_urls = [ "https://velocityapps.dev/api/auth/shopify/callback" ]

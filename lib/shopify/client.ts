@@ -494,7 +494,7 @@ export class ShopifyClient {
     trialDays?: number;
     test?: boolean;
   }): Promise<{ confirmationUrl: string; gid: string }> {
-    const { name, returnUrl, priceMonthly, currencyCode = 'GBP', trialDays = 0, test = false } = params;
+    const { name, returnUrl, priceMonthly, currencyCode = 'USD', trialDays = 0, test = false } = params;
 
     const data = await this.graphql<{
       appSubscriptionCreate: {

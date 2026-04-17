@@ -9,12 +9,12 @@ import ExitIntentPopup from '@/components/ExitIntentPopup';
 import ActivityFeed from '@/components/ActivityFeed';
 
 const AUTOMATIONS = [
-  { icon: '🛒', name: 'Abandoned Cart Recovery', category: 'Revenue', price: 29, roi: 'Recover up to 15% of abandoned carts' },
-  { icon: '⭐', name: 'Review Request Automator', category: 'Social proof', price: 19, roi: 'Get 3× more reviews on autopilot' },
-  { icon: '📦', name: 'Low Stock Alerts', category: 'Inventory', price: 34, roi: 'Save ~5 hrs/week on stock checks' },
-  { icon: '🏆', name: 'Best Sellers Collection', category: 'Merchandising', price: 15, roi: 'Keep top sellers front and centre' },
-  { icon: '✉️', name: 'Welcome Email Series', category: 'Retention', price: 24, roi: 'Convert new subscribers 22% better' },
-  { icon: '🔁', name: 'Win-Back Campaign', category: 'Retention', price: 29, roi: 'Win back 1 in 5 lapsed customers' },
+  { icon: '🛒', name: 'Abandoned Cart Recovery', category: 'Revenue', price: 36, roi: 'Recover up to 15% of abandoned carts' },
+  { icon: '⭐', name: 'Review Request Automator', category: 'Social proof', price: 24, roi: 'Get 3× more reviews on autopilot' },
+  { icon: '📦', name: 'Low Stock Alerts', category: 'Inventory', price: 42, roi: 'Save ~5 hrs/week on stock checks' },
+  { icon: '🏆', name: 'Best Sellers Collection', category: 'Merchandising', price: 19, roi: 'Keep top sellers front and centre' },
+  { icon: '✉️', name: 'Welcome Email Series', category: 'Retention', price: 30, roi: 'Convert new subscribers 22% better' },
+  { icon: '🔁', name: 'Win-Back Campaign', category: 'Retention', price: 36, roi: 'Win back 1 in 5 lapsed customers' },
 ];
 
 const FEATURES = [
@@ -92,7 +92,7 @@ function RoiCalculator() {
   const annualROI = annualValue - annualCost;
 
   const fmt = (n: number) =>
-    n >= 1000 ? `£${(n / 1000).toFixed(1)}k` : `£${n}`;
+    n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n}`;
 
   return (
     <section className="py-20 border-b border-[var(--border)]">
@@ -117,14 +117,14 @@ function RoiCalculator() {
                 className="w-full accent-blue-500 cursor-pointer"
               />
               <div className="flex justify-between text-xs text-[var(--text-muted)] mt-1">
-                <span>£1k</span><span>£200k</span>
+                <span>$1k</span><span>$200k</span>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
                 <label className="text-sm font-semibold text-[var(--text-primary)]">Average order value</label>
-                <span className="text-sm font-bold text-[var(--accent)]">£{aov}</span>
+                <span className="text-sm font-bold text-[var(--accent)]">${aov}</span>
               </div>
               <input
                 type="range" min={10} max={500} step={5}
@@ -133,7 +133,7 @@ function RoiCalculator() {
                 className="w-full accent-blue-500 cursor-pointer"
               />
               <div className="flex justify-between text-xs text-[var(--text-muted)] mt-1">
-                <span>£10</span><span>£500</span>
+                <span>$10</span><span>$500</span>
               </div>
             </div>
           </div>
@@ -258,16 +258,16 @@ function PricingSection({ session }: { session: any }) {
             <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">Starter</h3>
             <p className="text-sm text-[var(--text-secondary)] mb-6">Pick only what you need.</p>
             <div className="mb-4">
-              <span className="text-4xl font-extrabold text-[var(--text-primary)]">from £15</span>
+              <span className="text-4xl font-extrabold text-[var(--text-primary)]">from $19</span>
               <span className="text-[var(--text-secondary)] ml-1">/ automation / mo</span>
             </div>
             <div className="mb-6 grid grid-cols-2 gap-x-4 gap-y-1.5">
               {[
-                ['Best Sellers Collection', '£15'],
-                ['Review Request Automator', '£19'],
-                ['Welcome Email Series', '£24'],
-                ['Abandoned Cart Recovery', '£29'],
-                ['Low Stock Alerts', '£34'],
+                ['Best Sellers Collection', '$19'],
+                ['Review Request Automator', '$24'],
+                ['Welcome Email Series', '$30'],
+                ['Abandoned Cart Recovery', '$36'],
+                ['Low Stock Alerts', '$42'],
               ].map(([name, price]) => (
                 <div key={name} className="flex items-center justify-between text-xs text-[var(--text-secondary)] col-span-2 border-b border-[var(--border)] py-1 last:border-0">
                   <span>{name}</span>
@@ -308,11 +308,11 @@ function PricingSection({ session }: { session: any }) {
             <p className="text-sm text-blue-200 mb-6">Everything, for one flat price.</p>
             <div className="mb-1">
               <span className="text-4xl font-extrabold text-white">
-                £{annual ? annualMonthly : monthlyPrice}
+                ${annual ? annualMonthly : monthlyPrice}
               </span>
               <span className="text-blue-200 ml-1">/ mo</span>
             </div>
-            {annual && <p className="text-blue-200 text-sm mb-6">Billed £{annualTotal} annually</p>}
+            {annual && <p className="text-blue-200 text-sm mb-6">Billed ${annualTotal} annually</p>}
             {!annual && <p className="text-blue-200 text-sm mb-6">Billed monthly, cancel anytime</p>}
             <ul className="space-y-3 mb-8">
               {PRO_FEATURES.map((f) => (
@@ -490,7 +490,7 @@ export default function LandingPage() {
                 <div className="min-w-0">
                   <div className="font-semibold text-[var(--text-primary)] text-sm leading-snug">{a.name}</div>
                   <div className="text-xs text-[var(--success)] font-medium mt-0.5">{a.roi}</div>
-                  <div className="text-xs text-[var(--text-secondary)] mt-0.5">{a.category} · from £{a.price}/mo</div>
+                  <div className="text-xs text-[var(--text-secondary)] mt-0.5">{a.category} · from ${a.price}/mo</div>
                 </div>
               </div>
             ))}

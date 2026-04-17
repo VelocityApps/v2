@@ -275,7 +275,7 @@ export default function AutomationInfoModal({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[#6d7175] text-sm">Starting at</p>
-                <p className="text-2xl font-bold text-[#202223]">£{automation.price_monthly}/month</p>
+                <p className="text-2xl font-bold text-[#202223]">${automation.price_monthly}/month</p>
               </div>
               <div className="text-right">
                 <p className="text-[#6d7175] text-sm">{automation.user_count} stores using this</p>

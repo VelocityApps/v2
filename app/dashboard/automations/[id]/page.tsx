@@ -167,7 +167,7 @@ export default function AutomationManagementPage() {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--accent-bg)] border border-[var(--accent-border)]">
           <p className="text-[var(--accent-text)] font-medium">Free trial — {days} day{days !== 1 ? 's' : ''} left</p>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">Then £{priceMonthly}/month. Activate now to continue without interruption.</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Then ${priceMonthly}/month. Activate now to continue without interruption.</p>
           {activateBtn('Activate Automation')}
         </div>
       );
@@ -176,7 +176,7 @@ export default function AutomationManagementPage() {
     if (status === 'active' && hasActiveSub) {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--success-bg)] border border-[var(--success-border)]">
-          <p className="text-[var(--success)] font-medium">Active · £{priceMonthly}/month</p>
+          <p className="text-[var(--success)] font-medium">Active · ${priceMonthly}/month</p>
           {manageBtn}
         </div>
       );
@@ -196,7 +196,7 @@ export default function AutomationManagementPage() {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--warning-bg)] border border-[var(--warning-border)]">
           <p className="text-[var(--warning)] font-medium">Trial ended</p>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">Subscribe for £{priceMonthly}/month to reactivate.</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Subscribe for ${priceMonthly}/month to reactivate.</p>
           {activateBtn('Activate Automation')}
         </div>
       );
@@ -206,7 +206,7 @@ export default function AutomationManagementPage() {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--error-bg)] border border-[var(--error-border)]">
           <p className="text-[var(--error)] font-medium">Cancelled</p>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">Resubscribe for £{priceMonthly}/month to reactivate.</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Resubscribe for ${priceMonthly}/month to reactivate.</p>
           {activateBtn('Resubscribe')}
         </div>
       );

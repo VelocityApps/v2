@@ -364,7 +364,7 @@ export default function DashboardPage() {
                   <div className="text-3xl flex-shrink-0">{automation.icon}</div>
                   <div className="min-w-0">
                     <div className="font-semibold text-[var(--text-primary)] text-sm leading-snug">{automation.name}</div>
-                    <div className="text-xs text-[var(--text-secondary)] mt-0.5">from £{automation.price_monthly}/mo · 7-day free trial</div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-0.5">from ${automation.price_monthly}/mo · 7-day free trial</div>
                   </div>
                 </Link>
               ))}

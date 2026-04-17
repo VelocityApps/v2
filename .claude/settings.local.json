@@ -33,7 +33,11 @@
       "Bash(git credential-manager:*)",
       "Bash(rm \"C:/Users/petes/forge44/app/api/auth/vercel/route.ts\" \"C:/Users/petes/forge44/app/api/auth/vercel/callback/route.ts\" \"C:/Users/petes/forge44/app/api/auth/vercel/store/route.ts\" \"C:/Users/petes/forge44/lib/vercel-client.ts\" && rmdir \"C:/Users/petes/forge44/app/api/auth/vercel\" 2>/dev/null; echo \"done\")",
       "Bash(cat /c/Users/petes/AppData/Local/Temp/claude/C--Users-petes-forge44/1023c79e-8c66-46d6-8d1b-02d2fcaa8a3b/tasks/b7uxy03do.output 2>/dev/null || find /c/Users/petes/forge44 -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) -print0 | xargs -0 grep -l \"Powered by\" 2>/dev/null | head -10)",
-      "Bash(npm show:*)"
+      "Bash(npm show:*)",
+      "Bash(find /c/Users/petes/forge44 -maxdepth 2 -name \"*.md\" -newer /c/Users/petes/forge44/TODO.md 2>/dev/null | head -20)",
+      "Bash(head -20 /c/Users/petes/forge44/app/dashboard/automations/\\\\[id\\\\]/page.tsx)",
+      "Bash(shopify version:*)",
+      "Bash(shopify app:*)"
     ]
   }
 }
