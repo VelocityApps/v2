@@ -75,107 +75,93 @@ const FEATURES = [
 ];
 
 function RoiCalculator() {
-  const [revenue, setRevenue] = useState(10000);
+  const [visitors, setVisitors] = useState(10000);
   const [aov, setAov] = useState(50);
+  const [abandonRate, setAbandonRate] = useState(70);
 
-  const monthlyOrders = Math.round(revenue / aov);
-  const abandonedCarts = Math.round(monthlyOrders * 0.70);
-  const recoveredCarts = Math.round(abandonedCarts * 0.10);
-  const cartRecoveryValue = recoveredCarts * aov;
-
-  const extraReviews = Math.round(monthlyOrders * 0.30);
-
-  const stockHoursSaved = Math.min(Math.round(monthlyOrders / 50), 8);
-
-  const annualValue = cartRecoveryValue * 12;
-  const annualCost = (29 + 19 + 34) * 12; // cart + reviews + stock
-  const annualROI = annualValue - annualCost;
+  const cartsStarted = Math.round(visitors * 0.05);
+  const abandonedCarts = Math.round(cartsStarted * (abandonRate / 100));
+  const lostRevenue = abandonedCarts * aov;
+  const monthlyRecovery = Math.round(lostRevenue * 0.15);
+  const annualOpportunity = monthlyRecovery * 12;
 
   const fmt = (n: number) =>
     n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n}`;
 
+  const Slider = ({
+    label, value, min, max, step, onChange, display,
+  }: {
+    label: string; value: number; min: number; max: number; step: number;
+    onChange: (v: number) => void; display: string;
+  }) => (
+    <div>
+      <div className="flex justify-between items-baseline mb-2">
+        <label className="text-sm font-semibold text-[var(--text-primary)]">{label}</label>
+        <span className="text-sm font-bold text-[var(--accent)]">{display}</span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full accent-blue-500 cursor-pointer"
+      />
+    </div>
+  );
+
   return (
-    <section className="py-20 border-b border-[var(--border)]">
+    <section className="py-20 border-y border-[var(--border)] bg-[var(--bg-primary)]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-3">What could you recover?</h2>
-          <p className="text-[var(--text-secondary)] text-lg">Enter your store numbers — see what automation is worth to you.</p>
+          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-3">How much are you losing to abandoned carts?</h2>
+          <p className="text-[var(--text-secondary)] text-lg">Adjust the sliders to see your store's recovery potential.</p>
         </div>
 
-        {/* Inputs */}
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-8 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-sm font-semibold text-[var(--text-primary)]">Monthly revenue</label>
-                <span className="text-sm font-bold text-[var(--accent)]">{fmt(revenue)}</span>
-              </div>
-              <input
-                type="range" min={1000} max={200000} step={1000}
-                value={revenue}
-                onChange={(e) => setRevenue(Number(e.target.value))}
-                className="w-full accent-blue-500 cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-[var(--text-muted)] mt-1">
-                <span>$1k</span><span>$200k</span>
-              </div>
+        {/* Sliders */}
+        <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-8 mb-8 grid grid-cols-1 gap-7">
+          <Slider
+            label="Monthly website visitors"
+            value={visitors} min={1000} max={500000} step={1000}
+            onChange={setVisitors}
+            display={visitors.toLocaleString()}
+          />
+          <Slider
+            label="Average order value"
+            value={aov} min={10} max={500} step={5}
+            onChange={setAov}
+            display={`$${aov}`}
+          />
+          <Slider
+            label="Cart abandonment rate"
+            value={abandonRate} min={10} max={95} step={1}
+            onChange={setAbandonRate}
+            display={`${abandonRate}%`}
+          />
+        </div>
+
+        {/* Result cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Abandoned carts / mo', value: abandonedCarts.toLocaleString(), sub: `of ~${cartsStarted.toLocaleString()} carts started` },
+            { label: 'Revenue lost / mo', value: fmt(lostRevenue), sub: 'currently walking out the door' },
+            { label: 'Est. monthly recovery', value: fmt(monthlyRecovery), sub: 'at 15% recovery rate' },
+            { label: 'Annual opportunity', value: fmt(annualOpportunity), sub: 'if you start today' },
+          ].map(({ label, value, sub }) => (
+            <div key={label} className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-5 text-center">
+              <div className="text-2xl sm:text-3xl font-extrabold text-[var(--accent)] mb-1">{value}</div>
+              <div className="text-xs font-semibold text-[var(--text-primary)] mb-1">{label}</div>
+              <div className="text-xs text-[var(--text-secondary)]">{sub}</div>
             </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-sm font-semibold text-[var(--text-primary)]">Average order value</label>
-                <span className="text-sm font-bold text-[var(--accent)]">${aov}</span>
-              </div>
-              <input
-                type="range" min={10} max={500} step={5}
-                value={aov}
-                onChange={(e) => setAov(Number(e.target.value))}
-                className="w-full accent-blue-500 cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-[var(--text-muted)] mt-1">
-                <span>$10</span><span>$500</span>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Results */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-6">
-            <div className="text-2xl mb-2">🛒</div>
-            <div className="text-2xl font-extrabold text-[var(--text-primary)] mb-1">{fmt(cartRecoveryValue)}<span className="text-base font-normal text-[var(--text-secondary)]">/mo</span></div>
-            <div className="text-sm font-medium text-[var(--text-primary)] mb-1">Abandoned Cart Recovery</div>
-            <div className="text-xs text-[var(--text-secondary)]">{recoveredCarts} of {abandonedCarts} abandoned carts recovered</div>
-          </div>
-
-          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-6">
-            <div className="text-2xl mb-2">⭐</div>
-            <div className="text-2xl font-extrabold text-[var(--text-primary)] mb-1">+{extraReviews}<span className="text-base font-normal text-[var(--text-secondary)]">/mo</span></div>
-            <div className="text-sm font-medium text-[var(--text-primary)] mb-1">Extra Reviews</div>
-            <div className="text-xs text-[var(--text-secondary)]">From {monthlyOrders} monthly orders</div>
-          </div>
-
-          <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-6">
-            <div className="text-2xl mb-2">⏱️</div>
-            <div className="text-2xl font-extrabold text-[var(--text-primary)] mb-1">{stockHoursSaved} hrs<span className="text-base font-normal text-[var(--text-secondary)]">/wk</span></div>
-            <div className="text-sm font-medium text-[var(--text-primary)] mb-1">Time Saved</div>
-            <div className="text-xs text-[var(--text-secondary)]">On manual inventory checks</div>
-          </div>
-        </div>
-
-        {/* Summary banner */}
-        <div className="rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1a2744 100%)' }}>
-          <div>
-            <p className="text-white font-semibold text-lg">Estimated annual return: <span className="text-blue-400 font-extrabold">{fmt(annualROI)}</span></p>
-            <p className="text-slate-400 text-sm mt-0.5">After automation costs · Based on conservative industry benchmarks</p>
-          </div>
+        {/* CTA */}
+        <div className="text-center">
           <Link
             href="/onboarding"
-            className="flex-shrink-0 px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-blue-500/30 whitespace-nowrap"
+            className="inline-block px-8 py-4 bg-blue-500 hover:bg-blue-400 text-white rounded-lg font-semibold text-base transition-colors shadow-lg shadow-blue-500/30"
           >
-            Start free trial
+            Start recovering revenue free — 7 day trial
           </Link>
+          <p className="text-xs text-[var(--text-muted)] mt-3">No credit card required · Cancel anytime</p>
         </div>
       </div>
     </section>
@@ -469,9 +455,6 @@ export default function LandingPage() {
       </section>
 
 
-      {/* ── ROI Calculator ── */}
-      <RoiCalculator />
-
       {/* ── Automation grid ── */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -509,6 +492,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── ROI Calculator ── */}
+      <RoiCalculator />
 
       {/* ── Features ── */}
       <section className="bg-[var(--bg-secondary)] border-y border-[var(--border)] py-20">
