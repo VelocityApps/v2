@@ -88,22 +88,33 @@ function RoiCalculator() {
   const fmt = (n: number) =>
     n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n}`;
 
-  const Slider = ({
-    label, value, min, max, step, onChange, display,
+  const Field = ({
+    label, value, min, max, step, onChange, prefix, suffix,
   }: {
     label: string; value: number; min: number; max: number; step: number;
-    onChange: (v: number) => void; display: string;
+    onChange: (v: number) => void; prefix?: string; suffix?: string;
   }) => (
     <div>
-      <div className="flex justify-between items-baseline mb-2">
-        <label className="text-sm font-semibold text-[var(--text-primary)]">{label}</label>
-        <span className="text-sm font-bold text-[var(--accent)]">{display}</span>
+      <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">{label}</label>
+      <div className="flex items-center gap-4">
+        <input
+          type="range" min={min} max={max} step={step} value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="flex-1 accent-blue-500 cursor-pointer"
+        />
+        <div className="relative flex-shrink-0">
+          {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)] pointer-events-none">{prefix}</span>}
+          <input
+            type="number" min={min} max={max} step={step} value={value}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (!isNaN(v)) onChange(Math.min(max, Math.max(min, v)));
+            }}
+            className={`w-28 py-1.5 text-sm font-semibold text-right border border-[var(--border)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 ${prefix ? 'pl-6 pr-3' : suffix ? 'pl-3 pr-6' : 'px-3'}`}
+          />
+          {suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)] pointer-events-none">{suffix}</span>}
+        </div>
       </div>
-      <input
-        type="range" min={min} max={max} step={step} value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-blue-500 cursor-pointer"
-      />
     </div>
   );
 
@@ -112,28 +123,27 @@ function RoiCalculator() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-3">How much are you losing to abandoned carts?</h2>
-          <p className="text-[var(--text-secondary)] text-lg">Adjust the sliders to see your store's recovery potential.</p>
+          <p className="text-[var(--text-secondary)] text-lg">Drag the sliders or type your numbers directly.</p>
         </div>
 
-        {/* Sliders */}
+        {/* Inputs */}
         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-8 mb-8 grid grid-cols-1 gap-7">
-          <Slider
+          <Field
             label="Monthly website visitors"
             value={visitors} min={1000} max={500000} step={1000}
             onChange={setVisitors}
-            display={visitors.toLocaleString()}
           />
-          <Slider
+          <Field
             label="Average order value"
             value={aov} min={10} max={500} step={5}
             onChange={setAov}
-            display={`$${aov}`}
+            prefix="$"
           />
-          <Slider
+          <Field
             label="Cart abandonment rate"
             value={abandonRate} min={10} max={95} step={1}
             onChange={setAbandonRate}
-            display={`${abandonRate}%`}
+            suffix="%"
           />
         </div>
 
