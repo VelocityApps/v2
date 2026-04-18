@@ -130,18 +130,18 @@ function RoiCalculator() {
         <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-8 mb-8 grid grid-cols-1 gap-7">
           <Field
             label="Monthly website visitors"
-            value={visitors} min={1000} max={500000} step={1000}
+            value={visitors} min={10} max={1000000} step={100}
             onChange={setVisitors}
           />
           <Field
             label="Average order value"
-            value={aov} min={10} max={500} step={5}
+            value={aov} min={1} max={5000} step={1}
             onChange={setAov}
             prefix="$"
           />
           <Field
             label="Cart abandonment rate"
-            value={abandonRate} min={10} max={95} step={1}
+            value={abandonRate} min={1} max={95} step={1}
             onChange={setAbandonRate}
             suffix="%"
           />
