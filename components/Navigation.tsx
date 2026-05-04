@@ -52,7 +52,10 @@ export default function Navigation() {
 
   const navLinks = [
     { href: '/marketplace', label: 'Marketplace' },
-    ...(session ? [{ href: '/dashboard', label: 'Dashboard' }] : []),
+    ...(session ? [
+      { href: '/dashboard', label: 'Dashboard' },
+      { href: '/dashboard/evo', label: 'Evo' },
+    ] : []),
     { href: '/support', label: 'Support' },
   ];
 

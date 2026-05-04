@@ -183,6 +183,29 @@ async function handleAppSubscriptionUpdate(payload: any): Promise<void> {
       return;
     }
 
+    // ── Check if this is an Evo charge ────────────────────────────────────────
+    const { data: evoProfile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('user_id')
+      .eq('evo_charge_id', chargeId)
+      .maybeSingle();
+
+    if (evoProfile) {
+      if (shopifyStatus === 'CANCELLED' || shopifyStatus === 'DECLINED' || shopifyStatus === 'EXPIRED') {
+        await supabaseAdmin
+          .from('user_profiles')
+          .update({ has_evo: false })
+          .eq('user_id', evoProfile.user_id);
+        console.log(`[app_subscriptions/update] Evo subscription ended for user ${evoProfile.user_id}`);
+      } else if (shopifyStatus === 'ACTIVE') {
+        await supabaseAdmin
+          .from('user_profiles')
+          .update({ has_evo: true })
+          .eq('user_id', evoProfile.user_id);
+      }
+      return;
+    }
+
     // ── Otherwise handle as an automation subscription ────────────────────────
     const { data: ua } = await supabaseAdmin
       .from('user_automations')
@@ -336,27 +359,31 @@ async function handleAppUninstalled(shop: string): Promise<void> {
       .or(`shopify_store_url.eq.${shopNormalized},shopify_store_url.eq.https://${shopNormalized}`)
       .in('status', ['active', 'trial', 'paused']);
 
-    if (!uas?.length) return;
+    if (uas?.length) {
+      const uaIds = uas.map((ua: any) => ua.id);
 
-    const uaIds = uas.map((ua: any) => ua.id);
+      // Cancel automations and wipe the revoked token immediately
+      await supabaseAdmin
+        .from('user_automations')
+        .update({
+          status: 'cancelled',
+          shopify_access_token_encrypted: null,
+          error_message: 'App uninstalled by merchant',
+        })
+        .in('id', uaIds);
 
-    // Cancel automations and wipe the revoked token immediately
-    await supabaseAdmin
-      .from('user_automations')
-      .update({
-        status: 'cancelled',
-        shopify_access_token_encrypted: null,
-        error_message: 'App uninstalled by merchant',
-      })
-      .in('id', uaIds);
+      // Remove webhook registrations — Shopify already deleted them on their side
+      await supabaseAdmin
+        .from('shopify_webhooks')
+        .delete()
+        .in('user_automation_id', uaIds);
 
-    // Remove webhook registrations — Shopify already deleted them on their side
-    await supabaseAdmin
-      .from('shopify_webhooks')
-      .delete()
-      .in('user_automation_id', uaIds);
+      console.log(`[app/uninstalled] Cancelled ${uaIds.length} automations for ${shop}`);
+    }
 
-    console.log(`[app/uninstalled] Cancelled ${uaIds.length} automations for ${shop}`);
+    // Disconnect Evo platform and wipe the now-revoked token.
+    // Runs regardless of whether the merchant had automations installed.
+    await evoDisconnectPlatform(shopNormalized);
   } catch (err: any) {
     console.error('[app/uninstalled] Error:', err.message);
   }
@@ -379,23 +406,27 @@ async function handleCustomerRedact(payload: any, shop: string): Promise<void> {
       .select('id')
       .or(`shopify_store_url.eq.${shopNormalized},shopify_store_url.eq.https://${shopNormalized}`);
 
-    if (!uas?.length) return;
+    if (uas?.length) {
+      const uaIds = uas.map((ua: any) => ua.id);
 
-    const uaIds = uas.map((ua: any) => ua.id);
+      // Delete abandoned cart records for this customer
+      await supabaseAdmin
+        .from('abandoned_carts')
+        .delete()
+        .in('user_automation_id', uaIds)
+        .eq('customer_email', customerEmail);
 
-    // Delete abandoned cart records for this customer
-    await supabaseAdmin
-      .from('abandoned_carts')
-      .delete()
-      .in('user_automation_id', uaIds)
-      .eq('customer_email', customerEmail);
+      // Delete scheduled review requests for this customer
+      await supabaseAdmin
+        .from('scheduled_review_requests')
+        .delete()
+        .in('user_automation_id', uaIds)
+        .eq('customer_email', customerEmail);
+    }
 
-    // Delete scheduled review requests for this customer
-    await supabaseAdmin
-      .from('scheduled_review_requests')
-      .delete()
-      .in('user_automation_id', uaIds)
-      .eq('customer_email', customerEmail);
+    // Delete Evo order records that contain this customer's PII (email, name).
+    // Runs regardless of whether the merchant had automations installed.
+    await evoRedactCustomer(shopNormalized, customerEmail);
 
     console.log(`[GDPR] customers/redact: deleted data for ${customerEmail} on ${shop}`);
   } catch (err: any) {
@@ -417,27 +448,166 @@ async function handleShopRedact(shop: string): Promise<void> {
       .select('id')
       .or(`shopify_store_url.eq.${shopNormalized},shopify_store_url.eq.https://${shopNormalized}`);
 
-    if (!uas?.length) return;
+    if (uas?.length) {
+      const uaIds = uas.map((ua: any) => ua.id);
 
-    const uaIds = uas.map((ua: any) => ua.id);
+      // Cascade-delete dependent tables (RLS cascade should handle most, but be explicit)
+      await supabaseAdmin.from('abandoned_carts').delete().in('user_automation_id', uaIds);
+      await supabaseAdmin.from('scheduled_review_requests').delete().in('user_automation_id', uaIds);
+      await supabaseAdmin.from('automation_logs').delete().in('user_automation_id', uaIds);
+      await supabaseAdmin.from('shopify_webhooks').delete().in('user_automation_id', uaIds);
 
-    // Cascade-delete dependent tables (RLS cascade should handle most, but be explicit)
-    await supabaseAdmin.from('abandoned_carts').delete().in('user_automation_id', uaIds);
-    await supabaseAdmin.from('scheduled_review_requests').delete().in('user_automation_id', uaIds);
-    await supabaseAdmin.from('automation_logs').delete().in('user_automation_id', uaIds);
-    await supabaseAdmin.from('shopify_webhooks').delete().in('user_automation_id', uaIds);
+      // Mark automations as uninstalled rather than hard-deleting (preserves billing history)
+      await supabaseAdmin
+        .from('user_automations')
+        .update({ status: 'uninstalled' })
+        .in('id', uaIds);
 
-    // Mark automations as uninstalled rather than hard-deleting (preserves billing history)
-    await supabaseAdmin
-      .from('user_automations')
-      .update({ status: 'uninstalled' })
-      .in('id', uaIds);
+      console.log(`[GDPR] shop/redact: cleaned up ${uaIds.length} automations for ${shop}`);
+    }
 
-    console.log(`[GDPR] shop/redact: cleaned up ${uaIds.length} automations for ${shop}`);
+    // Hard-delete all Evo data sourced from this Shopify shop (48 h post-uninstall).
+    // Runs regardless of whether the merchant had automations installed.
+    await evoRedactShop(shopNormalized);
   } catch (err: any) {
     console.error('[GDPR] shop/redact error:', err.message);
   }
 }
 
+// ── Evo GDPR helpers ──────────────────────────────────────────────────────────
 
+/**
+ * Mark the Evo platform record as disconnected and wipe the now-revoked
+ * access token. Called on app/uninstalled (immediate).
+ */
+async function evoDisconnectPlatform(shopNormalized: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('evo_platforms')
+    .update({
+      status: 'disconnected',
+      credentials_encrypted: null,
+    })
+    .eq('platform', 'shopify')
+    .eq('platform_account_id', shopNormalized);
 
+  if (error) {
+    console.error('[EvoGDPR] evoDisconnectPlatform error:', error.message);
+  } else {
+    console.log(`[EvoGDPR] Disconnected Evo platform for ${shopNormalized}`);
+  }
+}
+
+/**
+ * Delete Evo order records that contain a specific customer's PII.
+ * Called on customers/redact.
+ */
+async function evoRedactCustomer(shopNormalized: string, customerEmail: string): Promise<void> {
+  // Resolve user_id from evo_platforms so we can scope the delete correctly.
+  const { data: platform } = await supabaseAdmin
+    .from('evo_platforms')
+    .select('user_id')
+    .eq('platform', 'shopify')
+    .eq('platform_account_id', shopNormalized)
+    .maybeSingle();
+
+  if (!platform) return; // No Evo record for this shop — nothing to do.
+
+  const { error } = await supabaseAdmin
+    .from('evo_orders')
+    .delete()
+    .eq('user_id', platform.user_id)
+    .eq('platform', 'shopify')
+    .eq('customer_email', customerEmail);
+
+  if (error) {
+    console.error('[EvoGDPR] evoRedactCustomer error:', error.message);
+  } else {
+    console.log(`[EvoGDPR] Deleted Evo orders for customer ${customerEmail} on ${shopNormalized}`);
+  }
+}
+
+/**
+ * Hard-delete all Evo data for a shop. Called on shop/redact (48 h after uninstall).
+ *
+ * Deletion order:
+ *  1. evo_orders          — order PII
+ *  2. evo_inventory_events — audit log rows sourced from Shopify
+ *  3. evo_sku_mappings     — cascades to evo_inventory_levels (FK ON DELETE CASCADE)
+ *  4. evo_products         — orphans left after mapping deletion
+ *  5. evo_alerts           — alert configurations
+ *  6. evo_platforms        — the platform record itself (hard delete)
+ */
+async function evoRedactShop(shopNormalized: string): Promise<void> {
+  // Resolve user_id from evo_platforms.
+  const { data: platform } = await supabaseAdmin
+    .from('evo_platforms')
+    .select('user_id')
+    .eq('platform', 'shopify')
+    .eq('platform_account_id', shopNormalized)
+    .maybeSingle();
+
+  if (!platform) return; // No Evo record for this shop — nothing to do.
+
+  const userId = platform.user_id;
+
+  // 1. Delete Shopify orders
+  await supabaseAdmin
+    .from('evo_orders')
+    .delete()
+    .eq('user_id', userId)
+    .eq('platform', 'shopify');
+
+  // 2. Delete inventory events sourced from Shopify
+  await supabaseAdmin
+    .from('evo_inventory_events')
+    .delete()
+    .eq('user_id', userId)
+    .eq('source_platform', 'shopify');
+
+  // 3. Delete Shopify SKU mappings (cascades to evo_inventory_levels)
+  const { data: deletedMappings } = await supabaseAdmin
+    .from('evo_sku_mappings')
+    .delete()
+    .eq('user_id', userId)
+    .eq('platform', 'shopify')
+    .select('product_id');
+
+  // 4. Delete evo_products that are no longer referenced by any mapping
+  if (deletedMappings?.length) {
+    const deletedProductIds = [...new Set(deletedMappings.map((m: any) => m.product_id).filter(Boolean))];
+    if (deletedProductIds.length) {
+      // Only delete products that have no remaining mappings
+      const { data: remaining } = await supabaseAdmin
+        .from('evo_sku_mappings')
+        .select('product_id')
+        .eq('user_id', userId)
+        .in('product_id', deletedProductIds);
+
+      const retainedIds = new Set((remaining ?? []).map((m: any) => m.product_id));
+      const orphanIds = deletedProductIds.filter((id) => !retainedIds.has(id));
+
+      if (orphanIds.length) {
+        await supabaseAdmin
+          .from('evo_products')
+          .delete()
+          .eq('user_id', userId)
+          .in('id', orphanIds);
+      }
+    }
+  }
+
+  // 5. Delete alert configurations
+  await supabaseAdmin
+    .from('evo_alerts')
+    .delete()
+    .eq('user_id', userId);
+
+  // 6. Hard-delete the platform record
+  await supabaseAdmin
+    .from('evo_platforms')
+    .delete()
+    .eq('user_id', userId)
+    .eq('platform', 'shopify');
+
+  console.log(`[EvoGDPR] Hard-deleted all Evo data for ${shopNormalized} (user ${userId})`);
+}

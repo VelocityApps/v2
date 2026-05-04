@@ -587,6 +587,29 @@ export class ShopifyClient {
       return null;
     }
   }
+
+  /**
+   * Set the absolute available quantity for an inventory item at a location.
+   * Used by the Evo sync engine to propagate stock changes across platforms.
+   *
+   * @param inventoryItemId  Numeric inventory item ID (not GID)
+   * @param locationId       Numeric location ID (not GID)
+   * @param available        New absolute quantity (must be >= 0)
+   */
+  async setInventoryLevel(
+    inventoryItemId: string,
+    locationId: string,
+    available: number,
+  ): Promise<void> {
+    await this.request('/inventory_levels/set.json', {
+      method: 'POST',
+      body: JSON.stringify({
+        inventory_item_id: inventoryItemId,
+        location_id: locationId,
+        available,
+      }),
+    });
+  }
 }
 
 
