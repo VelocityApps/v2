@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Middleware: per-path Content-Security-Policy and framing overrides.
+ * Middleware: per-path Content-Security-Policy overrides.
  *
- * /shopify/*  — Shopify admin embedded routes. Must allow framing by
- *               admin.shopify.com and *.myshopify.com. The global
- *               X-Frame-Options: DENY set in next.config.ts is removed here.
+ * Framing policy for /shopify/* is handled entirely in next.config.ts via a
+ * shopify-specific header block — Next.js applies config headers after
+ * middleware, so trying to modify CSP/X-Frame-Options here is unreliable.
  *
  * /preview/*  — Babel standalone code runner. Needs unsafe-eval for
  *               transpilation. Scope it tightly so the rest of the app
@@ -25,33 +25,9 @@ const PREVIEW_CSP = [
   "base-uri 'self'",
 ].join('; ');
 
-const SHOPIFY_FRAME_ANCESTORS =
-  "frame-ancestors https://admin.shopify.com https://*.myshopify.com 'self'";
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Shopify embedded routes ──────────────────────────────────────────────
-  if (pathname.startsWith('/shopify/')) {
-    const response = NextResponse.next();
-
-    // Remove the blanket DENY from next.config.ts
-    response.headers.delete('X-Frame-Options');
-
-    // Inject frame-ancestors that permits Shopify admin only
-    const existingCSP = response.headers.get('Content-Security-Policy') || '';
-    const updatedCSP = existingCSP
-      // Replace any existing frame-ancestors directive
-      .replace(/frame-ancestors[^;]*(;|$)/g, '')
-      .trimEnd()
-      .replace(/;$/, '') +
-      '; ' + SHOPIFY_FRAME_ANCESTORS;
-
-    response.headers.set('Content-Security-Policy', updatedCSP);
-    return response;
-  }
-
-  // ── Preview pages ────────────────────────────────────────────────────────
   if (pathname.startsWith('/preview/')) {
     const response = NextResponse.next();
     response.headers.set('Content-Security-Policy', PREVIEW_CSP);
@@ -62,5 +38,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/preview/:path*', '/shopify/:path*'],
+  matcher: ['/preview/:path*'],
 };

@@ -1,8 +1,8 @@
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
-// Content-Security-Policy — keeps Next.js hydration + Stripe + Supabase + Sentry working
-const CSP = [
+// Shared CSP directives (everything except frame-ancestors and frame-src)
+const CSP_BASE = [
   "default-src 'self'",
   // Next.js requires unsafe-inline for its runtime scripts.
   // unsafe-eval is intentionally excluded here — it is added back only for /preview/* via middleware.ts
@@ -27,13 +27,17 @@ const CSP = [
   ].join(' '),
   // Stripe iframes + Shopify admin CDN
   "frame-src https://js.stripe.com https://hooks.stripe.com https://cdn.shopify.com",
-  // By default no framing — middleware overrides this for /shopify/* routes
-  "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "upgrade-insecure-requests",
 ].join('; ');
+
+// Default CSP — no framing allowed (all non-embedded routes)
+const CSP = CSP_BASE + "; frame-ancestors 'none'";
+
+// Shopify embedded CSP — allows framing by Shopify admin only
+const SHOPIFY_CSP = CSP_BASE + "; frame-ancestors https://admin.shopify.com https://*.myshopify.com";
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -53,10 +57,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Apply security headers to every response
+        // Apply security headers to every response.
+        // X-Frame-Options is intentionally omitted — CSP frame-ancestors handles
+        // framing policy for all modern browsers, and we need /shopify/* routes to
+        // be embeddable without X-Frame-Options interfering (Next.js applies all
+        // matching header blocks, so a global DENY can't be selectively removed by
+        // the shopify-specific block below).
         source: '/(.*)',
         headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -66,6 +74,14 @@ const nextConfig: NextConfig = {
             value: 'max-age=31536000; includeSubDomains; preload',
           },
           { key: 'Content-Security-Policy', value: CSP },
+        ],
+      },
+      {
+        // Shopify embedded routes — override CSP to allow framing by Shopify admin.
+        // This block runs after the global block above so its CSP wins for /shopify/* paths.
+        source: '/shopify/:path*',
+        headers: [
+          { key: 'Content-Security-Policy', value: SHOPIFY_CSP },
         ],
       },
     ];
