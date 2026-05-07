@@ -23,6 +23,12 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Lock background scroll while modal is open
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) {
       setStep('connect');
@@ -190,7 +196,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-[#e1e3e5] rounded-2xl p-8 max-w-2xl w-full shadow-xl">
+      <div className="bg-white border border-[#e1e3e5] rounded-2xl p-8 max-w-2xl w-full shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#202223]">Install {automation.name}</h2>
           <button
