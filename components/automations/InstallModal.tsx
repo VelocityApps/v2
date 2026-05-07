@@ -173,7 +173,16 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       if (data.error) {
         toast.error(data.error, { id: 'install-automation' });
         setError(data.error);
-        setStep('configure');
+        // Token missing — drop back to connect so user can re-auth
+        if (response.status === 422 || data.error.toLowerCase().includes('token') || data.error.toLowerCase().includes('reconnect')) {
+          sessionStorage.removeItem('shopify_token');
+          // Pre-fill store URL so user doesn't need to retype it
+          const knownShop = sessionStorage.getItem('shopify_shop');
+          if (knownShop) setShopifyStoreUrl(knownShop);
+          setStep('connect');
+        } else {
+          setStep('configure');
+        }
         return;
       }
 
