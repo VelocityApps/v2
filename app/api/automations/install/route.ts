@@ -24,12 +24,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { automationId, config, shopifyStoreUrl, shopifyAccessToken } = await request.json();
+    const { automationId, config, shopifyStoreUrl, shopifyAccessToken, embedded } = await request.json();
 
     // Input validation
-    if (!automationId || !shopifyStoreUrl || !shopifyAccessToken) {
+    if (!automationId || !shopifyStoreUrl) {
       return NextResponse.json(
-        { error: 'automationId, shopifyStoreUrl, and shopifyAccessToken are required' },
+        { error: 'automationId and shopifyStoreUrl are required' },
+        { status: 400 }
+      );
+    }
+    if (!shopifyAccessToken && !embedded) {
+      return NextResponse.json(
+        { error: 'shopifyAccessToken is required (or pass embedded:true for embedded app installs)' },
         { status: 400 }
       );
     }
@@ -58,11 +64,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate token format (basic check)
-    if (typeof shopifyAccessToken !== 'string' || shopifyAccessToken.length < 20) {
+    // Resolve the access token — either provided directly or looked up from an
+    // existing user_automation record (embedded installs reuse the stored token).
+    let resolvedToken: string = shopifyAccessToken ?? '';
+
+    if (embedded && !resolvedToken) {
+      const normalizedShop = shopifyStoreUrl
+        .replace(/^https?:\/\//i, '')
+        .toLowerCase()
+        .split('/')[0];
+
+      const { data: existing } = await supabaseAdmin
+        .from('user_automations')
+        .select('shopify_access_token_encrypted')
+        .eq('user_id', user.id)
+        .or(`shopify_store_url.eq.${normalizedShop},shopify_store_url.eq.https://${normalizedShop}`)
+        .not('shopify_access_token_encrypted', 'is', null)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing?.shopify_access_token_encrypted) {
+        const { decryptToken } = await import('@/lib/shopify/oauth');
+        resolvedToken = await decryptToken(existing.shopify_access_token_encrypted);
+      }
+    }
+
+    if (!resolvedToken || resolvedToken.length < 20) {
       return NextResponse.json(
-        { error: 'Invalid access token format' },
-        { status: 400 }
+        { error: 'No valid Shopify access token found. Please reconnect your store.' },
+        { status: 422 }
       );
     }
 
@@ -114,7 +144,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       automation_id: automationId,
       shopify_store_url: shopifyStoreUrl,
-      shopify_access_token_encrypted: await encryptToken(shopifyAccessToken),
+      shopify_access_token_encrypted: await encryptToken(resolvedToken),
       config: config || {},
       status: trialEligible ? 'trial' : 'requires_payment',
     };

@@ -76,6 +76,8 @@ export async function GET(request: NextRequest) {
       // embedded:true means install was initiated from the App Store / Partner dashboard
       if (parsed.embedded) source = 'embedded';
       embeddedHost = parsed.host || embeddedHost;
+      installSlug = parsed.installSlug || '';
+      if (!parsed.embedded && parsed.source) source = parsed.source;
     } catch {
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding?shopify_auth_error=${encodeURIComponent('Invalid OAuth state — please try again')}`
@@ -105,18 +107,21 @@ export async function GET(request: NextRequest) {
     
     // Store token in httpOnly cookie (more secure than URL param)
     const response = NextResponse.redirect(redirectUrl.toString());
+    // lax (not strict) so the cookie survives the top-level cross-site redirect
+    // from myshopify.com back to velocityapps.dev. 10-minute window gives the
+    // user time to sign in on embed-init and claim the token before it expires.
     response.cookies.set('shopify_token_temp', tokenResponse.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60, // 1 minute - frontend should read and clear immediately
+      sameSite: 'lax',
+      maxAge: 600,
       path: '/',
     });
     response.cookies.set('shopify_shop_temp', shop, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60,
+      sameSite: 'lax',
+      maxAge: 600,
       path: '/',
     });
 

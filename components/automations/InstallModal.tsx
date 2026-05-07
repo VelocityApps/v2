@@ -33,10 +33,20 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       return;
     }
 
-    // If already connected from a previous OAuth (e.g. onboarding flow), skip connect step
+    // If already connected (standalone OAuth or embedded install flow), skip connect step
     const existingToken = sessionStorage.getItem('shopify_token');
     const existingShop = sessionStorage.getItem('shopify_shop');
     if (existingToken && existingShop) {
+      setStep('configure');
+      return;
+    }
+
+    // In the embedded app the store is already OAuth'd — skip straight to configure
+    // using the shop stored in sessionStorage by embed-init / AppBridgeProvider.
+    // If the token somehow expired we fall through to the connect step and the
+    // handleConnectShopify will use window.top to do a fresh OAuth outside the iframe.
+    const embeddedHost = sessionStorage.getItem('shopify_host');
+    if (embeddedHost && existingShop) {
       setStep('configure');
       return;
     }
@@ -89,8 +99,9 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       }
 
       toast.success('Redirecting to Shopify...', { id: 'connect-shopify' });
-      // Redirect to Shopify OAuth
-      window.location.href = data.authUrl;
+      // Use window.top so OAuth happens in the top-level window, not inside
+      // Shopify's embedded iframe (where cross-origin pages can't load).
+      (window.top || window).location.href = data.authUrl;
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to connect Shopify store';
       toast.error(errorMessage, { id: 'connect-shopify' });
@@ -107,11 +118,22 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       return;
     }
 
-    // Check if we have Shopify token from OAuth callback (stored in sessionStorage)
     const shopifyToken = sessionStorage.getItem('shopify_token');
     const shop = sessionStorage.getItem('shopify_shop');
+    const isEmbedded = !!sessionStorage.getItem('shopify_host');
 
-    if (!shopifyToken || !shop) {
+    // In the embedded context the token may not be in sessionStorage (e.g. if the
+    // user signed up and the 10-min cookie window passed before they returned).
+    // Fall back to server-side token lookup by passing embedded:true.
+    if (!shop) {
+      const errorMessage = 'Shopify connection not found. Please connect your store first.';
+      toast.error(errorMessage);
+      setError(errorMessage);
+      setStep('connect');
+      return;
+    }
+
+    if (!isEmbedded && !shopifyToken) {
       const errorMessage = 'Shopify connection not found. Please connect your store first.';
       toast.error(errorMessage);
       setError(errorMessage);
@@ -135,7 +157,8 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
           automationId: automation.id,
           config,
           shopifyStoreUrl: shop,
-          shopifyAccessToken: shopifyToken,
+          // In embedded context the server looks up the stored token instead
+          ...(shopifyToken ? { shopifyAccessToken: shopifyToken } : { embedded: true }),
         }),
       });
 

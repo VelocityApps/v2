@@ -44,28 +44,23 @@ export async function GET(request: NextRequest) {
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/shopify/callback`;
     const installSlug = searchParams.get('install')?.trim() || '';
     const source = searchParams.get('source')?.trim() || '';
+
     const crypto = await import('crypto');
     const nonce = crypto.randomBytes(16).toString('hex');
-    // State format: nonce:installSlug:source  (trailing parts omitted if empty)
-    const stateParts = [nonce, installSlug, source].join(':').replace(/:+$/, '');
-    const state = stateParts !== nonce ? stateParts : undefined;
+    // Sign the nonce so the callback can verify it without a cookie.
+    // (Cookies set inside Shopify's iframe are third-party and blocked by modern browsers.)
+    const nonceSignature = crypto
+      .createHmac('sha256', process.env.SHOPIFY_CLIENT_SECRET!)
+      .update(nonce)
+      .digest('hex');
 
-    const authUrl = generateShopifyAuthUrl({
-      shop,
-      redirectUri,
-      state,
-    });
+    const state = Buffer.from(
+      JSON.stringify({ nonce, nonceSignature, installSlug, source })
+    ).toString('base64url');
 
-    // Store nonce in httpOnly cookie so callback can verify it
-    const res = NextResponse.json({ authUrl });
-    res.cookies.set('shopify_oauth_nonce', nonce, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 300, // 5 minutes — plenty for OAuth flow
-      path: '/',
-    });
-    return res;
+    const authUrl = generateShopifyAuthUrl({ shop, redirectUri, state });
+
+    return NextResponse.json({ authUrl });
   } catch (error: any) {
     console.error('[ShopifyAuth] Error generating auth URL:', error);
     return NextResponse.json(

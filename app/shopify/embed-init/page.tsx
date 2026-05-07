@@ -36,11 +36,24 @@ export default function EmbedInitPage() {
     if (shop) sessionStorage.setItem('shopify_shop', shop);
   }, [host, shop]);
 
-  // Redirect authenticated merchants straight to the embedded dashboard
+  // Redirect authenticated merchants straight to the embedded dashboard.
+  // Before redirecting, attempt to claim a pending Shopify token from the
+  // httpOnly cookie set by the OAuth callback. This is needed when the user
+  // just completed OAuth (embedded install or manual connect flow) — the token
+  // is first-party here since embed-init loads as a top-level page after OAuth.
   useEffect(() => {
     if (!authLoading && session) {
       const dest = `/shopify/dashboard${host ? `?host=${encodeURIComponent(host)}&shop=${encodeURIComponent(shop)}` : ''}`;
-      router.replace(dest);
+      fetch('/api/auth/shopify/get-token')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.token && data.shop) {
+            sessionStorage.setItem('shopify_token', data.token);
+            sessionStorage.setItem('shopify_shop', data.shop);
+          }
+        })
+        .catch(() => {})
+        .finally(() => router.replace(dest));
     }
   }, [session, authLoading, router, host, shop]);
 
