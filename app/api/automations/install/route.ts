@@ -87,6 +87,26 @@ export async function POST(request: NextRequest) {
         const { decryptToken } = await import('@/lib/shopify/oauth');
         resolvedToken = await decryptToken(existing.shopify_access_token_encrypted);
       }
+
+      // Fallback: claim from server-side pending tokens table (set during OAuth callback)
+      if (!resolvedToken) {
+        const { data: pending } = await supabaseAdmin
+          .from('shopify_pending_tokens')
+          .select('encrypted_token')
+          .eq('shop', normalizedShop)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+
+        if (pending?.encrypted_token) {
+          const { decryptToken } = await import('@/lib/shopify/oauth');
+          resolvedToken = await decryptToken(pending.encrypted_token);
+          // Claim and delete so it can't be reused
+          await supabaseAdmin
+            .from('shopify_pending_tokens')
+            .delete()
+            .eq('shop', normalizedShop);
+        }
+      }
     }
 
     if (!resolvedToken || resolvedToken.length < 20) {

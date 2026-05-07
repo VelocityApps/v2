@@ -40,9 +40,23 @@ export async function GET(request: NextRequest) {
     // Exchange code for access token
     const tokenResponse = await exchangeCodeForToken(shop, code);
 
-    // SECURITY: Store token in session/cookie instead of URL
-    // For now, we'll use a secure cookie to pass token to frontend
-    // In production, consider storing in database immediately
+    // Persist the token server-side so the install API can retrieve it even if
+    // the sessionStorage/cookie window is lost (e.g. email verification round-trip).
+    // The install API claims and deletes this record on first use.
+    try {
+      const { encryptToken } = await import('@/lib/shopify/oauth');
+      const encryptedToken = await encryptToken(tokenResponse.access_token);
+      const shopNormalized = shop.replace(/^https?:\/\//i, '').toLowerCase().split('/')[0];
+      await supabaseAdmin
+        .from('shopify_pending_tokens')
+        .upsert(
+          { shop: shopNormalized, encrypted_token: encryptedToken },
+          { onConflict: 'shop' },
+        );
+    } catch (err: any) {
+      // Non-fatal — cookie fallback still works for the common path
+      console.warn('[ShopifyCallback] Failed to persist pending token:', err.message);
+    }
 
     // Parse state — expected to be base64url-encoded JSON produced by the install route.
     // The nonce is verified via HMAC signature (nonceSignature) rather than a cookie,
