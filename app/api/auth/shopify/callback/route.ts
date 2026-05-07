@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { exchangeCodeForToken } from '@/lib/shopify/oauth';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { checkIpRateLimit, getClientIp } from '@/lib/rate-limit';
@@ -44,27 +45,38 @@ export async function GET(request: NextRequest) {
     // In production, consider storing in database immediately
 
     // Parse state — expected to be base64url-encoded JSON produced by the install route.
+    // The nonce is verified via HMAC signature (nonceSignature) rather than a cookie,
+    // because cookies set inside Shopify's iframe are third-party and blocked by
+    // modern browsers (Chrome, Safari).
     const oauthState = searchParams.get('state') ?? '';
-    let stateNonce: string;
     let installSlug: string = '';
     let source: string = '';
     let embeddedHost: string = searchParams.get('host') ?? '';
 
     try {
       const parsed = JSON.parse(Buffer.from(oauthState, 'base64url').toString());
-      stateNonce = parsed.nonce ?? '';
+      const { nonce, nonceSignature } = parsed;
+
+      // Verify the nonce was signed by our server
+      const expectedSig = crypto
+        .createHmac('sha256', process.env.SHOPIFY_CLIENT_SECRET!)
+        .update(nonce ?? '')
+        .digest('hex');
+
+      const sigValid =
+        nonce &&
+        nonceSignature &&
+        crypto.timingSafeEqual(
+          Buffer.from(expectedSig, 'hex'),
+          Buffer.from(nonceSignature, 'hex'),
+        );
+
+      if (!sigValid) throw new Error('bad signature');
+
       // embedded:true means install was initiated from the App Store / Partner dashboard
       if (parsed.embedded) source = 'embedded';
       embeddedHost = parsed.host || embeddedHost;
     } catch {
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding?shopify_auth_error=${encodeURIComponent('Invalid OAuth state — please try again')}`
-      );
-    }
-
-    // Verify nonce matches what we set in the authorize step
-    const storedNonce = request.cookies.get('shopify_oauth_nonce')?.value;
-    if (!storedNonce || storedNonce !== stateNonce) {
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding?shopify_auth_error=${encodeURIComponent('Invalid OAuth state — please try again')}`
       );
@@ -93,8 +105,6 @@ export async function GET(request: NextRequest) {
     
     // Store token in httpOnly cookie (more secure than URL param)
     const response = NextResponse.redirect(redirectUrl.toString());
-    // Clear the nonce cookie — it's single-use
-    response.cookies.delete('shopify_oauth_nonce');
     response.cookies.set('shopify_token_temp', tokenResponse.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

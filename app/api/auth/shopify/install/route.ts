@@ -63,10 +63,18 @@ export async function GET(request: NextRequest) {
   }
 
   const nonce = crypto.randomBytes(16).toString('hex');
+  // Sign the nonce with SHOPIFY_CLIENT_SECRET so the callback can verify it
+  // without a cookie. Cookies set inside Shopify's iframe are treated as
+  // third-party cookies and blocked by modern browsers (Chrome, Safari).
+  const nonceSignature = crypto
+    .createHmac('sha256', process.env.SHOPIFY_CLIENT_SECRET!)
+    .update(nonce)
+    .digest('hex');
+
   // State is base64url-encoded JSON — more robust than colon-delimited strings
   // and safely handles edge cases where the host value itself contains colons.
   const state = Buffer.from(
-    JSON.stringify({ nonce, embedded: true, host: host ?? '' })
+    JSON.stringify({ nonce, nonceSignature, embedded: true, host: host ?? '' })
   ).toString('base64url');
 
   const scopes = [
@@ -91,17 +99,7 @@ export async function GET(request: NextRequest) {
     `redirect_uri=${redirectUri}&` +
     `state=${state}`;
 
-  // Store nonce in httpOnly cookie for CSRF verification in callback
-  const response = NextResponse.redirect(authUrl);
-  response.cookies.set('shopify_oauth_nonce', nonce, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax', // must be lax here — the redirect crosses origins
-    maxAge: 300,
-    path: '/',
-  });
-
-  return response;
+  return NextResponse.redirect(authUrl);
 }
 
 /**
