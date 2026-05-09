@@ -56,6 +56,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize shop URL — strip protocol and trailing slashes so DB values are consistent
+    const normalizedStoreUrl = shopifyStoreUrl
+      .replace(/^https?:\/\//i, '')
+      .toLowerCase()
+      .split('/')[0];
+
     // Validate config
     if (config && !validateAutomationConfig(config)) {
       return NextResponse.json(
@@ -136,7 +142,7 @@ export async function POST(request: NextRequest) {
       .select('id')
       .eq('user_id', user.id)
       .eq('automation_id', automationId)
-      .eq('shopify_store_url', shopifyStoreUrl)
+      .eq('shopify_store_url', normalizedStoreUrl)
       .neq('status', 'uninstalled')
       .single();
 
@@ -163,7 +169,7 @@ export async function POST(request: NextRequest) {
     const insertRow: Record<string, unknown> = {
       user_id: user.id,
       automation_id: automationId,
-      shopify_store_url: shopifyStoreUrl,
+      shopify_store_url: normalizedStoreUrl,
       shopify_access_token_encrypted: await encryptToken(resolvedToken),
       config: config || {},
       status: trialEligible ? 'trial' : 'requires_payment',
@@ -182,7 +188,7 @@ export async function POST(request: NextRequest) {
     if (createError) {
       console.error('Error creating user automation:', createError);
       return NextResponse.json(
-        { error: 'Failed to install automation' },
+        { error: `Failed to install automation: ${createError.message}` },
         { status: 500 }
       );
     }
