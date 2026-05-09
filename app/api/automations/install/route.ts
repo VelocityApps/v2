@@ -136,21 +136,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already installed (ignore soft-deleted rows)
-    const { data: existing } = await supabaseAdmin
+    // Check if already installed — any status except uninstalled blocks re-install.
+    // If uninstalled, delete the row first so the unique constraint doesn't block the new insert.
+    const { data: existingRows } = await supabaseAdmin
       .from('user_automations')
-      .select('id')
+      .select('id, status')
       .eq('user_id', user.id)
       .eq('automation_id', automationId)
-      .eq('shopify_store_url', normalizedStoreUrl)
-      .neq('status', 'uninstalled')
-      .single();
+      .eq('shopify_store_url', normalizedStoreUrl);
 
-    if (existing) {
-      return NextResponse.json(
-        { error: 'Automation already installed for this store' },
-        { status: 400 }
-      );
+    for (const row of existingRows ?? []) {
+      if (row.status === 'uninstalled') {
+        await supabaseAdmin.from('user_automations').delete().eq('id', row.id);
+      } else {
+        return NextResponse.json(
+          { error: 'Automation already installed for this store' },
+          { status: 400 }
+        );
+      }
     }
 
     // One free trial per user per automation type
