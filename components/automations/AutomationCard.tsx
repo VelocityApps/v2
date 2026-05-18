@@ -68,13 +68,16 @@ export default function AutomationCard({
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
-  // If the trial has expired and there's no paid subscription, treat as requires_payment
-  const trialExpired =
-    status === 'trial' &&
+  // If there's no paid subscription and no active trial, treat as requires_payment
+  // regardless of whether the DB status is 'trial' or 'paused'
+  const hasActiveTrial =
+    trialEndsAt != null && new Date(trialEndsAt).getTime() > Date.now();
+  const needsPayment =
     !shopifyChargeId &&
-    trialEndsAt != null &&
-    new Date(trialEndsAt).getTime() <= Date.now();
-  const effectiveStatus = trialExpired ? 'requires_payment' : status;
+    (status === 'requires_payment' ||
+      (status === 'trial' && !hasActiveTrial) ||
+      (status === 'paused' && !hasActiveTrial));
+  const effectiveStatus = needsPayment ? 'requires_payment' : status;
 
   return (
     <>
