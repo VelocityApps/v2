@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase-server';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-11-17.clover',
-});
 
 /**
  * PATCH /api/automations/[id]/resume
@@ -44,21 +39,15 @@ export async function PATCH(
       );
     }
 
-    // Require an active subscription — prevents bypassing billing wall
-    if (!userAutomation.stripe_subscription_id) {
+    // Require an active Shopify subscription or active trial to resume
+    const hasPaidSub = !!userAutomation.shopify_charge_id;
+    const inActiveTrial =
+      userAutomation.trial_ends_at &&
+      new Date(userAutomation.trial_ends_at).getTime() > Date.now();
+
+    if (!hasPaidSub && !inActiveTrial) {
       return NextResponse.json(
         { error: 'A subscription is required to resume this automation' },
-        { status: 402 }
-      );
-    }
-
-    // Verify the subscription is actually active in Stripe
-    const subscription = await stripe.subscriptions.retrieve(
-      userAutomation.stripe_subscription_id
-    );
-    if (subscription.status !== 'active' && subscription.status !== 'trialing') {
-      return NextResponse.json(
-        { error: 'Subscription is not active. Please update your payment method.' },
         { status: 402 }
       );
     }

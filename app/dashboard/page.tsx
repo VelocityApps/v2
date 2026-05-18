@@ -141,6 +141,26 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleSubscribe(userAutomationId: string) {
+    if (!session) return;
+    toast.loading('Creating subscription...', { id: `subscribe-${userAutomationId}` });
+    try {
+      const response = await fetch(`/api/automations/${userAutomationId}/subscribe`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      const data = await response.json();
+      if (data.url) {
+        toast.dismiss(`subscribe-${userAutomationId}`);
+        window.location.href = data.url;
+      } else {
+        toast.error(data.error || 'Failed to start subscription', { id: `subscribe-${userAutomationId}` });
+      }
+    } catch {
+      toast.error('Failed to start subscription', { id: `subscribe-${userAutomationId}` });
+    }
+  }
+
   async function handleManageBilling() {
     if (!session || billingLoading) return;
     setBillingLoading(true);
@@ -313,12 +333,13 @@ export default function DashboardPage() {
                   }}
                   variant="installed"
                   status={userAutomation.status}
-                  stripeSubscriptionId={userAutomation.stripe_subscription_id}
+                  shopifyChargeId={userAutomation.shopify_charge_id}
                   trialEndsAt={userAutomation.trial_ends_at}
                   onConfigure={() => router.push(`/dashboard/automations/${userAutomation.id}`)}
                   onPause={() => handlePause(userAutomation.id)}
                   onResume={() => handleResume(userAutomation.id)}
                   onRemove={() => handleRemove(userAutomation.id)}
+                  onSubscribe={() => handleSubscribe(userAutomation.id)}
                   onManageBilling={handleManageBilling}
                 />
               );

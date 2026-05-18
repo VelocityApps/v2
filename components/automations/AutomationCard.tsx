@@ -30,14 +30,15 @@ interface AutomationCardProps {
   onPause?: () => void;
   onResume?: () => void;
   onRemove?: () => void;
+  onSubscribe?: () => void;
   onManageBilling?: () => void;
-  status?: 'active' | 'paused' | 'error' | 'trial' | 'cancelled';
+  status?: 'active' | 'paused' | 'error' | 'trial' | 'cancelled' | 'requires_payment';
   stripeSubscriptionId?: string | null;
+  shopifyChargeId?: string | null;
   trialEndsAt?: string | null;
-  /** When true (marketplace), show "£X/month, no trial available" instead of trial badge */
+  /** When true (marketplace), show "$X/month, no trial available" instead of trial badge */
   trialAlreadyUsed?: boolean;
   metrics?: AutomationMetrics;
-
 }
 
 function daysLeft(endsAt: string | null | undefined): number | null {
@@ -55,9 +56,11 @@ export default function AutomationCard({
   onPause,
   onResume,
   onRemove,
+  onSubscribe,
   onManageBilling,
   status,
   stripeSubscriptionId,
+  shopifyChargeId,
   trialEndsAt,
   trialAlreadyUsed,
   metrics,
@@ -81,9 +84,14 @@ export default function AutomationCard({
               status === 'active' ? 'bg-[#e3f9e3] text-[#008060]' :
               status === 'trial' ? 'bg-[#e8f0fe] text-[#2563eb]' :
               status === 'paused' ? 'bg-amber-50 text-amber-700' :
+              status === 'requires_payment' ? 'bg-orange-50 text-orange-700' :
               'bg-red-50 text-red-700'
             }`}>
-              {status === 'active' ? 'Active' : status === 'trial' ? 'Trial' : status === 'paused' ? 'Paused' : status === 'cancelled' ? 'Cancelled' : 'Error'}
+              {status === 'active' ? 'Active' :
+               status === 'trial' ? 'Trial' :
+               status === 'paused' ? 'Paused' :
+               status === 'requires_payment' ? 'Payment required' :
+               status === 'cancelled' ? 'Cancelled' : 'Error'}
             </div>
           )}
         </div>
@@ -150,36 +158,69 @@ export default function AutomationCard({
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="flex gap-2">
-              <button
-                onClick={onConfigure}
-                className="flex-1 px-3 py-2 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors text-sm"
-              >
-                Configure
-              </button>
-              {status === 'active' || status === 'trial' ? (
+            {status === 'requires_payment' ? (
+              <>
                 <button
-                  onClick={onPause}
-                  className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg font-medium transition-colors text-sm"
+                  onClick={onSubscribe}
+                  className="w-full px-4 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg font-semibold transition-colors text-sm shadow-sm"
                 >
-                  Pause
+                  Subscribe — ${automation.price_monthly}/mo
                 </button>
-              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={onConfigure}
+                    className="flex-1 px-3 py-2 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Configure
+                  </button>
+                  <button
+                    onClick={onRemove}
+                    className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex gap-2">
                 <button
-                  onClick={onResume}
-                  className="px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg font-medium transition-colors text-sm"
+                  onClick={onConfigure}
+                  className="flex-1 px-3 py-2 bg-white hover:bg-[#f6f6f7] border border-[#e1e3e5] text-[#202223] rounded-lg font-medium transition-colors text-sm"
                 >
-                  Resume
+                  Configure
                 </button>
-              )}
+                {status === 'active' || status === 'trial' ? (
+                  <button
+                    onClick={onPause}
+                    className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Pause
+                  </button>
+                ) : (
+                  <button
+                    onClick={onResume}
+                    className="px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Resume
+                  </button>
+                )}
+                <button
+                  onClick={onRemove}
+                  className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-medium transition-colors text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+            {status === 'trial' && onSubscribe && (
               <button
-                onClick={onRemove}
-                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-medium transition-colors text-sm"
+                onClick={onSubscribe}
+                className="w-full px-4 py-2 bg-white hover:bg-[#f6f6f7] text-[#2563eb] hover:text-[#1d4ed8] border border-[#2563eb]/30 rounded-lg text-sm font-medium transition-colors"
               >
-                Remove
+                Subscribe now — ${automation.price_monthly}/mo
               </button>
-            </div>
-            {stripeSubscriptionId && (
+            )}
+            {shopifyChargeId && status === 'active' && (
               <button
                 onClick={onManageBilling}
                 className="w-full px-4 py-2 bg-white hover:bg-[#f6f6f7] text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg text-sm font-medium transition-colors"
