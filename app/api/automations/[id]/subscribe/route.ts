@@ -93,7 +93,7 @@ export async function POST(
       name: automation.name,
       returnUrl,
       priceMonthly: automation.price_monthly || 0,
-      currencyCode: 'GBP',
+      currencyCode: 'USD',
       trialDays,
       test: isTest,
     });
