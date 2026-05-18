@@ -68,6 +68,14 @@ export default function AutomationCard({
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
+  // If the trial has expired and there's no paid subscription, treat as requires_payment
+  const trialExpired =
+    status === 'trial' &&
+    !shopifyChargeId &&
+    trialEndsAt != null &&
+    new Date(trialEndsAt).getTime() <= Date.now();
+  const effectiveStatus = trialExpired ? 'requires_payment' : status;
+
   return (
     <>
       <div className="relative bg-white border border-[#e1e3e5] rounded-xl p-6 transition-all hover:border-[#2563eb]/40 hover:shadow-sm">
@@ -79,19 +87,19 @@ export default function AutomationCard({
               <p className="text-xs text-[#6d7175] capitalize">{automation.category}</p>
             </div>
           </div>
-          {variant === 'installed' && status && (
+          {variant === 'installed' && effectiveStatus && (
             <div className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-              status === 'active' ? 'bg-[#e3f9e3] text-[#008060]' :
-              status === 'trial' ? 'bg-[#e8f0fe] text-[#2563eb]' :
-              status === 'paused' ? 'bg-amber-50 text-amber-700' :
-              status === 'requires_payment' ? 'bg-orange-50 text-orange-700' :
+              effectiveStatus === 'active' ? 'bg-[#e3f9e3] text-[#008060]' :
+              effectiveStatus === 'trial' ? 'bg-[#e8f0fe] text-[#2563eb]' :
+              effectiveStatus === 'paused' ? 'bg-amber-50 text-amber-700' :
+              effectiveStatus === 'requires_payment' ? 'bg-orange-50 text-orange-700' :
               'bg-red-50 text-red-700'
             }`}>
-              {status === 'active' ? 'Active' :
-               status === 'trial' ? 'Trial' :
-               status === 'paused' ? 'Paused' :
-               status === 'requires_payment' ? 'Payment required' :
-               status === 'cancelled' ? 'Cancelled' : 'Error'}
+              {effectiveStatus === 'active' ? 'Active' :
+               effectiveStatus === 'trial' ? 'Trial' :
+               effectiveStatus === 'paused' ? 'Paused' :
+               effectiveStatus === 'requires_payment' ? 'Payment required' :
+               effectiveStatus === 'cancelled' ? 'Cancelled' : 'Error'}
             </div>
           )}
         </div>
@@ -129,13 +137,13 @@ export default function AutomationCard({
           </div>
         )}
 
-        {variant === 'installed' && status === 'trial' && trialEndsAt && (
+        {variant === 'installed' && effectiveStatus === 'trial' && trialEndsAt && (
           <div className="mb-4 flex items-center gap-2 text-sm text-[#2563eb]">
             <span>⏱</span>
             <span>
               {(() => {
                 const d = daysLeft(trialEndsAt);
-                return d !== null ? `${d} day${d !== 1 ? 's' : ''} left in trial` : 'Trial ended';
+                return d !== null && d > 0 ? `${d} day${d !== 1 ? 's' : ''} left in trial` : 'Trial ended';
               })()}
             </span>
           </div>
@@ -158,7 +166,7 @@ export default function AutomationCard({
           </div>
         ) : (
           <div className="space-y-2">
-            {status === 'requires_payment' ? (
+            {effectiveStatus === 'requires_payment' ? (
               <>
                 <button
                   onClick={onSubscribe}
@@ -189,7 +197,7 @@ export default function AutomationCard({
                 >
                   Configure
                 </button>
-                {status === 'active' || status === 'trial' ? (
+                {effectiveStatus === 'active' || effectiveStatus === 'trial' ? (
                   <button
                     onClick={onPause}
                     className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg font-medium transition-colors text-sm"
@@ -212,7 +220,7 @@ export default function AutomationCard({
                 </button>
               </div>
             )}
-            {status === 'trial' && onSubscribe && (
+            {effectiveStatus === 'trial' && onSubscribe && (
               <button
                 onClick={onSubscribe}
                 className="w-full px-4 py-2 bg-white hover:bg-[#f6f6f7] text-[#2563eb] hover:text-[#1d4ed8] border border-[#2563eb]/30 rounded-lg text-sm font-medium transition-colors"
@@ -220,7 +228,7 @@ export default function AutomationCard({
                 Subscribe now — ${automation.price_monthly}/mo
               </button>
             )}
-            {shopifyChargeId && status === 'active' && (
+            {shopifyChargeId && effectiveStatus === 'active' && (
               <button
                 onClick={onManageBilling}
                 className="w-full px-4 py-2 bg-white hover:bg-[#f6f6f7] text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg text-sm font-medium transition-colors"

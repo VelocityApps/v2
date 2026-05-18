@@ -30,6 +30,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Flip expired trials (no paid subscription) to requires_payment
+    await supabaseAdmin
+      .from('user_automations')
+      .update({ status: 'requires_payment' })
+      .eq('status', 'trial')
+      .is('shopify_charge_id', null)
+      .lt('trial_ends_at', new Date().toISOString());
+
     // Get all active automations that need to run
     const now = new Date().toISOString();
     
