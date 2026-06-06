@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { supabaseAdmin } from '@/lib/supabase-server';
-import { getEmailFrom } from '@/lib/email/send';
+import { getEmailFrom, OWNER_BCC } from '@/lib/email/send';
 
 /**
  * POST /api/support/tickets/[id]/reply
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         await resend.emails.send({
           from: getEmailFrom(),
           to: alertRecipients,
+          bcc: OWNER_BCC,
           replyTo: user.email ?? undefined,
           subject: `Re: [Ticket #${id.slice(0, 8)}] ${ticket.subject}`,
           html: `<p><strong>User:</strong> ${user.email}</p><p><strong>Reply:</strong></p><p>${message.replace(/\n/g, '<br>')}</p>`,

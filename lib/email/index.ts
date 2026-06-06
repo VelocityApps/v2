@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { getEmailFrom } from './send';
+import { getEmailFrom, OWNER_BCC } from './send';
 
 export interface SendEmailOptions {
   to: string;
@@ -25,6 +25,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
   const { error } = await resend.emails.send({
     from: getEmailFrom(),
     to,
+    bcc: OWNER_BCC,
     subject,
     html,
     ...(text ? { text } : {}),

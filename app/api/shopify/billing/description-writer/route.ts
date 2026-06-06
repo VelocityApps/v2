@@ -3,10 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import { ShopifyClient } from '@/lib/shopify/client';
 import { decryptToken } from '@/lib/shopify/oauth';
 import { checkCheckoutRateLimit } from '@/lib/rate-limit';
+import { isTestCharge } from '@/lib/shopify/billing';
 
 /**
  * POST /api/shopify/billing/description-writer
- * Creates a Shopify AppSubscription charge for the AI Description Writer add-on (£19/mo).
+ * Creates a Shopify AppSubscription charge for the AI Description Writer add-on ($19/mo).
  * Returns { url } — redirect the user to Shopify's hosted approval page.
  */
 export async function POST(request: NextRequest) {
@@ -53,16 +54,18 @@ export async function POST(request: NextRequest) {
   const accessToken = await decryptToken(ua.shopify_access_token_encrypted);
   const shopify = new ShopifyClient(ua.shopify_store_url, accessToken);
 
+  // Only fetch shop plan in production — in dev NODE_ENV check is sufficient
+  const shopPlan = process.env.NODE_ENV === 'production' ? await shopify.getShopPlan() : null;
+
   const returnUrl = `${appUrl}/api/shopify/billing/callback?user_id=${user.id}`;
-  const isTest = process.env.NODE_ENV !== 'production';
 
   const { confirmationUrl, gid } = await shopify.createAppSubscription({
     name: 'AI Description Writer',
     returnUrl,
     priceMonthly: 19,
-    currencyCode: 'GBP',
+    currencyCode: 'USD',
     trialDays: 0,
-    test: isTest,
+    test: isTestCharge(shopPlan),
   });
 
   // Store pending charge ID so callback can verify it

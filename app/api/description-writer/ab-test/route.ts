@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 import { Resend } from 'resend';
-import { getEmailFrom } from '@/lib/email/send';
+import { getEmailFrom, OWNER_BCC } from '@/lib/email/send';
 
 const anthropic = new Anthropic();
 
@@ -206,6 +206,7 @@ async function sendWinnerEmail(userId: string, test: any): Promise<void> {
     await resend.emails.send({
       from: getEmailFrom(),
       to: email,
+      bcc: OWNER_BCC,
       subject: `A/B Test Complete — ${winnerLabel} won!`,
       html: `
 <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#111">

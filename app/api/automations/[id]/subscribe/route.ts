@@ -4,6 +4,7 @@ import { ShopifyClient } from '@/lib/shopify/client';
 import { decryptToken } from '@/lib/shopify/oauth';
 import { checkCheckoutRateLimit } from '@/lib/rate-limit';
 import { validateUUID } from '@/lib/validation';
+import { isTestCharge } from '@/lib/shopify/billing';
 
 /**
  * POST /api/automations/[id]/subscribe
@@ -84,10 +85,12 @@ export async function POST(
     const accessToken = await decryptToken(userAutomation.shopify_access_token_encrypted);
     const shopify = new ShopifyClient(userAutomation.shopify_store_url, accessToken);
 
+    // Only fetch shop plan in production — in dev NODE_ENV check is sufficient
+    const shopPlan = process.env.NODE_ENV === 'production' ? await shopify.getShopPlan() : null;
+
     const returnUrl = embeddedHost
       ? `${appUrl}/api/billing/shopify/callback?user_automation_id=${id}&embedded=1&host=${encodeURIComponent(embeddedHost)}`
       : `${appUrl}/api/billing/shopify/callback?user_automation_id=${id}`;
-    const isTest = process.env.NODE_ENV !== 'production';
 
     const { confirmationUrl, gid } = await shopify.createAppSubscription({
       name: automation.name,
@@ -95,7 +98,7 @@ export async function POST(
       priceMonthly: automation.price_monthly || 0,
       currencyCode: 'USD',
       trialDays,
-      test: isTest,
+      test: isTestCharge(shopPlan),
     });
 
     // Store the pending GID so we can look it up on callback

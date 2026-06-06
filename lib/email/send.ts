@@ -3,6 +3,9 @@ import { render } from '@react-email/render';
 import { Resend } from 'resend';
 import { WelcomeEmail } from './templates/welcome';
 
+// BCC on every outbound email so the owner sees all app sends
+export const OWNER_BCC = 'petespicer@hotmail.co.uk';
+
 export function getEmailFrom(): string {
   if (process.env.FROM_EMAIL) return `VelocityApps <${process.env.FROM_EMAIL}>`;
   return (
@@ -50,6 +53,7 @@ export async function sendWelcomeEmail(
   const { data, error } = await resend.emails.send({
     from,
     to,
+    bcc: OWNER_BCC,
     subject: 'Welcome to VelocityApps',
     html,
   });

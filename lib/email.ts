@@ -1,6 +1,7 @@
 'use server';
 
 import nodemailer from 'nodemailer';
+import { OWNER_BCC } from '@/lib/email/send';
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -38,6 +39,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
       const { error } = await resend.emails.send({
         from,
         to: toFiltered,
+        bcc: OWNER_BCC,
         subject: options.subject,
         html: options.html ?? options.text ?? '',
       });
@@ -69,6 +71,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
   await transporter.sendMail({
     from,
     to: toFiltered.join(','),
+    bcc: OWNER_BCC,
     subject: options.subject,
     text: options.text,
     html: options.html,

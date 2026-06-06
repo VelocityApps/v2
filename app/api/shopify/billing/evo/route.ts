@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import { ShopifyClient } from '@/lib/shopify/client';
 import { decryptCredentials } from '@/lib/evo/encrypt';
 import { checkCheckoutRateLimit } from '@/lib/rate-limit';
+import { isTestCharge } from '@/lib/shopify/billing';
 
 const EVO_PRICE_MONTHLY = 29;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://velocityapps.dev';
@@ -75,8 +76,10 @@ export async function POST(request: NextRequest) {
   const shopDomain = platform.platform_account_id;
   const shopify = new ShopifyClient(shopDomain, accessToken);
 
+  // Only fetch shop plan in production — in dev NODE_ENV check is sufficient
+  const shopPlan = process.env.NODE_ENV === 'production' ? await shopify.getShopPlan() : null;
+
   const returnUrl = `${APP_URL}/api/shopify/billing/evo/callback?user_id=${user.id}`;
-  const isTest = process.env.NODE_ENV !== 'production';
 
   const { confirmationUrl, gid } = await shopify.createAppSubscription({
     name: 'Evo — Multi-Platform Inventory Sync',
@@ -84,7 +87,7 @@ export async function POST(request: NextRequest) {
     priceMonthly: EVO_PRICE_MONTHLY,
     currencyCode: 'USD',
     trialDays: 7,
-    test: isTest,
+    test: isTestCharge(shopPlan),
   });
 
   // Store pending charge ID so the callback can verify it (IDOR protection)

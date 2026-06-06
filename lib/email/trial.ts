@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@react-email/render';
 import { Resend } from 'resend';
-import { getEmailFrom } from './send';
+import { getEmailFrom, OWNER_BCC } from './send';
 import { TrialStartedEmail } from './templates/trial-started';
 import { TrialReminderEmail } from './templates/trial-reminder';
 import { TrialEndedEmail } from './templates/trial-ended';
@@ -25,6 +25,7 @@ export async function sendTrialStartedEmail(
     const { error } = await resend.emails.send({
       from: getEmailFrom(),
       to,
+      bcc: OWNER_BCC,
       subject: `Your ${automationName} trial has started`,
       html,
     });
@@ -48,6 +49,7 @@ export async function sendTrialReminderEmail(
     const { error } = await resend.emails.send({
       from: getEmailFrom(),
       to,
+      bcc: OWNER_BCC,
       subject: `2 days left: Your ${automationName} trial is ending soon`,
       html,
     });
@@ -70,6 +72,7 @@ export async function sendTrialEndedEmail(
     const { error } = await resend.emails.send({
       from: getEmailFrom(),
       to,
+      bcc: OWNER_BCC,
       subject: `Your ${automationName} trial has ended`,
       html,
     });

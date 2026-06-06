@@ -589,6 +589,21 @@ export class ShopifyClient {
   }
 
   /**
+   * Fetch the shop's plan info. Used by isTestCharge() to detect partner/dev
+   * stores that require test: true on AppSubscription charges.
+   */
+  async getShopPlan(): Promise<{ partnerDevelopment: boolean; displayName: string } | null> {
+    try {
+      const data = await this.graphql<{
+        shop: { plan: { partnerDevelopment: boolean; displayName: string } };
+      }>(`query { shop { plan { partnerDevelopment displayName } } }`);
+      return data.shop?.plan ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Set the absolute available quantity for an inventory item at a location.
    * Used by the Evo sync engine to propagate stock changes across platforms.
    *

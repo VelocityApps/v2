@@ -4,7 +4,7 @@ import { render } from '@react-email/render';
 import { Resend } from 'resend';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { logError } from '@/lib/monitoring';
-import { getEmailFrom } from '@/lib/email/send';
+import { getEmailFrom, OWNER_BCC } from '@/lib/email/send';
 import { SupportConfirmationEmail } from '@/lib/email/templates/support-confirmation';
 import { SupportAlertEmail } from '@/lib/email/templates/support-alert';
 
@@ -112,6 +112,7 @@ export async function POST(request: NextRequest) {
                 return resend.emails.send({
                   from,
                   to: alertRecipients,
+                  bcc: OWNER_BCC,
                   replyTo: user.email ?? undefined,
                   subject: `[${priority.toUpperCase()}] New Support Ticket – ${subject}`,
                   html,
@@ -134,6 +135,7 @@ export async function POST(request: NextRequest) {
                 return resend.emails.send({
                   from,
                   to: user.email!,
+                  bcc: OWNER_BCC,
                   subject: `We've received your request – ${subject}`,
                   html,
                 });
