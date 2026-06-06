@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCallback } from 'react';
 import AutomationCard from '@/components/automations/AutomationCard';
+import AutomationAIBuilder from '@/components/AutomationAIBuilder';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -22,6 +23,7 @@ export default function DashboardPage() {
   const [replyMessage, setReplyMessage] = useState('');
   const [replySending, setReplySending] = useState(false);
   const [ticketActionLoading, setTicketActionLoading] = useState(false);
+  const [showAIBuilder, setShowAIBuilder] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -288,12 +290,20 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-1">My Automations</h1>
             <p className="text-[var(--text-secondary)]">Manage your installed automations</p>
           </div>
-          <Link
-            href="/marketplace"
-            className="px-5 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
-          >
-            Browse More Automations
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAIBuilder(true)}
+              className="px-5 py-2.5 border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--text-primary)] hover:text-[var(--accent)] rounded-lg font-medium text-sm transition-colors shadow-sm"
+            >
+              Create with AI ✨
+            </button>
+            <Link
+              href="/marketplace"
+              className="px-5 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
+            >
+              Browse More Automations
+            </Link>
+          </div>
         </div>
 
         {userAutomations.length === 0 ? (
@@ -448,6 +458,17 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
+
+    {/* AI Automation Builder slide-over */}
+    {showAIBuilder && (
+      <AutomationAIBuilder
+        onClose={() => setShowAIBuilder(false)}
+        onActivated={() => {
+          setShowAIBuilder(false);
+          fetchUserAutomations();
+        }}
+      />
+    )}
 
     {/* Ticket detail modal */}
     {selectedTicket && (
