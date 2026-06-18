@@ -31,11 +31,11 @@ function calculateRoi(slug: string, d: StoreData): RoiResult {
 
   switch (slug) {
     case 'abandoned-cart-recovery': {
-      const estimatedAbandoned = Math.round(ordersLast30 * 2.3);
-      const recoverable = Math.round(estimatedAbandoned * 0.10);
+      const estimatedAbandoned = Math.max(Math.round(ordersLast30 * 2.3), 1);
+      const recoverable = Math.max(Math.round(estimatedAbandoned * 0.10), 1);
       const value = Math.round(recoverable * avgOrderValue);
       return {
-        headline: `~${recoverable} recoverable carts/month`,
+        headline: `~${recoverable} recoverable cart${recoverable !== 1 ? 's' : ''}/month`,
         subtext: `Based on your ${ordersLast30} orders in the last 30 days`,
         estimatedMonthlyValue: value,
         metrics: [
