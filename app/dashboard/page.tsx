@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [replySending, setReplySending] = useState(false);
   const [ticketActionLoading, setTicketActionLoading] = useState(false);
   const [showAIBuilder, setShowAIBuilder] = useState(false);
+  const [scanInsights, setScanInsights] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -35,15 +36,37 @@ export default function DashboardPage() {
       fetchUserAutomations();
       fetchTickets();
       fetchSuggestedAutomations();
+      runFirstLoginScan(session.user.id);
     }
   }, [session, authLoading, router]);
+
+  function runFirstLoginScan(userId: string) {
+    const key = `scan_shown_${userId}`;
+    if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      // Fetch top automations to build scan insights
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from('automations')
+            .select('id,name,description,icon,slug,price_monthly')
+            .eq('active', true)
+            .order('user_count', { ascending: false })
+            .limit(4);
+          if (data && data.length) setScanInsights(data);
+        } catch {
+          // non-critical
+        }
+      })();
+    }
+  }
 
   async function fetchSuggestedAutomations() {
     try {
       // Run both queries in parallel instead of sequentially
       const [{ data: installed }, { data: all }] = await Promise.all([
         supabase.from('user_automations').select('automation_id').neq('status', 'uninstalled'),
-        supabase.from('automations').select('*').eq('active', true).order('user_count', { ascending: false }).limit(10),
+        supabase.from('automations').select('*').eq('active', true).order('user_count', { ascending: false }),
       ]);
 
       const installedIds = new Set((installed || []).map((ua: any) => ua.automation_id));
@@ -305,6 +328,38 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
+
+        {/* First-login scan banner */}
+        {scanInsights && scanInsights.length > 0 && (
+          <div className="mb-8 bg-[var(--bg-primary)] border border-[var(--accent-border)] rounded-xl p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wide mb-1">Store audit complete</p>
+                <h2 className="text-lg font-bold text-[var(--text-primary)]">Here's what top Shopify stores in your niche are automating</h2>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">Install any of these to start saving time and recovering revenue today.</p>
+              </div>
+              <button
+                onClick={() => setScanInsights(null)}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors text-lg leading-none flex-shrink-0 ml-4"
+                aria-label="Dismiss"
+              >✕</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {scanInsights.map((a: any) => (
+                <Link
+                  key={a.id}
+                  href={`/marketplace?install=${a.slug}`}
+                  className="flex flex-col gap-2 p-4 rounded-lg border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors group"
+                >
+                  <span className="text-2xl">{a.icon}</span>
+                  <p className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">{a.name}</p>
+                  <p className="text-xs text-[var(--text-muted)] line-clamp-2 flex-1">{a.description}</p>
+                  <p className="text-xs font-medium text-[var(--accent)] mt-auto">Install · ${a.price_monthly}/mo →</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {userAutomations.length === 0 ? (
           <div className="text-center py-16 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl">

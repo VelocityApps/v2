@@ -22,6 +22,8 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
   const [config, setConfig] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nlPrompt, setNlPrompt] = useState('');
+  const [nlLoading, setNlLoading] = useState(false);
 
   // Lock background scroll while modal is open
   useEffect(() => {
@@ -36,6 +38,7 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       setShopifyConnected(false);
       setConfig({});
       setError(null);
+      setNlPrompt('');
       return;
     }
 
@@ -114,6 +117,38 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
       setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAiFill = async () => {
+    if (!nlPrompt.trim() || !session) return;
+    setNlLoading(true);
+    try {
+      const res = await fetch('/api/automations/ai-fill-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          prompt: nlPrompt,
+          configSchema: automation.config_schema || {},
+          automationName: automation.name,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error);
+      } else if (data.config && Object.keys(data.config).length > 0) {
+        setConfig(prev => ({ ...prev, ...data.config }));
+        toast.success('Settings filled in — review and adjust below');
+      } else {
+        toast('No specific settings found in your description — fill in manually below.', { icon: 'ℹ️' });
+      }
+    } catch {
+      toast.error('AI fill failed. Please fill in manually.');
+    } finally {
+      setNlLoading(false);
     }
   };
 
@@ -251,9 +286,29 @@ export default function InstallModal({ automation, isOpen, onClose }: InstallMod
 
         {step === 'configure' && (
           <div className="space-y-4">
-            <p className="text-[#6d7175] text-sm">
-              Configure your automation settings.
-            </p>
+            {automation.config_schema && Object.keys(automation.config_schema).length > 0 && (
+              <div className="bg-[#f6f6f7] border border-[#e1e3e5] rounded-xl p-4">
+                <p className="text-xs font-semibold text-[#202223] mb-2">Describe what you want in plain English</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={nlPrompt}
+                    onChange={e => setNlPrompt(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAiFill(); }}
+                    placeholder={`e.g. "Send alerts when stock drops below 10 units to my work email"`}
+                    className="flex-1 px-3 py-2 bg-white border border-[#e1e3e5] rounded-lg text-sm text-[#202223] placeholder:text-[#8c9196] focus:outline-none focus:border-[#2563eb] transition-colors"
+                  />
+                  <button
+                    onClick={handleAiFill}
+                    disabled={nlLoading || !nlPrompt.trim()}
+                    className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {nlLoading ? '…' : 'Fill with AI'}
+                  </button>
+                </div>
+                <p className="text-[10px] text-[#8c9196] mt-2">AI will pre-fill settings based on your description. Review before installing.</p>
+              </div>
+            )}
             <ConfigForm
               configSchema={automation.config_schema || {}}
               initialConfig={config}

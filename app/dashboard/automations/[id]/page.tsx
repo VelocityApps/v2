@@ -8,6 +8,125 @@ import toast from 'react-hot-toast';
 import ConfigForm from '@/components/automations/ConfigForm';
 import Link from 'next/link';
 
+// ── ROI Preview Modal ────────────────────────────────────────────────────────
+function RoiModal({
+  data,
+  automationName,
+  priceMonthly,
+  loading,
+  onConfirm,
+  onClose,
+}: {
+  data: any;
+  automationName: string;
+  priceMonthly: number;
+  loading: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wide mb-1">Your store · estimated impact</p>
+            <h2 className="text-xl font-bold text-[var(--text-primary)]">{automationName}</h2>
+          </div>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors text-lg leading-none">✕</button>
+        </div>
+
+        {loading ? (
+          <div className="py-12 flex flex-col items-center gap-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--accent)]" />
+            <p className="text-sm text-[var(--text-secondary)]">Scanning your store…</p>
+          </div>
+        ) : data?.error ? (
+          <div className="py-8 text-center">
+            <p className="text-[var(--text-secondary)] text-sm mb-6">Couldn't load store data — you can still activate.</p>
+            <button onClick={onConfirm} className="w-full px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-semibold transition-colors shadow-sm">
+              Activate · ${priceMonthly}/month
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="bg-[var(--bg-secondary)] rounded-xl p-5 mb-5">
+              <p className="text-lg font-bold text-[var(--text-primary)] mb-1">{data?.headline}</p>
+              <p className="text-sm text-[var(--text-secondary)]">{data?.subtext}</p>
+            </div>
+
+            <div className="space-y-2 mb-5">
+              {(data?.metrics ?? []).map((m: { label: string; value: string }) => (
+                <div key={m.label} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
+                  <span className="text-sm text-[var(--text-secondary)]">{m.label}</span>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">{m.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {data?.roiMultiple && data.roiMultiple > 1 && (
+              <div className="bg-[var(--success-bg)] border border-[var(--success-border)] rounded-lg px-4 py-3 mb-5 text-center">
+                <p className="text-sm font-semibold text-[var(--success)]">
+                  Estimated {data.roiMultiple}× return on the ${priceMonthly}/month subscription
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={onConfirm}
+              className="w-full px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-xl font-semibold transition-colors shadow-sm"
+            >
+              Activate · ${priceMonthly}/month
+            </button>
+            <button onClick={onClose} className="w-full mt-2 px-6 py-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm transition-colors">
+              Not right now
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Bundle Suggestions ───────────────────────────────────────────────────────
+function BundleSuggestions({ currentAutomationId, session }: { currentAutomationId: string; session: any }) {
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      const [{ data: installed }, { data: all }] = await Promise.all([
+        supabase.from('user_automations').select('automation_id').neq('status', 'uninstalled'),
+        supabase.from('automations').select('id,name,description,icon,slug,price_monthly').eq('active', true).order('user_count', { ascending: false }),
+      ]);
+      const installedIds = new Set((installed || []).map((ua: any) => ua.automation_id));
+      setSuggestions((all || []).filter((a: any) => !installedIds.has(a.id)).slice(0, 3));
+    }
+    load().catch(() => {});
+  }, [currentAutomationId]);
+
+  if (!suggestions.length) return null;
+
+  return (
+    <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8 mb-6">
+      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-1">Add more automations</h2>
+      <p className="text-sm text-[var(--text-secondary)] mb-5">Merchants who activated this also run these automations.</p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {suggestions.map(s => (
+          <Link
+            key={s.id}
+            href={`/marketplace?install=${s.slug}`}
+            className="flex flex-col gap-2 p-4 rounded-lg border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--accent-bg)] transition-colors group"
+          >
+            <span className="text-2xl">{s.icon}</span>
+            <p className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">{s.name}</p>
+            <p className="text-xs text-[var(--text-muted)] line-clamp-2">{s.description}</p>
+            <p className="text-xs font-medium text-[var(--accent)] mt-auto">${s.price_monthly}/mo →</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AutomationManagementPage() {
   const { session } = useAuth();
   const router = useRouter();
@@ -23,6 +142,10 @@ export default function AutomationManagementPage() {
   const [saving, setSaving] = useState(false);
   const [billingLoading, setBillingLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRoiModal, setShowRoiModal] = useState(false);
+  const [roiData, setRoiData] = useState<any>(null);
+  const [roiLoading, setRoiLoading] = useState(false);
+  const [showBundleSuggestions, setShowBundleSuggestions] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -34,10 +157,12 @@ export default function AutomationManagementPage() {
     const billing = searchParams.get('billing');
     if (billing === 'success') {
       toast.success('Automation activated!');
+      setShowBundleSuggestions(true);
     } else if (billing === 'declined') {
       toast.error('Billing approval was declined. You can try again any time.');
     } else if (billing === 'error') {
-      toast.error('Something went wrong with billing. Please try again.');
+      const reason = searchParams.get('reason');
+      toast.error(`Billing error${reason ? `: ${reason}` : ''}. Please try again.`);
     }
   }, [searchParams]);
 
@@ -97,6 +222,26 @@ export default function AutomationManagementPage() {
 
   async function handleActivate() {
     if (!session) return;
+    // Show ROI preview first
+    setShowRoiModal(true);
+    setRoiData(null);
+    setRoiLoading(true);
+    try {
+      const res = await fetch(`/api/automations/${id}/roi-preview`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      setRoiData(data);
+    } catch {
+      setRoiData({ error: true });
+    } finally {
+      setRoiLoading(false);
+    }
+  }
+
+  async function handleConfirmActivate() {
+    if (!session) return;
+    setShowRoiModal(false);
     setBillingLoading(true);
     try {
       const response = await fetch(`/api/automations/${id}/subscribe`, {
@@ -186,8 +331,8 @@ export default function AutomationManagementPage() {
       return (
         <div className="mb-4 p-4 rounded-lg bg-[var(--warning-bg)] border border-[var(--warning-border)]">
           <p className="text-[var(--warning)] font-medium">Paused — payment issue</p>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">Update your payment method to reactivate.</p>
-          {manageBtn}
+          <p className="text-[var(--text-secondary)] text-sm mt-1">Resubscribe to reactivate.</p>
+          {activateBtn('Resubscribe')}
         </div>
       );
     }
@@ -236,6 +381,16 @@ export default function AutomationManagementPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-secondary)] text-[var(--text-primary)]">
+      {showRoiModal && (
+        <RoiModal
+          data={roiData}
+          automationName={automation?.name ?? ''}
+          priceMonthly={automation?.price_monthly ?? 0}
+          loading={roiLoading}
+          onConfirm={handleConfirmActivate}
+          onClose={() => setShowRoiModal(false)}
+        />
+      )}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link href="/dashboard" className="text-[var(--accent)] hover:text-[var(--accent-hover)] text-sm font-medium mb-6 inline-flex items-center gap-1">
           ← Back to Dashboard
@@ -273,6 +428,10 @@ export default function AutomationManagementPage() {
           )}
         </div>
 
+        {showBundleSuggestions && (
+          <BundleSuggestions currentAutomationId={id} session={session} />
+        )}
+
         {/* Configuration */}
         <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8 mb-6">
           <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Configuration</h2>
@@ -297,8 +456,11 @@ export default function AutomationManagementPage() {
 
         {/* Logs */}
         <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Execution Logs</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Activity log</h2>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">What this automation has been doing</p>
+            </div>
             {logs.length > 0 && (
               <button
                 onClick={() => {
@@ -311,36 +473,64 @@ export default function AutomationManagementPage() {
               </button>
             )}
           </div>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-1.5 max-h-[480px] overflow-y-auto">
             {logs.length === 0 ? (
-              <p className="text-[var(--text-secondary)] text-center py-8">No logs yet</p>
+              <p className="text-[var(--text-secondary)] text-center py-10 text-sm">No activity yet — logs will appear here once the automation runs.</p>
             ) : (
-              logs.map((log) => (
-                <div
-                  key={log.id}
-                  className={`p-3 rounded-lg border text-sm ${
-                    log.event_type === 'success' ? 'bg-[var(--success-bg)] border-[var(--success-border)]' :
-                    log.event_type === 'error' ? 'bg-[var(--error-bg)] border-[var(--error-border)]' :
-                    log.event_type === 'warning' ? 'bg-[var(--warning-bg)] border-[var(--warning-border)]' :
-                    'bg-[var(--bg-secondary)] border-[var(--border)]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-semibold tracking-wide ${
-                      log.event_type === 'success' ? 'text-[var(--success)]' :
-                      log.event_type === 'error' ? 'text-[var(--error)]' :
-                      log.event_type === 'warning' ? 'text-[var(--warning)]' :
-                      'text-[var(--text-secondary)]'
-                    }`}>
-                      {log.event_type.toUpperCase()}
-                    </span>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {new Date(log.created_at).toLocaleString()}
-                    </span>
+              logs.map((log) => {
+                const isRoutine = log.event_type === 'success' && (
+                  log.message === 'Automation executed successfully' ||
+                  log.message === 'No unpaid orders to cancel' ||
+                  log.message === 'No action needed'
+                );
+                const icon = log.event_type === 'error' ? '✗'
+                  : log.event_type === 'warning' ? '!'
+                  : log.event_type === 'success' ? '✓'
+                  : '·';
+                const timeAgo = (() => {
+                  const diff = Date.now() - new Date(log.created_at).getTime();
+                  const mins = Math.floor(diff / 60000);
+                  if (mins < 1) return 'just now';
+                  if (mins < 60) return `${mins}m ago`;
+                  const hrs = Math.floor(mins / 60);
+                  if (hrs < 24) return `${hrs}h ago`;
+                  const days = Math.floor(hrs / 24);
+                  return days === 1 ? 'yesterday' : `${days}d ago`;
+                })();
+
+                if (isRoutine) {
+                  return (
+                    <div key={log.id} className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)]">
+                      <span className="w-4 h-4 rounded-full border border-[var(--border)] flex items-center justify-center text-[9px] font-bold flex-shrink-0 text-[var(--text-muted)]">·</span>
+                      <span className="flex-1">Ran — nothing to do</span>
+                      <span className="flex-shrink-0">{timeAgo}</span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    key={log.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border text-sm transition-colors ${
+                      log.event_type === 'error' ? 'bg-[var(--error-bg)] border-[var(--error-border)]' :
+                      log.event_type === 'warning' ? 'bg-[var(--warning-bg)] border-[var(--warning-border)]' :
+                      log.event_type === 'success' ? 'bg-[var(--success-bg)] border-[var(--success-border)]' :
+                      'bg-[var(--bg-secondary)] border-[var(--border)]'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${
+                      log.event_type === 'error' ? 'bg-red-500/20 text-[var(--error)]' :
+                      log.event_type === 'warning' ? 'bg-yellow-500/20 text-[var(--warning)]' :
+                      log.event_type === 'success' ? 'bg-green-500/20 text-[var(--success)]' :
+                      'bg-[var(--bg-primary)] text-[var(--text-muted)]'
+                    }`}>{icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[var(--text-primary)] leading-snug">{log.message}</p>
+                    </div>
+                    <span className="text-xs text-[var(--text-muted)] flex-shrink-0 mt-0.5">{timeAgo}</span>
                   </div>
-                  <p className="text-[var(--text-primary)]">{log.message}</p>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
