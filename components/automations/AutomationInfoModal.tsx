@@ -67,7 +67,7 @@ const automationInfo: Record<string, {
     ],
     stats: [
       { label: 'Prevented stockouts/month', value: '5–10', icon: '📦' },
-      { label: 'Lost sales avoided/month', value: '£200–500', icon: '💰' },
+      { label: 'Lost sales avoided/month', value: '$200–500', icon: '💰' },
       { label: 'Time saved per week', value: '3–5 hrs', icon: '⏱️' },
     ],
     useCases: [
@@ -87,14 +87,14 @@ const automationInfo: Record<string, {
       'Tracks revenue recovered with detailed per-email analytics',
     ],
     stats: [
-      { label: 'Revenue recovered/month', value: '£500–2k', icon: '💰' },
+      { label: 'Revenue recovered/month', value: '$500–2k', icon: '💰' },
       { label: 'Cart recovery rate', value: '10–15%', icon: '🛒' },
       { label: 'Time saved per week', value: '5–8 hrs', icon: '⏱️' },
     ],
     useCases: [
       'Stores with high cart abandonment rates (60%+ is normal)',
       'Businesses wanting to recover lost sales automatically',
-      'E-commerce stores with average order value >£50',
+      'E-commerce stores with average order value >$50',
       'Merchants manually following up on abandoned carts',
     ],
     setupTime: '5 minutes — customise email templates, set discount amounts, activate',

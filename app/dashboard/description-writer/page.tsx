@@ -328,7 +328,7 @@ function DescriptionWriterPage() {
             ))}
           </ul>
           <div className="mb-6">
-            <span className="text-3xl font-bold text-[var(--text-primary)]">£19</span>
+            <span className="text-3xl font-bold text-[var(--text-primary)]">$19</span>
             <span className="text-[var(--text-secondary)]">/month</span>
           </div>
           <button
@@ -336,7 +336,7 @@ function DescriptionWriterPage() {
             disabled={upgradeLoading}
             className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {upgradeLoading ? 'Redirecting to Shopify...' : 'Activate AI Description Writer — £19/mo'}
+            {upgradeLoading ? 'Redirecting to Shopify...' : 'Activate AI Description Writer — $19/mo'}
           </button>
           <p className="text-xs text-[var(--text-muted)] mt-3">
             Billed via Shopify. Cancel any time from your Shopify billing settings.

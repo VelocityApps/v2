@@ -1,6 +1,6 @@
 # Shopify App Store Launch Checklist
 
-**Last updated:** 2026-04-06
+**Last updated:** 2026-04-19
 **Target:** Shopify App Store submission
 
 ---
@@ -32,25 +32,16 @@
 | 21 | `app/uninstalled` webhook — cancels automations and clears revoked tokens immediately |
 | 22 | Embedded signup UX — `emailRedirectTo` brings merchant back after verification |
 | 23 | Coming soon labels removed — all automations show "Add to Store" |
+| 24 | Partner dashboard config — App URL, redirect URL, embedded flag, webhooks, scopes |
+| 25 | Production environment variables verified on Vercel |
 
 ---
 
 ## ❌ Remaining
 
-### 🔴 Priority 1 — Partner Dashboard config (required before review)
+### ✅ Priority 1 — Partner Dashboard config — DONE
 
-- [ ] **App URL** → `https://velocityapps.dev/api/auth/shopify/install`
-- [ ] **Allowed redirect URL** → `https://velocityapps.dev/api/auth/shopify/callback`
-- [ ] **Embedded in admin** → Yes
-- [ ] **Register mandatory webhooks** in Partner dashboard:
-  - `app/uninstalled` → `https://velocityapps.dev/api/webhooks/shopify`
-  - `customers/data_request` → `https://velocityapps.dev/api/webhooks/shopify`
-  - `customers/redact` → `https://velocityapps.dev/api/webhooks/shopify`
-  - `shop/redact` → `https://velocityapps.dev/api/webhooks/shopify`
-- [ ] **Scopes declared** in Partner dashboard match what the app requests:
-  `read_products`, `write_products`, `read_orders`, `read_inventory`, `write_inventory`, `read_customers`, `read_content`, `write_content`, `write_price_rules`, `write_discounts`
-
-**Time:** 15 minutes
+- [x] App URL, redirect URL, embedded flag, webhooks, scopes — all configured
 
 ---
 
@@ -83,30 +74,9 @@
 
 ---
 
-### 🟡 Priority 4 — Production environment variables
+### ✅ Priority 4 — Production environment variables — DONE
 
-Verify these are all set in the Vercel dashboard:
-
-| Variable | Status |
-|----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✓ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✓ |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✓ |
-| `SHOPIFY_CLIENT_ID` | ✓ |
-| `SHOPIFY_CLIENT_SECRET` | ✓ |
-| `SHOPIFY_WEBHOOK_SECRET` | ✓ |
-| `RESEND_API_KEY` | ✓ |
-| `FROM_EMAIL` | ✓ |
-| `SUPPORT_ALERT_EMAILS` | ✓ |
-| `CRON_SECRET` | ✓ |
-| `ENCRYPTION_KEY` | **verify** |
-| `NEXT_PUBLIC_APP_URL` | must be `https://velocityapps.dev` |
-| `NEXT_PUBLIC_SHOPIFY_CLIENT_ID` | needed for App Bridge client-side init |
-| `NEXT_PUBLIC_SENTRY_DSN` | optional — set up sentry.io if desired |
-
-**Note:** `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` are no longer needed for the App Store version — billing goes through Shopify.
-
-**Time:** 10 minutes
+All env vars verified on Vercel.
 
 ---
 
@@ -127,8 +97,8 @@ Verify these are all set in the Vercel dashboard:
 
 | Status | Count |
 |--------|-------|
-| ✅ Done | 23 |
-| ❌ Remaining | 5 tasks |
+| ✅ Done | 25 |
+| ❌ Remaining | 3 tasks |
 
 **No more code changes needed. Everything remaining is config, listing content, and testing.**
 

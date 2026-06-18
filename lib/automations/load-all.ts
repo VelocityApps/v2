@@ -9,6 +9,9 @@
  */
 
 import '@/lib/automations/abandoned-cart-recovery';
+import '@/lib/automations/auto-cancel-unpaid-orders';
+import '@/lib/automations/auto-hide-out-of-stock';
+import '@/lib/automations/back-in-stock-alerts';
 import '@/lib/automations/auto-restock-alerts';
 import '@/lib/automations/auto-seo-optimization';
 import '@/lib/automations/auto-tag-products';

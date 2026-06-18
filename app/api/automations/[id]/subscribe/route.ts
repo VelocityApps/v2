@@ -61,6 +61,15 @@ export async function POST(
       );
     }
 
+    // Clear stale charge ID so a fresh subscription can be created
+    if (userAutomation.status === 'paused' && userAutomation.shopify_charge_id) {
+      await supabaseAdmin
+        .from('user_automations')
+        .update({ shopify_charge_id: null })
+        .eq('id', id);
+      userAutomation.shopify_charge_id = null;
+    }
+
     if (!userAutomation.shopify_access_token_encrypted) {
       return NextResponse.json({ error: 'Shopify store not connected' }, { status: 400 });
     }

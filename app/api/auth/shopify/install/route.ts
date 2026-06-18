@@ -81,6 +81,7 @@ export async function GET(request: NextRequest) {
     'read_products',
     'write_products',
     'read_orders',
+    'write_orders',
     'read_inventory',
     'write_inventory',
     'read_customers',

@@ -12,6 +12,7 @@ export function isTestCharge(
   plan: { partnerDevelopment: boolean } | null | undefined,
 ): boolean {
   if (process.env.NODE_ENV !== 'production') return true;
+  if (process.env.SHOPIFY_BILLING_TEST === 'true') return true;
   // partnerDevelopment is the official Shopify flag for all dev/partner store types
   return plan?.partnerDevelopment === true;
 }

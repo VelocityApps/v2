@@ -575,14 +575,14 @@ export class ShopifyClient {
   async getAppSubscription(gid: string): Promise<{ id: string; status: string; name: string } | null> {
     try {
       const data = await this.graphql<{
-        appSubscription: { id: string; status: string; name: string } | null;
+        node: { id: string; status: string; name: string } | null;
       }>(
         `query GetAppSubscription($id: ID!) {
-          appSubscription(id: $id) { id status name }
+          node(id: $id) { ... on AppSubscription { id status name } }
         }`,
         { id: gid }
       );
-      return data.appSubscription;
+      return data.node ?? null;
     } catch {
       return null;
     }
@@ -601,6 +601,18 @@ export class ShopifyClient {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Cancel an order by ID.
+   * @param orderId  Numeric order ID
+   * @param notifyCustomer  Whether to send Shopify's cancellation email
+   */
+  async cancelOrder(orderId: string, notifyCustomer = false): Promise<void> {
+    await this.request(`/orders/${orderId}/cancel.json`, {
+      method: 'POST',
+      body: JSON.stringify({ email: notifyCustomer }),
+    });
   }
 
   /**

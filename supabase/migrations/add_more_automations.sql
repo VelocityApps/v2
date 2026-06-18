@@ -59,7 +59,7 @@ INSERT INTO automations (name, slug, description, long_description, category, pr
 
 ('Customer Lifetime Value Tracker', 'customer-ltv-tracker', 'Track and segment customers by lifetime value', 'Automatically calculate and track customer lifetime value. Segment customers and create targeted campaigns based on their value.', 'analytics', 24.00, '💎',
  '["LTV calculation", "Customer segmentation", "High-value alerts", "Retention tracking"]'::jsonb,
- '{"calculation_method": {"type": "select", "label": "Calculation Method", "options": ["simple", "rfm"], "default": "simple", "required": true}, "segment_threshold": {"type": "number", "label": "High-Value Threshold (£)", "default": 500, "required": true}}'::jsonb),
+ '{"calculation_method": {"type": "select", "label": "Calculation Method", "options": ["simple", "rfm"], "default": "simple", "required": true}, "segment_threshold": {"type": "number", "label": "High-Value Threshold ($)", "default": 500, "required": true}}'::jsonb),
 
 ('Competitor Price Monitoring', 'competitor-price-monitoring', 'Monitor competitor prices automatically', 'Automatically monitor competitor prices and get alerts when they change. Stay competitive with real-time price intelligence.', 'analytics', 34.00, '👁️',
  '["Competitor tracking", "Price change alerts", "Price comparison", "Market analysis"]'::jsonb,

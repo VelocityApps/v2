@@ -54,7 +54,7 @@ export class CustomerLtvTracker extends BaseAutomation {
     const config = userAutomation.config || {};
     const segmentThreshold: number = Number(config.segment_threshold ?? 500);
 
-    await this.log(userAutomation.id, 'info', `LTV Tracker running – threshold: £${segmentThreshold}`);
+    await this.log(userAutomation.id, 'info', `LTV Tracker running – threshold: $${segmentThreshold}`);
 
     let allCustomers: any[] = [];
     try {

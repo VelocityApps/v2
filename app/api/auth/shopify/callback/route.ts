@@ -50,7 +50,11 @@ export async function GET(request: NextRequest) {
       await supabaseAdmin
         .from('shopify_pending_tokens')
         .upsert(
-          { shop: shopNormalized, encrypted_token: encryptedToken },
+          {
+            shop: shopNormalized,
+            encrypted_token: encryptedToken,
+            expires_at: new Date(Date.now() + 3600_000).toISOString(),
+          },
           { onConflict: 'shop' },
         );
     } catch (err: any) {

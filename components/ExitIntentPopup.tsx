@@ -61,7 +61,7 @@ export default function ExitIntentPopup() {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-[var(--text-secondary)]">Avg. monthly recovery</span>
-            <span className="font-semibold text-[var(--success)]">£700+</span>
+            <span className="font-semibold text-[var(--success)]">$700+</span>
           </div>
         </div>
 
