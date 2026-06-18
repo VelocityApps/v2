@@ -84,6 +84,36 @@ export class ShopifyClient {
   }
 
   /**
+   * Make authenticated request and return body + next page_info cursor from Link header.
+   * Used for endpoints that use cursor-based pagination (replaces deprecated ?page=N).
+   */
+  private async requestWithPagination<TItem>(
+    endpoint: string
+  ): Promise<{ collects: TItem[]; nextPageInfo: string | null }> {
+    const url = `https://${this.shop}/admin/api/${this.apiVersion}${endpoint}`;
+    const response = await fetch(url, {
+      headers: {
+        'X-Shopify-Access-Token': this.accessToken,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Shopify API error: ${response.status} ${error}`);
+    }
+    const data = await response.json();
+    // Extract the collects array regardless of key name
+    const collects: TItem[] = data.collects ?? [];
+
+    // Parse Link header for next page cursor
+    const link = response.headers.get('link') ?? '';
+    const nextMatch = link.match(/<[^>]*[?&]page_info=([^&>]+)[^>]*>;\s*rel="next"/);
+    const nextPageInfo = nextMatch ? nextMatch[1] : null;
+
+    return { collects, nextPageInfo };
+  }
+
+  /**
    * Make authenticated request to Shopify API
    */
   private async request<T>(
@@ -354,19 +384,19 @@ export class ShopifyClient {
    * Remove all products from collection
    */
   async clearCollection(collectionId: string): Promise<void> {
-    let page = 1;
+    let pageInfo: string | null = null;
     while (true) {
-      const collects = await this.request<{ collects: Array<{ id: string }> }>(
-        `/collects.json?collection_id=${collectionId}&limit=250&page=${page}`
-      );
-      if (!collects.collects.length) break;
-      for (const collect of collects.collects) {
-        await this.request(`/collects/${collect.id}.json`, {
-          method: 'DELETE',
-        });
+      const qs: string = pageInfo
+        ? `collection_id=${collectionId}&limit=250&page_info=${pageInfo}`
+        : `collection_id=${collectionId}&limit=250`;
+      const { collects, nextPageInfo }: { collects: { id: string }[]; nextPageInfo: string | null } =
+        await this.requestWithPagination<{ id: string }>(`/collects.json?${qs}`);
+      if (!collects.length) break;
+      for (const collect of collects) {
+        await this.request(`/collects/${collect.id}.json`, { method: 'DELETE' });
       }
-      if (collects.collects.length < 250) break;
-      page++;
+      if (!nextPageInfo) break;
+      pageInfo = nextPageInfo;
     }
   }
 
@@ -385,14 +415,16 @@ export class ShopifyClient {
    */
   async getCollectionProducts(collectionId: string): Promise<Array<{ id: string }>> {
     const all: Array<{ id: string }> = [];
-    let page = 1;
+    let pageInfo: string | null = null;
     while (true) {
-      const collects = await this.request<{ collects: Array<{ product_id: string }> }>(
-        `/collects.json?collection_id=${collectionId}&limit=250&page=${page}`
-      );
-      all.push(...collects.collects.map(c => ({ id: c.product_id })));
-      if (collects.collects.length < 250) break;
-      page++;
+      const qs: string = pageInfo
+        ? `collection_id=${collectionId}&limit=250&page_info=${pageInfo}`
+        : `collection_id=${collectionId}&limit=250`;
+      const { collects, nextPageInfo }: { collects: { product_id: string }[]; nextPageInfo: string | null } =
+        await this.requestWithPagination<{ product_id: string }>(`/collects.json?${qs}`);
+      all.push(...collects.map(c => ({ id: c.product_id })));
+      if (!nextPageInfo) break;
+      pageInfo = nextPageInfo;
     }
     return all;
   }
