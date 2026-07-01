@@ -395,6 +395,7 @@ export default function DashboardPage() {
                   shopifyChargeId={userAutomation.shopify_charge_id}
                   trialEndsAt={userAutomation.trial_ends_at}
                   onConfigure={() => router.push(`/dashboard/automations/${userAutomation.id}`)}
+                  onActivityLog={() => router.push(`/dashboard/automations/${userAutomation.id}#logs`)}
                   onPause={() => handlePause(userAutomation.id)}
                   onResume={() => handleResume(userAutomation.id)}
                   onRemove={() => handleRemove(userAutomation.id)}

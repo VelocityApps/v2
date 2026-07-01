@@ -28,6 +28,7 @@ interface AutomationCardProps {
   automation: Automation;
   variant?: 'marketplace' | 'installed';
   onConfigure?: () => void;
+  onActivityLog?: () => void;
   onPause?: () => void;
   onResume?: () => void;
   onRemove?: () => void;
@@ -54,6 +55,7 @@ export default function AutomationCard({
   automation,
   variant = 'marketplace',
   onConfigure,
+  onActivityLog,
   onPause,
   onResume,
   onRemove,
@@ -238,6 +240,15 @@ export default function AutomationCard({
                 className="w-full px-4 py-2 bg-white hover:bg-[#f6f6f7] text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg text-sm font-medium transition-colors"
               >
                 Manage subscription / Cancel
+              </button>
+            )}
+            {onActivityLog && (
+              <button
+                onClick={onActivityLog}
+                className="w-full px-4 py-2 bg-white hover:bg-[#f6f6f7] text-[#6d7175] hover:text-[#202223] border border-[#e1e3e5] rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                Activity log
               </button>
             )}
           </div>

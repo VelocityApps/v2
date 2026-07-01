@@ -455,7 +455,7 @@ export default function AutomationManagementPage() {
         </div>
 
         {/* Logs */}
-        <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8">
+        <div id="logs" className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">Activity log</h2>
