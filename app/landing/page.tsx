@@ -325,11 +325,11 @@ function PricingSection({ session }: { session: any }) {
             <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">Pay as you go</h3>
             <p className="text-sm text-[var(--text-secondary)] mb-6">Install one automation, pay for one automation.</p>
             <div className="mb-5">
-              <span className="text-4xl font-extrabold text-[var(--text-primary)]">from $19</span>
+              <span className="text-4xl font-extrabold text-[var(--text-primary)]">from $9</span>
               <span className="text-[var(--text-secondary)] ml-1 text-sm">/ automation / mo</span>
             </div>
             <div className="mb-6 space-y-1.5">
-              {[['Best Sellers Collection', '$19'], ['Low Stock Alerts', '$19'], ['Review Request Automator', '$24'], ['Welcome Email Series', '$30'], ['Abandoned Cart Recovery', '$36']].map(([name, price]) => (
+              {[['Back-in-Stock Alerts', '$9'], ['Auto-Cancel Unpaid Orders', '$9'], ['Auto-Hide Out-of-Stock', '$9'], ['Best Sellers Collection', '$19'], ['Low Stock Alerts', '$19'], ['Review Request Automator', '$24'], ['Welcome Email Series', '$30'], ['Abandoned Cart Recovery', '$36']].map(([name, price]) => (
                 <div key={name} className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-1.5">
                   <span className="text-[var(--text-secondary)]">{name}</span>
                   <span className="font-semibold text-[var(--text-primary)]">{price}/mo</span>
