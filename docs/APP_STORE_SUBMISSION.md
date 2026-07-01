@@ -18,7 +18,7 @@ Stop leaving money on the table. VelocityApps gives every Shopify merchant acces
 
 **Pick an automation. Click install. Watch it run.**
 
-Each automation is a standalone, laser-focused tool that solves one problem exceptionally well. Browse the marketplace, see exactly what it's worth to your store (we show a live ROI estimate based on your real data), and activate in under 60 seconds.
+Each automation is a standalone, laser-focused tool that solves one problem exceptionally well. Browse the marketplace, pick what fits your store, and activate in under 60 seconds — we show a live ROI estimate from your real store data before you confirm.
 
 ---
 
@@ -50,7 +50,7 @@ Each automation is a standalone, laser-focused tool that solves one problem exce
 
 Unlike all-in-one platforms that lock you into one vendor and one way of doing things, VelocityApps lets you pick exactly what you need. Install one automation for $9/month. Install ten and save. Each one comes with a free trial so you can see the value before you pay.
 
-- **Live ROI preview** — Before you install anything, we show you a real estimate based on your actual store data: how many carts you're losing, how many reviews you could be collecting, how much revenue is locked up in lapsed customers.
+- **Live ROI preview** — Before you activate any automation, we show you a real estimate based on your actual store data: how many carts you're losing, how many reviews you could be collecting, how much revenue is locked up in lapsed customers.
 - **AI-powered setup** — Describe what you want in plain English ("alert me when stock drops below 10 units") and our AI fills in the configuration for you.
 - **No code required** — Every automation installs and configures entirely within the app. No scripts, no theme edits, no developer needed.
 - **14-day free trial** — Try any automation free for 7 days. Only pay when you're sure it's working.
@@ -60,7 +60,7 @@ Unlike all-in-one platforms that lock you into one vendor and one way of doing t
 ### Key benefits (3 bullet points shown on listing card)
 
 1. Install proven revenue automations in one click — abandoned cart recovery, low stock alerts, review requests, and more.
-2. See a live ROI estimate from your real store data before you pay a cent.
+2. See a live ROI estimate from your real store data before you activate any automation.
 3. AI-powered setup: describe what you want in plain English and we configure it for you.
 
 ---
