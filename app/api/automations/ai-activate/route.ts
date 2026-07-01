@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 
   // Create the user_automations trial row
   const now = new Date();
-  const trialEndsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const trialEndsAt = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
   const { data: userAutomation, error: uaError } = await supabaseAdmin
     .from('user_automations')

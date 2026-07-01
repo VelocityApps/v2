@@ -6,65 +6,71 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import ExitIntentPopup from '@/components/ExitIntentPopup';
+import AutomationIcon from '@/components/automations/AutomationIcon';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
 const AUTOMATIONS = [
-  { icon: '🛒', name: 'Abandoned Cart Recovery', category: 'Revenue', price: 36, roi: 'Recover up to 15% of abandoned carts', slug: 'abandoned-cart-recovery' },
-  { icon: '⭐', name: 'Review Request Automator', category: 'Social proof', price: 24, roi: 'Get 3× more reviews on autopilot', slug: 'review-request-automator' },
-  { icon: '📦', name: 'Low Stock Alerts', category: 'Inventory', price: 19, roi: 'Save ~5 hrs/week on stock checks', slug: 'low-stock-alerts' },
-  { icon: '✉️', name: 'Welcome Email Series', category: 'Retention', price: 30, roi: 'Convert new subscribers 22% better', slug: 'welcome-email-series' },
-  { icon: '🔁', name: 'Win-Back Campaign', category: 'Retention', price: 36, roi: 'Win back 1 in 5 lapsed customers', slug: 'win-back-campaign' },
-  { icon: '🏆', name: 'Best Sellers Collection', category: 'Merchandising', price: 19, roi: 'Keep top sellers front and centre', slug: 'best-sellers-collection' },
+  { name: 'Abandoned Cart Recovery', category: 'marketing', price: 36, roi: 'Typical recovery: 10–15% of lost carts', slug: 'abandoned-cart-recovery' },
+  { name: 'Review Request Automator', category: 'marketing', price: 24, roi: 'More reviews, no manual chasing', slug: 'review-request-automator' },
+  { name: 'Low Stock Alerts', category: 'inventory', price: 19, roi: 'Know before customers do', slug: 'low-stock-alerts' },
+  { name: 'Welcome Email Series', category: 'retention', price: 30, roi: 'Better first-purchase rate from new subscribers', slug: 'welcome-email-series' },
+  { name: 'Win-Back Campaign', category: 'retention', price: 36, roi: 'Re-engage customers before they forget you', slug: 'win-back-campaign' },
+  { name: 'Best Sellers Collection', category: 'merchandising', price: 19, roi: 'Your bestsellers, always up to date', slug: 'best-sellers-collection' },
 ];
 
 const PAIN_POINTS = [
   {
-    problem: 'You forget to follow up on abandoned carts',
-    solution: 'Abandoned Cart Recovery sends personalised emails within the hour — automatically, every time.',
+    problem: 'Carts get abandoned and you never follow up',
+    solution: 'Abandoned Cart Recovery fires an email within the hour. You set it once — it runs every time, forever.',
     automation: 'Abandoned Cart Recovery',
-    icon: '🛒',
-    metric: 'Up to 15% recovery rate',
+    slug: 'abandoned-cart-recovery',
+    category: 'marketing',
+    metric: 'Recovers around 10–15% of abandoned carts',
   },
   {
-    problem: 'You miss stock-outs until customers start complaining',
-    solution: 'Low Stock Alerts ping you the moment any product drops below your threshold.',
+    problem: 'You find out you\'re out of stock when a customer tells you',
+    solution: 'Low Stock Alerts watches your inventory and pings you the moment anything drops below your threshold. Email or Slack, your call.',
     automation: 'Low Stock Alerts',
-    icon: '📦',
-    metric: 'Never miss a stock-out again',
+    slug: 'low-stock-alerts',
+    category: 'inventory',
+    metric: 'Know before customers do',
   },
   {
-    problem: 'You\'re not getting enough reviews',
-    solution: 'Review Request Automator sends requests at exactly the right moment — 7 days after delivery.',
+    problem: 'You ship orders but never ask for a review',
+    solution: 'Review Request Automator waits until 7 days after delivery — when the product has actually been used — then sends a simple ask.',
     automation: 'Review Request Automator',
-    icon: '⭐',
-    metric: '3× more reviews on autopilot',
+    slug: 'review-request-automator',
+    category: 'marketing',
+    metric: 'More reviews without manually chasing anyone',
   },
   {
-    problem: 'Customers who haven\'t bought in 90+ days just disappear',
-    solution: 'Win-Back Campaign automatically re-engages lapsed customers with a compelling offer.',
+    problem: 'Customers buy once and you never hear from them again',
+    solution: 'Win-Back Campaign spots customers who haven\'t ordered in 90 days and sends them a targeted offer before they\'re gone for good.',
     automation: 'Win-Back Campaign',
-    icon: '🔁',
-    metric: 'Win back 1 in 5 lapsed customers',
+    slug: 'win-back-campaign',
+    category: 'retention',
+    metric: 'Gets some of those customers back',
   },
   {
-    problem: 'New subscribers get no welcome — and bounce',
-    solution: 'Welcome Email Series greets every new subscriber with a 3-email sequence that converts.',
+    problem: 'New subscribers get one generic email and that\'s it',
+    solution: 'Welcome Email Series sends a short sequence over the first few days — enough to introduce the brand and nudge a second order.',
     automation: 'Welcome Email Series',
-    icon: '✉️',
-    metric: '22% better new subscriber conversion',
+    slug: 'welcome-email-series',
+    category: 'retention',
+    metric: 'Better first-30-day conversion',
   },
 ];
 
 const LIVE_FEED = [
-  { icon: '💰', text: 'Recovered £127 — Sarah left 3 items in her cart 1h ago', time: 'just now', color: 'text-green-400' },
-  { icon: '⭐', text: 'Review request sent to james@... (Order #4821)', time: '2m ago', color: 'text-yellow-400' },
-  { icon: '📦', text: 'Low stock alert: Air Max Hoodie — 2 units left', time: '5m ago', color: 'text-orange-400' },
-  { icon: '🔁', text: 'Win-back email sent to 14 customers (90+ days inactive)', time: '12m ago', color: 'text-blue-400' },
-  { icon: '✉️', text: 'Welcome email sent to emma@... (just subscribed)', time: '18m ago', color: 'text-purple-400' },
-  { icon: '💰', text: 'Recovered £243 — Mike returned for his abandoned Nikes', time: '24m ago', color: 'text-green-400' },
-  { icon: '⭐', text: 'New 5★ review from Order #4799 — request sent 7 days ago', time: '31m ago', color: 'text-yellow-400' },
-  { icon: '📦', text: 'Restock alert: Oversized Tee (Black) reached 5 units', time: '45m ago', color: 'text-orange-400' },
+  { icon: '💰', text: 'Cart recovered — £127, Sarah M.', time: 'just now', color: 'text-green-400' },
+  { icon: '⭐', text: 'Review request sent — Order #4821, fulfilled 7 days ago', time: '2m ago', color: 'text-yellow-400' },
+  { icon: '📦', text: 'Low stock — Air Max Hoodie, 2 units remaining', time: '5m ago', color: 'text-orange-400' },
+  { icon: '🔁', text: 'Win-back emails out — 14 customers, last order 90+ days ago', time: '12m ago', color: 'text-blue-400' },
+  { icon: '✉️', text: 'Welcome email sent — emma@...', time: '18m ago', color: 'text-purple-400' },
+  { icon: '💰', text: 'Cart recovered — £243, Mike returned and completed checkout', time: '24m ago', color: 'text-green-400' },
+  { icon: '⭐', text: '5★ review posted — Order #4799', time: '31m ago', color: 'text-yellow-400' },
+  { icon: '📦', text: 'Stock back — Oversized Tee (Black) restocked to 30 units', time: '45m ago', color: 'text-orange-400' },
 ];
 
 const PRO_FEATURES = [
@@ -86,8 +92,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     ),
-    title: '60-second install',
-    description: 'Connect your Shopify store and activate any automation in under a minute. No developer, no config files.',
+    title: 'Installed in about a minute',
+    description: 'OAuth into Shopify, pick an automation, done. There\'s nothing to configure if you don\'t want to — the defaults work.',
   },
   {
     icon: (
@@ -95,8 +101,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
       </svg>
     ),
-    title: 'Secure by default',
-    description: 'AES-256 encrypted tokens, row-level security, and SOC 2-aligned infrastructure. Your store data never leaves our encrypted stack.',
+    title: 'Your token, encrypted',
+    description: 'Shopify access tokens are AES-256 encrypted at rest. We never log them, never expose them in responses. Standard stuff, but worth saying.',
   },
   {
     icon: (
@@ -104,8 +110,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
-    title: 'Live execution logs',
-    description: 'See exactly what each automation did, when it ran, and why — in plain English. Full audit trail, always.',
+    title: 'Logs that actually make sense',
+    description: 'Every time an automation runs, you get a plain-English log of what happened. Not "job completed successfully" — "sent recovery email to 3 customers".',
   },
   {
     icon: (
@@ -113,8 +119,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
       </svg>
     ),
-    title: 'Pay per automation',
-    description: 'Subscribe only to what you need. Cancel any individual automation at any time. No contracts.',
+    title: 'Pay for what you use',
+    description: 'Each automation is billed separately. Installing Low Stock Alerts doesn\'t mean you\'re paying for everything else. Cancel one without touching the others.',
   },
   {
     icon: (
@@ -122,8 +128,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
     ),
-    title: 'Real support',
-    description: 'Email and in-app support with a 4-hour response guarantee. Talk to a human, not a bot.',
+    title: 'Support from an actual person',
+    description: 'Email hello@velocityapps.dev and you\'ll hear back from the same person who built it. Under 4 hours during business days.',
   },
   {
     icon: (
@@ -131,8 +137,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
     ),
-    title: 'Runs 24 / 7',
-    description: 'Webhook-driven and cron-scheduled. Your automations run around the clock without you lifting a finger.',
+    title: 'Runs while you sleep',
+    description: 'Webhooks fire in real time, crons run every hour. If a cart gets abandoned at 2am, the recovery email still goes out at 3am.',
   },
 ];
 
@@ -228,11 +234,8 @@ function RoiCalculator() {
       </div>
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold mb-5 uppercase tracking-wider">
-            Revenue calculator
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">How much are you losing right now?</h2>
-          <p className="text-slate-400 text-lg">Drag the sliders — see the money you're leaving on the table.</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">What's sitting in abandoned carts right now?</h2>
+          <p className="text-slate-400 text-lg">Rough numbers, but they add up fast.</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -261,9 +264,9 @@ function RoiCalculator() {
                 href="/onboarding"
                 className="block w-full py-4 text-center bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-bold text-base transition-colors shadow-lg shadow-blue-500/30"
               >
-                Start recovering revenue — free for 7 days
+                Try Abandoned Cart Recovery free
               </Link>
-              <p className="text-xs text-white/30 text-center mt-2">No credit card · Cancel anytime</p>
+              <p className="text-xs text-white/30 text-center mt-2">14-day trial · Cancel anytime</p>
             </div>
           </div>
         </div>
@@ -299,8 +302,8 @@ function PricingSection({ session }: { session: any }) {
     <section className="bg-[var(--bg-secondary)] border-y border-[var(--border)] py-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">Simple, transparent pricing</h2>
-          <p className="text-[var(--text-secondary)] text-lg">Pay per automation, or go PRO for everything.</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">Pricing</h2>
+          <p className="text-[var(--text-secondary)] text-lg">Pay per automation. Or get everything for one flat price.</p>
           <div className="inline-flex items-center gap-1 mt-8 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-1">
             <button onClick={() => setAnnual(false)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${!annual ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
@@ -319,8 +322,8 @@ function PricingSection({ session }: { session: any }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Starter */}
           <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-8">
-            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">Starter</h3>
-            <p className="text-sm text-[var(--text-secondary)] mb-6">Pick only what you need.</p>
+            <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">Pay as you go</h3>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">Install one automation, pay for one automation.</p>
             <div className="mb-5">
               <span className="text-4xl font-extrabold text-[var(--text-primary)]">from $19</span>
               <span className="text-[var(--text-secondary)] ml-1 text-sm">/ automation / mo</span>
@@ -334,7 +337,7 @@ function PricingSection({ session }: { session: any }) {
               ))}
             </div>
             <ul className="space-y-2.5 mb-8">
-              {['7-day free trial per automation', 'Cancel any automation anytime', 'Standard support (< 4 hr)', 'Live execution logs'].map(f => (
+              {['14-day free trial per automation', 'Cancel any automation anytime', 'Standard support (< 4 hr)', 'Live execution logs'].map(f => (
                 <li key={f} className="flex items-center gap-3 text-sm text-[var(--text-primary)]">
                   <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -348,11 +351,10 @@ function PricingSection({ session }: { session: any }) {
             </Link>
           </div>
 
-          {/* PRO */}
+          {/* All Access */}
           <div className="bg-blue-600 rounded-2xl p-8 relative overflow-hidden">
-            <div className="absolute top-4 right-4 px-2.5 py-1 bg-white/20 rounded-md text-white text-xs font-semibold">Best value</div>
-            <h3 className="text-lg font-bold text-white mb-1">PRO</h3>
-            <p className="text-sm text-blue-200 mb-6">Everything, one flat price.</p>
+            <h3 className="text-lg font-bold text-white mb-1">All Access</h3>
+            <p className="text-sm text-blue-200 mb-6">Every automation, one price. Useful if you're running more than two or three.</p>
             <div className="mb-1 flex items-end gap-2">
               {annual && <span className="text-blue-300 line-through text-lg font-semibold">${monthlyPrice}</span>}
               <span className="text-4xl font-extrabold text-white">${annual ? annualMonthly : monthlyPrice}</span>
@@ -371,11 +373,11 @@ function PricingSection({ session }: { session: any }) {
             </ul>
             <button onClick={handleUpgrade} disabled={upgrading}
               className="block w-full py-3 text-center bg-white text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors shadow-sm disabled:opacity-60">
-              {upgrading ? 'Redirecting…' : session ? 'Upgrade to PRO' : 'Start free trial'}
+              {upgrading ? 'Redirecting…' : session ? 'Upgrade to All Access' : 'Start free trial'}
             </button>
           </div>
         </div>
-        <p className="text-center text-sm text-[var(--text-muted)] mt-8">All plans include a 7-day free trial. No credit card required to start.</p>
+        <p className="text-center text-sm text-[var(--text-muted)] mt-8">Every automation has a 14-day free trial. No card needed to start one.</p>
       </div>
     </section>
   );
@@ -449,10 +451,7 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold mb-8 uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                {automationCount ?? '14'}+ automations live now
-              </div>
+              <p className="text-blue-400 text-sm font-medium mb-6 tracking-wide">{automationCount ?? '14'}+ automations available</p>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.08] tracking-tight mb-6">
                 Your Shopify store,<br />
@@ -462,13 +461,13 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg text-slate-300 leading-relaxed mb-8 max-w-lg">
-                Pre-built automations that recover carts, send review requests, alert on low stock, and win back customers — all running 24/7 without you touching a thing.
+                The tedious stuff — following up on abandoned carts, chasing reviews, watching stock levels — done automatically. You connect Shopify once and it just runs.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 mb-8">
                 <Link href="/onboarding"
                   className="px-7 py-3.5 bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-bold text-base transition-colors shadow-xl shadow-blue-500/30 text-center">
-                  Start free — 7 day trial
+                  Start free — 14 day trial
                 </Link>
                 <Link href="/marketplace"
                   className="px-7 py-3.5 bg-white/8 hover:bg-white/15 border border-white/15 text-white rounded-xl font-semibold text-base transition-colors text-center">
@@ -476,14 +475,14 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              <p className="text-sm text-slate-500">No credit card required · Cancel anytime · Installed in 60 seconds</p>
+              <p className="text-sm text-slate-500">14-day free trial · Cancel any automation anytime · No developer needed</p>
 
               {/* Quick stats */}
               <div className="grid grid-cols-3 gap-4 mt-10 pt-10 border-t border-white/10">
                 {[
-                  { value: 'Up to 15%', label: 'carts recovered' },
-                  { value: '3×', label: 'more reviews' },
-                  { value: '5 hrs', label: 'saved per week' },
+                  { value: '~10–15%', label: 'of carts recovered' },
+                  { value: '3–4×', label: 'more reviews' },
+                  { value: 'hrs/week', label: 'back in your pocket' },
                 ].map(({ value, label }) => (
                   <div key={label}>
                     <div className="text-2xl font-extrabold text-blue-400 mb-0.5">{value}</div>
@@ -503,18 +502,10 @@ export default function LandingPage() {
 
       {/* ── Social proof bar ──────────────────────────────────────────────── */}
       <section className="border-b border-[var(--border)] bg-[var(--bg-secondary)] py-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-8">
-            Trusted by Shopify merchants worldwide
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+            Built for independent Shopify merchants — the kind who are doing everything themselves and just need the repetitive stuff to stop being their problem.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 opacity-40">
-            {/* Placeholder brand logos — replace with real SVGs when available */}
-            {['BRAND', 'STORE CO', 'SHOPIFY+', 'FASHION HQ', 'TECH GOODS', 'NORDIC CO'].map(name => (
-              <div key={name} className="text-[var(--text-primary)] text-sm font-black tracking-tight">
-                {name}
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -522,8 +513,8 @@ export default function LandingPage() {
       <section className="py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">The work you're not doing</h2>
-            <p className="text-[var(--text-secondary)] text-lg max-w-xl mx-auto">Every one of these is costing you money right now. Here's how we fix it.</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">The stuff that slips through the cracks</h2>
+            <p className="text-[var(--text-secondary)] text-lg max-w-xl mx-auto">Every Shopify store has the same list of things they mean to do but don't get around to.</p>
           </div>
 
           <div className="grid lg:grid-cols-5 gap-4 mb-8">
@@ -536,7 +527,7 @@ export default function LandingPage() {
                   : 'bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/30'
                   }`}
               >
-                <span className="text-2xl mb-2 block">{p.icon}</span>
+                <div className="mb-2"><AutomationIcon slug={p.slug} category={p.category} size="sm" /></div>
                 <p className="text-xs font-semibold leading-snug">{p.problem}</p>
               </button>
             ))}
@@ -546,32 +537,22 @@ export default function LandingPage() {
           <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-2xl p-8 lg:p-10">
             <div className="grid lg:grid-cols-2 gap-8 items-center">
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-3xl">{PAIN_POINTS[activePain].icon}</span>
-                  <span className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide">The problem</span>
-                </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-4 leading-snug">
                   {PAIN_POINTS[activePain].problem}
                 </h3>
                 <p className="text-[var(--text-secondary)] leading-relaxed">{PAIN_POINTS[activePain].solution}</p>
               </div>
               <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-6">
-                <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">Solved by</div>
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-2xl">{PAIN_POINTS[activePain].icon}</span>
+                  <AutomationIcon slug={PAIN_POINTS[activePain].slug} category={PAIN_POINTS[activePain].category} size="sm" />
                   <span className="font-bold text-[var(--text-primary)]">{PAIN_POINTS[activePain].automation}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-green-500 font-semibold mb-5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {PAIN_POINTS[activePain].metric}
-                </div>
+                <p className="text-sm text-[var(--text-secondary)] mb-5">{PAIN_POINTS[activePain].metric}</p>
                 <Link
                   href="/marketplace"
                   className="block w-full py-2.5 text-center bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-semibold transition-colors"
                 >
-                  Start 7-day free trial
+                  Try it free for 14 days
                 </Link>
               </div>
             </div>
@@ -583,8 +564,8 @@ export default function LandingPage() {
       <section className="py-24 bg-[var(--bg-secondary)] border-y border-[var(--border)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">Up and running in 60 seconds</h2>
-            <p className="text-[var(--text-secondary)] text-lg">No code. No setup. No waiting.</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">How it actually works</h2>
+            <p className="text-[var(--text-secondary)] text-lg">Three steps, then you forget it exists — in a good way.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
@@ -592,9 +573,9 @@ export default function LandingPage() {
             <div className="hidden sm:block absolute top-10 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
 
             {[
-              { step: '01', title: 'Install the app', desc: 'Connect your Shopify store in one click. OAuth takes 15 seconds.', icon: '🔌' },
-              { step: '02', title: 'Activate an automation', desc: 'Browse the marketplace, pick what you need, start your free trial.', icon: '⚡' },
-              { step: '03', title: 'Watch it work', desc: 'Your automation runs 24/7. Check the live logs and watch the results come in.', icon: '📈' },
+              { step: '01', title: 'Connect Shopify', desc: 'OAuth takes about 15 seconds. We request only the permissions each automation actually needs.', icon: '🔌' },
+              { step: '02', title: 'Pick an automation', desc: 'Browse the marketplace, start a free trial on whatever looks useful. You can always add more later.', icon: '⚡' },
+              { step: '03', title: 'Leave it running', desc: 'Check the logs when you\'re curious. Otherwise it just runs — and you\'ll see the results in your Shopify stats.', icon: '📈' },
             ].map(({ step, title, desc, icon }) => (
               <div key={step} className="relative bg-[var(--bg-primary)] border border-[var(--border)] rounded-2xl p-7 text-center">
                 <div className="text-3xl mb-4">{icon}</div>
@@ -611,8 +592,8 @@ export default function LandingPage() {
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">Popular automations</h2>
-            <p className="text-[var(--text-secondary)] text-lg">Most stores see results within the first week.</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">Where most people start</h2>
+            <p className="text-[var(--text-secondary)] text-lg">These are the ones that tend to pay for themselves pretty quickly.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
@@ -622,7 +603,7 @@ export default function LandingPage() {
                 href={`/automations/${a.slug}`}
                 className="group flex items-center gap-4 p-5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl hover:border-blue-500/40 hover:bg-[var(--bg-secondary)] transition-all"
               >
-                <div className="text-3xl flex-shrink-0 group-hover:scale-110 transition-transform">{a.icon}</div>
+                <AutomationIcon slug={a.slug} category={a.category} size="md" />
                 <div className="min-w-0">
                   <div className="font-semibold text-[var(--text-primary)] text-sm leading-snug">{a.name}</div>
                   <div className="text-xs text-green-500 font-medium mt-0.5">{a.roi}</div>
@@ -654,9 +635,9 @@ export default function LandingPage() {
       <section className="py-24 border-t border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">Everything you need, nothing you don't</h2>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">A few things worth knowing</h2>
             <p className="text-[var(--text-secondary)] text-lg max-w-2xl mx-auto">
-              Built to be reliable, transparent, and easy to use — because that's what Shopify merchants actually need.
+              The bits that matter when you're trusting something to run on your store without supervision.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -686,18 +667,18 @@ export default function LandingPage() {
         </div>
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-5 leading-tight">
-            Stop losing money<br />to abandoned carts.
+            The repetitive stuff<br />shouldn't need you.
           </h2>
           <p className="text-slate-300 text-xl mb-10 max-w-xl mx-auto">
-            Start your 7-day free trial. No credit card required. Your first automation running in under a minute.
+            Pick one automation, try it free for a week. If it doesn't pay for itself, cancel it — takes 10 seconds.
           </p>
           <Link
             href={session ? '/dashboard' : '/onboarding'}
             className="inline-block px-10 py-4 bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-bold text-lg transition-colors shadow-2xl shadow-blue-500/30"
           >
-            {session ? 'Go to Dashboard' : 'Get started free →'}
+            {session ? 'Go to Dashboard' : 'Browse automations →'}
           </Link>
-          <p className="text-slate-500 text-sm mt-4">No credit card · Cancel anytime · Shopify approved</p>
+          <p className="text-slate-500 text-sm mt-4">Free trial · Cancel any time · Shopify-approved app</p>
         </div>
       </section>
 
@@ -710,7 +691,7 @@ export default function LandingPage() {
                 <span className="w-6 h-6 rounded-md bg-blue-500 flex items-center justify-center text-white text-xs font-black">V</span>
                 VelocityApps
               </div>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">Pre-built Shopify automations that run your store for you. No code required.</p>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">Shopify automations that run while you sleep. We maintain them so you don't have to.</p>
             </div>
             <div>
               <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">Product</h4>

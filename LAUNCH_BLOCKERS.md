@@ -60,17 +60,17 @@
 
 ---
 
-### 🟡 Priority 3 — End-to-end testing on a dev store
+### ✅ Priority 3 — End-to-end testing on a dev store — DONE
 
-- [ ] Install app on a Shopify development store via the Partner dashboard
-- [ ] Complete the embedded OAuth + account creation flow
-- [ ] Install one automation and verify billing prompt appears
-- [ ] Approve billing and confirm automation status goes `active` in Supabase
-- [ ] Trigger a test webhook (e.g. set a product out of stock) and verify automation fires
-- [ ] Uninstall the app and verify `app/uninstalled` fires — automations marked `cancelled` in Supabase
-- [ ] Test GDPR webhooks using the Partner dashboard test tool
+- [x] Install app on a Shopify development store via the Partner dashboard
+- [x] Complete the embedded OAuth + account creation flow
+- [x] Install one automation and verify billing prompt appears
+- [x] Approve billing and confirm automation status goes `active` in Supabase
+- [x] Trigger a test webhook (e.g. set a product out of stock) and verify automation fires
+- [x] Uninstall the app and verify `app/uninstalled` fires — automations marked `cancelled` in Supabase
+- [x] Test GDPR webhooks — all 3 topics return 200 (fixed `SHOPIFY_WEBHOOK_SECRET` = client secret)
 
-**Time:** 1 hour
+**Note:** Also fixed 100% webhook failure rate caused by `SHOPIFY_WEBHOOK_SECRET` being set to a random string instead of the Shopify client secret. All automation webhooks now passing.
 
 ---
 
@@ -97,10 +97,10 @@ All env vars verified on Vercel.
 
 | Status | Count |
 |--------|-------|
-| ✅ Done | 25 |
-| ❌ Remaining | 3 tasks |
+| ✅ Done | 27 |
+| ❌ Remaining | 1 task |
 
-**No more code changes needed. Everything remaining is config, listing content, and testing.**
+**No more code changes needed. Only remaining task is the app listing content before submitting for review.**
 
 ---
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import InstallModal from './InstallModal';
 import AutomationInfoModal from './AutomationInfoModal';
+import AutomationIcon from './AutomationIcon';
 
 export interface Automation {
   id: string;
@@ -84,7 +85,7 @@ export default function AutomationCard({
       <div className="relative bg-white border border-[#e1e3e5] rounded-xl p-6 transition-all hover:border-[#2563eb]/40 hover:shadow-sm">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="text-3xl">{automation.icon}</div>
+            <AutomationIcon slug={automation.slug} category={automation.category} />
             <div>
               <h3 className="text-base font-semibold text-[#202223]">{automation.name}</h3>
               <p className="text-xs text-[#6d7175] capitalize">{automation.category}</p>
@@ -116,7 +117,7 @@ export default function AutomationCard({
                 <span className="text-sm text-[#6d7175]">${automation.price_monthly}/month — no trial available</span>
               ) : (
                 <>
-                  <span className="px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#2563eb] text-xs font-medium">7-day free trial</span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#2563eb] text-xs font-medium">14-day free trial</span>
                   <span className="text-sm text-[#6d7175]">then ${automation.price_monthly}/mo</span>
                 </>
               )}

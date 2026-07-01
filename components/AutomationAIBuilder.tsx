@@ -497,7 +497,7 @@ export default function AutomationAIBuilder({ onClose, onActivated }: Automation
           )}
 
           <p className="text-xs text-[var(--text-muted)] text-center">
-            7-day free trial · Cancel any time
+            14-day free trial · Cancel any time
           </p>
         </div>
       </div>

@@ -182,11 +182,15 @@ function OnboardingContent() {
     <div className="min-h-screen bg-[var(--bg-secondary)] text-[var(--text-primary)]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-3">Welcome to VelocityApps</h1>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-3">
+            {step === 'auth' ? 'Create your account' : step === 'select' ? 'Pick your first automation' : 'Connect your store'}
+          </h1>
           <p className="text-[var(--text-secondary)] text-lg">
             {step === 'auth'
-              ? 'Sign in or create an account to get started'
-              : "Let's get your Shopify store set up with automations"}
+              ? 'Takes about 2 minutes. Free for 14 days, no card needed.'
+              : step === 'select'
+              ? 'Start with one. You can always add more later.'
+              : 'We need read access to your orders, products, and inventory.'}
           </p>
         </div>
 
@@ -266,9 +270,9 @@ function OnboardingContent() {
 
         {(step === 'connect' || (step === 'auth' && session)) && (
           <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8 max-w-lg mx-auto">
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Connect Your Shopify Store</h2>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Connect your Shopify store</h2>
             <p className="text-[var(--text-secondary)] text-sm mb-6">
-              Connect your store to get started. We only request permissions each automation needs.
+              Enter your store URL below. You'll be taken to Shopify to approve the connection.
             </p>
             <div className="space-y-4">
               <div>
@@ -297,9 +301,9 @@ function OnboardingContent() {
         {step === 'select' && (
           <div className="space-y-6">
             <div className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-8">
-              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Choose Your First Automation</h2>
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Pick something to try</h2>
               <p className="text-[var(--text-secondary)] text-sm">
-                Pick one to start your free 7-day trial. Most merchants run 2–3 automations together for the best results.
+                14 days free, no card required. If it's not useful, cancel it in one click.
               </p>
             </div>
 
@@ -324,12 +328,8 @@ function OnboardingContent() {
               ))}
             </div>
 
-            <div className="bg-[var(--accent-bg)] border border-[var(--accent-border)] rounded-xl px-6 py-4 flex items-center gap-4">
-              <div className="text-2xl">💡</div>
-              <div>
-                <p className="text-sm font-semibold text-[var(--accent-text)]">Pro tip: pair Abandoned Cart Recovery with Review Request Automator</p>
-                <p className="text-xs text-[var(--accent)] mt-0.5">Merchants who run both recover more revenue and build social proof at the same time.</p>
-              </div>
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl px-6 py-4">
+              <p className="text-sm text-[var(--text-secondary)]">Most people start with Abandoned Cart Recovery or Low Stock Alerts — both show results quickly and are easy to verify.</p>
             </div>
 
             <div className="text-center">

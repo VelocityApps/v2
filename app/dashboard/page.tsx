@@ -314,12 +314,6 @@ export default function DashboardPage() {
             <p className="text-[var(--text-secondary)]">Manage your installed automations</p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowAIBuilder(true)}
-              className="px-5 py-2.5 border border-[var(--border)] hover:border-[var(--accent)]/50 text-[var(--text-primary)] hover:text-[var(--accent)] rounded-lg font-medium text-sm transition-colors shadow-sm"
-            >
-              Create with AI ✨
-            </button>
             <Link
               href="/marketplace"
               className="px-5 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-medium text-sm transition-colors shadow-sm"
@@ -450,7 +444,7 @@ export default function DashboardPage() {
                   <div className="text-3xl flex-shrink-0">{automation.icon}</div>
                   <div className="min-w-0">
                     <div className="font-semibold text-[var(--text-primary)] text-sm leading-snug">{automation.name}</div>
-                    <div className="text-xs text-[var(--text-secondary)] mt-0.5">from ${automation.price_monthly}/mo · 7-day free trial</div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-0.5">from ${automation.price_monthly}/mo · 14-day free trial</div>
                   </div>
                 </Link>
               ))}

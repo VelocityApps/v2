@@ -45,7 +45,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4 text-[#2563eb]">4. Free Trials</h2>
             <p className="text-[#6d7175] leading-relaxed">
-              Each automation comes with a 7-day free trial when first installed. No payment is taken during the trial period. At the end of the trial, your chosen payment method will be charged automatically unless you cancel before the trial ends. Each automation's trial can only be used once per account.
+              Each automation comes with a 14-day free trial when first installed. No payment is taken during the trial period. At the end of the trial, your chosen payment method will be charged automatically unless you cancel before the trial ends. Each automation's trial can only be used once per account.
             </p>
           </section>
 

@@ -70,7 +70,7 @@ export default function ExitIntentPopup() {
           onClick={() => setVisible(false)}
           className="block w-full py-3 text-center bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg font-semibold transition-colors shadow-sm"
         >
-          Start 7-day free trial — no card needed
+          Start 14-day free trial — no card needed
         </Link>
 
         <button

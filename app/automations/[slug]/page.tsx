@@ -23,7 +23,7 @@ export async function generateMetadata({
   if (!automation) return {};
 
   const title = `${automation.name} for Shopify`;
-  const description = `${automation.description} Start with a 7-day free trial. No code required.`;
+  const description = `${automation.description} Start with a 14-day free trial. No code required.`;
   const url = `${APP_URL}/automations/${slug}`;
 
   return {

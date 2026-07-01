@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
 
     const trialEligible = !priorTrial?.length;
     const now = new Date();
-    const trialEndsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const trialEndsAt = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
     const insertRow: Record<string, unknown> = {
       user_id: user.id,

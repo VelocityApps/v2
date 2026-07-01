@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     returnUrl,
     priceMonthly: EVO_PRICE_MONTHLY,
     currencyCode: 'USD',
-    trialDays: 7,
+    trialDays: 14,
     test: isTestCharge(shopPlan),
   });
 

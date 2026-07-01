@@ -20,7 +20,7 @@ export function TrialStartedEmail({
   });
 
   return (
-    <EmailLayout preview={`Your ${automationName} trial has started – 7 days of full access.`}>
+    <EmailLayout preview={`Your ${automationName} trial has started – 14 days of full access.`}>
       {/* Badge */}
       <Section style={badgeSection}>
         <span style={badge}>Trial Active</span>
@@ -31,7 +31,7 @@ export function TrialStartedEmail({
       </Heading>
 
       <Text style={body}>
-        You now have <strong>full access to {automationName}</strong> for the next 7 days — no
+        You now have <strong>full access to {automationName}</strong> for the next 14 days — no
         credit card required yet.
       </Text>
 
@@ -41,7 +41,7 @@ export function TrialStartedEmail({
           <strong>Automation:</strong> {automationName}
         </Text>
         <Text style={infoRow}>
-          <strong>Trial period:</strong> 7 days
+          <strong>Trial period:</strong> 14 days
         </Text>
         <Text style={infoRowLast}>
           <strong>Trial ends:</strong> {endDateStr}
